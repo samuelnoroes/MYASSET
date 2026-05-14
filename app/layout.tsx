@@ -19,7 +19,20 @@ const sans = DM_Sans({
 export const metadata: Metadata = {
   title: "MyAsset — Gestão de portfólio imobiliário",
   description:
-    "A clareza que o investidor imobiliário sempre quis sobre o próprio patrimônio.",
+    "Acompanhe yield, ROI e fluxo de caixa dos seus imóveis com clareza. Cadastre ativos, lance receitas e despesas, e veja o desempenho do seu portfólio em tempo real.",
+  openGraph: {
+    title: "MyAsset — Gestão de portfólio imobiliário",
+    description:
+      "A clareza que o investidor imobiliário sempre quis sobre o próprio patrimônio.",
+    siteName: "MyAsset",
+    locale: "pt_BR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "MyAsset",
+    description: "Gestão de portfólio imobiliário para investidores.",
+  },
 };
 
 export default function RootLayout({
