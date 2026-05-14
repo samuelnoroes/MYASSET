@@ -4,34 +4,12 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 
-export async function login(formData: FormData) {
+export async function auth(formData: FormData) {
   const supabase = createClient();
 
   const email = String(formData.get("email") || "").trim();
   const password = String(formData.get("password") || "");
-
-  if (!email || !password) {
-    redirect("/error?message=Informe e-mail e senha.");
-  }
-
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
-
-  if (error) {
-    redirect(`/error?message=${encodeURIComponent(error.message)}`);
-  }
-
-  revalidatePath("/", "layout");
-  redirect("/dashboard");
-}
-
-export async function signup(formData: FormData) {
-  const supabase = createClient();
-
-  const email = String(formData.get("email") || "").trim();
-  const password = String(formData.get("password") || "");
+  const mode = String(formData.get("mode") || "");
 
   if (!email || !password) {
     redirect("/error?message=Informe e-mail e senha.");
@@ -41,19 +19,37 @@ export async function signup(formData: FormData) {
     redirect("/error?message=A senha precisa ter no mínimo 6 caracteres.");
   }
 
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-  });
+  if (mode === "signup") {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
 
-  if (error) {
-    redirect(`/error?message=${encodeURIComponent(error.message)}`);
+    if (error) {
+      redirect(`/error?message=${encodeURIComponent(error.message)}`);
+    }
+
+    if (!data.user) {
+      redirect("/error?message=Não foi possível criar o usuário.");
+    }
+
+    revalidatePath("/", "layout");
+    redirect("/dashboard");
   }
 
-  if (!data.user) {
-    redirect("/error?message=Usuário não foi criado no Supabase.");
+  if (mode === "login") {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      redirect(`/error?message=${encodeURIComponent(error.message)}`);
+    }
+
+    revalidatePath("/", "layout");
+    redirect("/dashboard");
   }
 
-  revalidatePath("/", "layout");
-  redirect("/dashboard");
+  redirect("/error?message=Ação inválida.");
 }
