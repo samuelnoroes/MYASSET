@@ -1,19 +1,20 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
+import { logout } from "./actions";
 
-type Property = {
-  id: string;
-  name: string;
-  current_value: number | null;
-  acquisition_value: number | null;
-  monthly_rent: number | null;
-};
-
-function formatCurrency(value: number) {
+function formatCurrency(value: number): string {
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",
     currency: "BRL",
+  }).format(value);
+}
+
+function formatPercent(value: number): string {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "percent",
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
   }).format(value);
 }
 
@@ -28,179 +29,159 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  const { data: properties, error } = await supabase
+  const { data: properties } = await supabase
     .from("properties")
-    .select("id, name, current_value, acquisition_value, monthly_rent")
-    .order("created_at", { ascending: false });
+    .select("*")
+    .eq("user_id", user.id);
 
-  if (error) {
-    redirect(`/error?message=${encodeURIComponent(error.message)}`);
-  }
+  const props = properties ?? [];
+  const totalProperties = props.length;
 
-  const propertyList = (properties || []) as Property[];
-
-  const totalCurrentValue = propertyList.reduce(
-    (sum, property) => sum + Number(property.current_value || 0),
+  const totalCurrentValue = props.reduce(
+    (acc, p) => acc + Number(p.current_value || 0),
     0
   );
-
-  const totalAcquisitionValue = propertyList.reduce(
-    (sum, property) => sum + Number(property.acquisition_value || 0),
+  const totalAcquisitionValue = props.reduce(
+    (acc, p) => acc + Number(p.acquisition_value || 0),
     0
   );
-
-  const totalMonthlyRent = propertyList.reduce(
-    (sum, property) => sum + Number(property.monthly_rent || 0),
+  const totalMonthlyRent = props.reduce(
+    (acc, p) => acc + Number(p.monthly_rent || 0),
     0
   );
 
   const appreciation =
     totalAcquisitionValue > 0
-      ? ((totalCurrentValue - totalAcquisitionValue) /
-          totalAcquisitionValue) *
-        100
+      ? (totalCurrentValue - totalAcquisitionValue) / totalAcquisitionValue
       : 0;
 
   return (
-    <main className="min-h-screen bg-[#f4f1ea]">
-      <header className="border-b border-[#d8d3ca] px-6 py-7">
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <Link href="/dashboard" className="font-serif text-2xl text-[#1f1f1f]">
-            My<span className="italic text-[#2f5a46]">Asset</span>
-          </Link>
-
-          <Link
-            href="/login"
-            className="text-xs uppercase tracking-[0.25em] text-[#7d7d7d] hover:text-[#2f5a46]"
-          >
-            Sair
-          </Link>
+    <main className="min-h-screen bg-cream">
+      {/* Header */}
+      <header className="border-b border-ink/10">
+        <div className="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
+          <h1 className="font-display text-2xl text-ink">
+            My<span className="italic text-forest">Asset</span>
+          </h1>
+          <form action={logout}>
+            <button
+              type="submit"
+              className="text-xs uppercase tracking-wider text-ink/60 hover:text-forest transition-colors"
+            >
+              Sair
+            </button>
+          </form>
         </div>
       </header>
 
-      <section className="mx-auto max-w-6xl px-6 py-16">
-        <div className="mb-12 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="mb-4 text-xs uppercase tracking-[0.35em] text-[#8a9a90]">
-              Bem-vindo
-            </p>
-
-            <h1 className="font-serif text-6xl text-[#1f1f1f]">
-              Seu portfólio
-            </h1>
-
-            <p className="mt-5 text-lg text-[#7d7d7d]">{user.email}</p>
-          </div>
-
-          <Link
-            href="/dashboard/properties/new"
-            className="flex h-12 items-center justify-center bg-[#2f5a46] px-6 text-xs font-medium uppercase tracking-widest text-white transition-colors hover:bg-[#1f1f1f]"
-          >
-            Cadastrar imóvel
-          </Link>
+      <div className="max-w-6xl mx-auto px-6 py-12">
+        {/* Cabeçalho do dashboard */}
+        <div className="mb-12">
+          <p className="text-xs tracking-[0.3em] uppercase text-forest/60 mb-3">
+            Visão geral
+          </p>
+          <h2 className="font-display text-4xl md:text-5xl text-ink mb-2">
+            Seu portfólio
+          </h2>
+          <p className="text-ink/60 text-sm">{user.email}</p>
         </div>
 
-        <div className="mb-12 grid gap-5 md:grid-cols-4">
-          <div className="border border-[#d8d3ca] bg-[#f8f5ef] p-6">
-            <p className="mb-3 text-xs uppercase tracking-[0.25em] text-[#8a9a90]">
+        {/* KPIs */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-ink/10 mb-12 border border-ink/10">
+          <div className="bg-cream p-6">
+            <p className="text-[10px] uppercase tracking-wider text-ink/40 mb-2">
               Imóveis
             </p>
-            <p className="font-serif text-4xl text-[#1f1f1f]">
-              {propertyList.length}
-            </p>
+            <p className="font-display text-3xl text-ink">{totalProperties}</p>
           </div>
-
-          <div className="border border-[#d8d3ca] bg-[#f8f5ef] p-6">
-            <p className="mb-3 text-xs uppercase tracking-[0.25em] text-[#8a9a90]">
+          <div className="bg-cream p-6">
+            <p className="text-[10px] uppercase tracking-wider text-ink/40 mb-2">
               Patrimônio
             </p>
-            <p className="font-serif text-3xl text-[#1f1f1f]">
+            <p className="font-display text-2xl text-ink">
               {formatCurrency(totalCurrentValue)}
             </p>
           </div>
-
-          <div className="border border-[#d8d3ca] bg-[#f8f5ef] p-6">
-            <p className="mb-3 text-xs uppercase tracking-[0.25em] text-[#8a9a90]">
-              Aluguel mensal
+          <div className="bg-cream p-6">
+            <p className="text-[10px] uppercase tracking-wider text-ink/40 mb-2">
+              Aluguel/mês
             </p>
-            <p className="font-serif text-3xl text-[#1f1f1f]">
+            <p className="font-display text-2xl text-forest">
               {formatCurrency(totalMonthlyRent)}
             </p>
           </div>
-
-          <div className="border border-[#d8d3ca] bg-[#f8f5ef] p-6">
-            <p className="mb-3 text-xs uppercase tracking-[0.25em] text-[#8a9a90]">
+          <div className="bg-cream p-6">
+            <p className="text-[10px] uppercase tracking-wider text-ink/40 mb-2">
               Valorização
             </p>
-            <p className="font-serif text-3xl text-[#1f1f1f]">
-              {appreciation.toFixed(1)}%
+            <p
+              className={`font-display text-2xl ${
+                appreciation >= 0 ? "text-forest" : "text-red-700"
+              }`}
+            >
+              {totalAcquisitionValue > 0 ? formatPercent(appreciation) : "—"}
             </p>
           </div>
         </div>
 
-        {propertyList.length === 0 ? (
-          <div className="border border-dashed border-[#d8d3ca] px-8 py-20 text-center">
-            <p className="mb-3 text-xs uppercase tracking-[0.35em] text-[#8a9a90]">
-              Em breve
+        {/* Bloco de ação */}
+        <div className="flex items-end justify-between mb-8">
+          <div>
+            <p className="text-xs tracking-[0.3em] uppercase text-forest/60 mb-2">
+              Imóveis
             </p>
+            <h3 className="font-display text-2xl text-ink">
+              Seu portfólio detalhado
+            </h3>
+          </div>
+          {totalProperties > 0 && (
+            <Link
+              href="/dashboard/properties"
+              className="text-xs uppercase tracking-wider text-forest hover:text-ink transition-colors"
+            >
+              Ver todos →
+            </Link>
+          )}
+        </div>
 
-            <h2 className="font-serif text-3xl text-[#1f1f1f]">
+        {totalProperties === 0 ? (
+          <div className="border border-dashed border-ink/15 p-12 text-center">
+            <p className="text-xs tracking-[0.3em] uppercase text-ink/40 mb-3">
+              Comece aqui
+            </p>
+            <p className="font-display text-2xl text-ink/70 mb-3">
               Cadastre seu primeiro imóvel
-            </h2>
-
-            <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-[#7d7d7d]">
-              Adicione imóveis para começar a acompanhar patrimônio, aluguel
-              mensal, valorização e fluxo de caixa.
             </p>
-
+            <p className="text-sm text-ink/50 max-w-md mx-auto mb-6">
+              Você ainda não tem imóveis cadastrados. Adicione o primeiro pra
+              começar a acompanhar seu patrimônio.
+            </p>
             <Link
               href="/dashboard/properties/new"
-              className="mt-8 inline-flex h-12 items-center justify-center bg-[#2f5a46] px-6 text-xs font-medium uppercase tracking-widest text-white transition-colors hover:bg-[#1f1f1f]"
+              className="inline-block px-6 py-3 bg-forest text-cream font-medium tracking-wider uppercase text-xs hover:bg-ink transition-colors"
             >
-              Cadastrar imóvel
+              + Cadastrar imóvel
             </Link>
           </div>
         ) : (
-          <section>
-            <div className="mb-5 flex items-center justify-between">
-              <h2 className="font-serif text-3xl text-[#1f1f1f]">
-                Imóveis recentes
-              </h2>
-
-              <Link
-                href="/dashboard/properties"
-                className="text-xs uppercase tracking-[0.25em] text-[#7d7d7d] hover:text-[#2f5a46]"
-              >
-                Ver todos
-              </Link>
-            </div>
-
-            <div className="grid gap-4">
-              {propertyList.slice(0, 3).map((property) => (
-                <div
-                  key={property.id}
-                  className="flex flex-col justify-between gap-4 border border-[#d8d3ca] bg-[#f8f5ef] p-6 md:flex-row md:items-center"
-                >
-                  <div>
-                    <h3 className="font-serif text-2xl text-[#1f1f1f]">
-                      {property.name}
-                    </h3>
-
-                    <p className="mt-2 text-sm text-[#7d7d7d]">
-                      Valor atual:{" "}
-                      {formatCurrency(Number(property.current_value || 0))}
-                    </p>
-                  </div>
-
-                  <p className="text-sm text-[#7d7d7d]">
-                    Aluguel: {formatCurrency(Number(property.monthly_rent || 0))}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
+          <div className="border border-ink/10 p-6 bg-white">
+            <p className="text-sm text-ink/70 mb-4">
+              Você tem{" "}
+              <strong className="text-ink">{totalProperties}</strong>{" "}
+              {totalProperties === 1
+                ? "imóvel cadastrado"
+                : "imóveis cadastrados"}
+              .
+            </p>
+            <Link
+              href="/dashboard/properties"
+              className="inline-block px-6 py-3 bg-forest text-cream font-medium tracking-wider uppercase text-xs hover:bg-ink transition-colors"
+            >
+              Gerenciar portfólio →
+            </Link>
+          </div>
         )}
-      </section>
+      </div>
     </main>
   );
 }

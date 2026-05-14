@@ -4,23 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 
-function parseNumber(value: FormDataEntryValue | null) {
-  if (!value) return null;
-
-  const normalized = String(value)
-    .replace(/\./g, "")
-    .replace(",", ".")
-    .trim();
-
-  if (!normalized) return null;
-
-  const number = Number(normalized);
-
-  if (Number.isNaN(number)) {
-    return null;
-  }
-
-  return number;
+function err(message: string): never {
+  redirect("/error?message=" + encodeURIComponent(message));
 }
 
 export async function createProperty(formData: FormData) {
@@ -28,60 +13,95 @@ export async function createProperty(formData: FormData) {
 
   const {
     data: { user },
-    error: userError,
   } = await supabase.auth.getUser();
 
-  if (userError || !user) {
+  if (!user) {
     redirect("/login");
   }
 
+  // Lê e valida os campos
   const name = String(formData.get("name") || "").trim();
+  const nickname = String(formData.get("nickname") || "")
+    .trim()
+    .toLowerCase();
+  const propertyType = String(formData.get("property_type") || "");
+  const address = String(formData.get("address") || "").trim() || null;
+  const city = String(formData.get("city") || "").trim() || null;
+  const stateField =
+    String(formData.get("state") || "")
+      .trim()
+      .toUpperCase() || null;
 
-  if (!name) {
-    redirect("/error?message=Informe o nome do imóvel.");
+  const acquisitionValueRaw = formData.get("acquisition_value");
+  const acquisitionDateRaw = formData.get("acquisition_date");
+  const currentValueRaw = formData.get("current_value");
+  const monthlyRentRaw = formData.get("monthly_rent");
+
+  if (!name) err("Nome do imóvel é obrigatório.");
+  if (!nickname) err("Apelido do imóvel é obrigatório.");
+
+  if (!/^[a-z0-9]+$/.test(nickname)) {
+    err(
+      "Apelido deve conter apenas letras minúsculas e números, sem espaços ou símbolos."
+    );
+  }
+
+  if (!["residential", "commercial", "land", "mixed"].includes(propertyType)) {
+    err("Tipo de imóvel inválido.");
   }
 
   const property = {
     user_id: user.id,
     name,
-    property_type: String(formData.get("property_type") || "").trim() || null,
-    address: String(formData.get("address") || "").trim() || null,
-    city: String(formData.get("city") || "").trim() || null,
-    state: String(formData.get("state") || "").trim() || null,
-    acquisition_value: parseNumber(formData.get("acquisition_value")),
-    current_value: parseNumber(formData.get("current_value")),
-    monthly_rent: parseNumber(formData.get("monthly_rent")),
+    nickname,
+    property_type: propertyType,
+    address,
+    city,
+    state: stateField,
+    acquisition_value: acquisitionValueRaw
+      ? Number(acquisitionValueRaw)
+      : null,
+    acquisition_date: acquisitionDateRaw ? String(acquisitionDateRaw) : null,
+    current_value: currentValueRaw ? Number(currentValueRaw) : null,
+    monthly_rent: monthlyRentRaw ? Number(monthlyRentRaw) : null,
   };
 
   const { error } = await supabase.from("properties").insert(property);
 
   if (error) {
-    redirect(`/error?message=${encodeURIComponent(error.message)}`);
+    if (error.code === "23505") {
+      err("Já existe um imóvel com esse apelido. Escolha outro.");
+    }
+    err(error.message);
   }
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/properties");
-
   redirect("/dashboard/properties");
 }
 
 export async function deleteProperty(formData: FormData) {
   const supabase = createClient();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
   const id = String(formData.get("id") || "");
+  if (!id) err("ID do imóvel não fornecido.");
 
-  if (!id) {
-    redirect("/error?message=Imóvel não encontrado.");
-  }
+  const { error } = await supabase
+    .from("properties")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", user.id);
 
-  const { error } = await supabase.from("properties").delete().eq("id", id);
-
-  if (error) {
-    redirect(`/error?message=${encodeURIComponent(error.message)}`);
-  }
+  if (error) err(error.message);
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/properties");
-
-  redirect("/dashboard/properties");
 }

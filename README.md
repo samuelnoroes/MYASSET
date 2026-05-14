@@ -16,11 +16,11 @@ Plataforma de gestão de portfólio imobiliário para investidores.
 - [x] Sprint 0 — Schema do banco no Supabase
 - [x] Sprint 1a — Landing inicial deployada
 - [x] Sprint 1b — Auth com email/senha funcionando
-- [ ] Sprint 1c — Cadastro de imóveis
-- [ ] Sprint 2 — Dashboard com KPIs
-- [ ] Sprint 3 — Lançamento de transações
-- [ ] Sprint 4 — Integração WhatsApp
-- [ ] Sprint 5 — Polimento
+- [x] Sprint 1c — Cadastro de imóveis + dashboard com KPIs
+- [ ] Sprint 2 — Lançamentos (receitas/despesas) manuais
+- [ ] Sprint 3 — Página detalhada do imóvel + edição
+- [ ] Sprint 4 — Integração WhatsApp (n8n + Evolution API)
+- [ ] Sprint 5 — Polimento + onboarding
 - [ ] Sprint 6 — Lançamento
 
 ## Setup local (opcional, requer Node.js)
@@ -42,3 +42,20 @@ Deploy automático via Vercel a cada push na branch `main`.
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+## Estrutura
+
+```
+app/
+├── page.tsx                   # Landing pública
+├── login/                     # Auth (email/senha)
+├── error/                     # Página de erro com mensagem
+└── dashboard/                 # Área logada
+    ├── page.tsx               # KPIs gerais
+    └── properties/            # Gestão de imóveis
+        ├── page.tsx           # Lista
+        ├── new/page.tsx       # Cadastro
+        └── actions.ts         # createProperty / deleteProperty
+utils/supabase/                # Clients do Supabase (browser/server/middleware)
+middleware.ts                  # Refresh de sessão + proteção de rotas
+```

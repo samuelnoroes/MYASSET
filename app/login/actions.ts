@@ -4,52 +4,38 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 
-export async function auth(formData: FormData) {
+export async function login(formData: FormData) {
   const supabase = createClient();
 
-  const email = String(formData.get("email") || "").trim();
-  const password = String(formData.get("password") || "");
-  const mode = String(formData.get("mode") || "");
+  const data = {
+    email: formData.get("email") as string,
+    password: formData.get("password") as string,
+  };
 
-  if (!email || !password) {
-    redirect("/error?message=Informe e-mail e senha.");
+  const { error } = await supabase.auth.signInWithPassword(data);
+
+  if (error) {
+    redirect("/error?message=" + encodeURIComponent(error.message));
   }
 
-  if (password.length < 6) {
-    redirect("/error?message=A senha precisa ter no mínimo 6 caracteres.");
+  revalidatePath("/", "layout");
+  redirect("/dashboard");
+}
+
+export async function signup(formData: FormData) {
+  const supabase = createClient();
+
+  const data = {
+    email: formData.get("email") as string,
+    password: formData.get("password") as string,
+  };
+
+  const { error } = await supabase.auth.signUp(data);
+
+  if (error) {
+    redirect("/error?message=" + encodeURIComponent(error.message));
   }
 
-  if (mode === "signup") {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-
-    if (error) {
-      redirect(`/error?message=${encodeURIComponent(error.message)}`);
-    }
-
-    if (!data.user) {
-      redirect("/error?message=Não foi possível criar o usuário.");
-    }
-
-    revalidatePath("/", "layout");
-    redirect("/dashboard");
-  }
-
-  if (mode === "login") {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      redirect(`/error?message=${encodeURIComponent(error.message)}`);
-    }
-
-    revalidatePath("/", "layout");
-    redirect("/dashboard");
-  }
-
-  redirect("/error?message=Ação inválida.");
+  revalidatePath("/", "layout");
+  redirect("/dashboard");
 }

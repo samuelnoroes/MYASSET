@@ -1,46 +1,46 @@
-import { auth } from "./actions";
+import Link from "next/link";
+import { login, signup } from "./actions";
 
 export default function LoginPage() {
   return (
-    <main className="min-h-screen bg-[#f4f1ea] flex items-center justify-center px-6">
+    <main className="min-h-screen flex items-center justify-center px-6 bg-cream">
       <div className="w-full max-w-md">
-        <div className="text-center mb-10">
-          <h1 className="text-5xl font-serif text-[#1f1f1f]">
-            My<span className="italic text-[#2f5a46]">Asset</span>
-          </h1>
-
-          <p className="mt-8 text-xs tracking-[0.4em] text-[#8a9a90] uppercase">
+        <div className="text-center mb-12">
+          <Link href="/" className="inline-block mb-8">
+            <h1 className="font-display text-5xl text-ink">
+              My<span className="italic text-forest">Asset</span>
+            </h1>
+          </Link>
+          <p className="text-xs tracking-[0.3em] uppercase text-forest/60">
             Acesse sua conta
           </p>
         </div>
 
-        <form action={auth} className="space-y-5">
+        <form className="space-y-5">
           <div>
             <label
               htmlFor="email"
-              className="block mb-2 text-xs uppercase tracking-wider text-[#7d7d7d]"
+              className="block text-xs uppercase tracking-wider text-ink/60 mb-2"
             >
               E-mail
             </label>
-
             <input
               id="email"
               name="email"
               type="email"
               required
               autoComplete="email"
-              className="w-full h-14 px-4 bg-white border border-[#2f5a46] text-[#1f1f1f] outline-none focus:ring-1 focus:ring-[#2f5a46]"
+              className="w-full px-4 py-3 bg-white border border-ink/10 focus:border-forest focus:outline-none transition-colors text-ink"
             />
           </div>
 
           <div>
             <label
               htmlFor="password"
-              className="block mb-2 text-xs uppercase tracking-wider text-[#7d7d7d]"
+              className="block text-xs uppercase tracking-wider text-ink/60 mb-2"
             >
               Senha
             </label>
-
             <input
               id="password"
               name="password"
@@ -48,29 +48,21 @@ export default function LoginPage() {
               required
               minLength={6}
               autoComplete="current-password"
-              className="w-full h-14 px-4 bg-white border border-[#d8d3ca] text-[#1f1f1f] outline-none focus:ring-1 focus:ring-[#2f5a46]"
+              className="w-full px-4 py-3 bg-white border border-ink/10 focus:border-forest focus:outline-none transition-colors text-ink"
             />
-
-            <p className="mt-2 text-xs text-[#a0a0a0]">
-              Mínimo 6 caracteres
-            </p>
+            <p className="text-[10px] text-ink/40 mt-2">Mínimo 6 caracteres</p>
           </div>
 
-          <div className="pt-5 space-y-3">
+          <div className="flex flex-col gap-3 pt-4">
             <button
-              type="submit"
-              name="mode"
-              value="login"
-              className="w-full h-14 bg-[#2f5a46] text-white text-xs uppercase tracking-widest font-medium hover:bg-[#1f1f1f] transition-colors"
+              formAction={login}
+              className="w-full py-3 bg-forest text-cream font-medium tracking-wider uppercase text-xs hover:bg-ink transition-colors"
             >
               Entrar
             </button>
-
             <button
-              type="submit"
-              name="mode"
-              value="signup"
-              className="w-full h-14 bg-transparent border border-[#d8d3ca] text-[#1f1f1f] text-xs uppercase tracking-widest font-medium hover:border-[#2f5a46] hover:text-[#2f5a46] transition-colors"
+              formAction={signup}
+              className="w-full py-3 bg-transparent border border-ink/20 text-ink font-medium tracking-wider uppercase text-xs hover:border-forest hover:text-forest transition-colors"
             >
               Criar conta
             </button>

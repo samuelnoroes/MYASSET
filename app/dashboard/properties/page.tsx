@@ -3,24 +3,15 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { deleteProperty } from "./actions";
 
-type Property = {
-  id: string;
-  name: string;
-  property_type: string | null;
-  address: string | null;
-  city: string | null;
-  state: string | null;
-  acquisition_value: number | null;
-  current_value: number | null;
-  monthly_rent: number | null;
-  created_at: string;
+const PROPERTY_TYPE_LABELS: Record<string, string> = {
+  residential: "Residencial",
+  commercial: "Comercial",
+  land: "Terreno",
+  mixed: "Misto",
 };
 
-function formatCurrency(value: number | null) {
-  if (value === null || value === undefined) {
-    return "—";
-  }
-
+function formatCurrency(value: number | null): string {
+  if (value === null || value === undefined) return "—";
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",
     currency: "BRL",
@@ -29,7 +20,6 @@ function formatCurrency(value: number | null) {
 
 export default async function PropertiesPage() {
   const supabase = createClient();
-
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -41,138 +31,132 @@ export default async function PropertiesPage() {
   const { data: properties, error } = await supabase
     .from("properties")
     .select("*")
+    .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
   if (error) {
-    redirect(`/error?message=${encodeURIComponent(error.message)}`);
+    redirect("/error?message=" + encodeURIComponent(error.message));
   }
 
-  const propertyList = (properties || []) as Property[];
-
   return (
-    <main className="min-h-screen bg-[#f4f1ea] px-6 py-10">
-      <div className="mx-auto max-w-6xl">
-        <header className="mb-10 flex flex-col gap-6 border-b border-[#d8d3ca] pb-8 md:flex-row md:items-end md:justify-between">
-          <div>
-            <Link
-              href="/dashboard"
-              className="mb-6 inline-block text-xs uppercase tracking-[0.25em] text-[#7d7d7d] hover:text-[#2f5a46]"
-            >
-              Dashboard
-            </Link>
+    <main className="min-h-screen bg-cream">
+      {/* Header */}
+      <header className="border-b border-ink/10">
+        <div className="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
+          <Link href="/dashboard" className="font-display text-2xl text-ink">
+            My<span className="italic text-forest">Asset</span>
+          </Link>
+          <Link
+            href="/dashboard"
+            className="text-xs uppercase tracking-wider text-ink/60 hover:text-forest transition-colors"
+          >
+            ← Dashboard
+          </Link>
+        </div>
+      </header>
 
-            <p className="mb-3 text-xs uppercase tracking-[0.35em] text-[#8a9a90]">
+      <div className="max-w-6xl mx-auto px-6 py-12">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10">
+          <div>
+            <p className="text-xs tracking-[0.3em] uppercase text-forest/60 mb-3">
               Portfólio
             </p>
-
-            <h1 className="font-serif text-5xl text-[#1f1f1f]">
-              Seus imóveis
-            </h1>
-
-            <p className="mt-4 text-sm text-[#7d7d7d]">
-              {propertyList.length} imóvel
-              {propertyList.length === 1 ? "" : "s"} cadastrado
-              {propertyList.length === 1 ? "" : "s"}.
+            <h1 className="font-display text-4xl text-ink">Seus imóveis</h1>
+            <p className="text-sm text-ink/60 mt-2">
+              {properties?.length ?? 0}{" "}
+              {properties?.length === 1
+                ? "imóvel cadastrado"
+                : "imóveis cadastrados"}
             </p>
           </div>
-
           <Link
             href="/dashboard/properties/new"
-            className="flex h-12 items-center justify-center bg-[#2f5a46] px-6 text-xs font-medium uppercase tracking-widest text-white transition-colors hover:bg-[#1f1f1f]"
+            className="self-start md:self-end px-6 py-3 bg-forest text-cream font-medium tracking-wider uppercase text-xs hover:bg-ink transition-colors"
           >
-            Cadastrar imóvel
+            + Novo imóvel
           </Link>
-        </header>
+        </div>
 
-        {propertyList.length === 0 ? (
-          <section className="border border-dashed border-[#d8d3ca] px-8 py-20 text-center">
-            <p className="mb-3 text-xs uppercase tracking-[0.35em] text-[#8a9a90]">
+        {(!properties || properties.length === 0) && (
+          <div className="border border-dashed border-ink/15 p-12 text-center">
+            <p className="text-xs tracking-[0.3em] uppercase text-ink/40 mb-3">
               Nenhum imóvel
             </p>
-
-            <h2 className="font-serif text-3xl text-[#1f1f1f]">
-              Comece cadastrando seu primeiro imóvel
-            </h2>
-
-            <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-[#7d7d7d]">
-              Depois do cadastro, você poderá acompanhar valor patrimonial,
-              aluguel mensal e indicadores do portfólio.
+            <p className="font-display text-2xl text-ink/70 mb-3">
+              Comece adicionando seu primeiro ativo
             </p>
-
+            <p className="text-sm text-ink/50 max-w-md mx-auto mb-6">
+              Cadastre cada imóvel do seu portfólio pra acompanhar yield, ROI e
+              fluxo de caixa.
+            </p>
             <Link
               href="/dashboard/properties/new"
-              className="mt-8 inline-flex h-12 items-center justify-center bg-[#2f5a46] px-6 text-xs font-medium uppercase tracking-widest text-white transition-colors hover:bg-[#1f1f1f]"
+              className="inline-block px-6 py-3 bg-forest text-cream font-medium tracking-wider uppercase text-xs hover:bg-ink transition-colors"
             >
               Cadastrar imóvel
             </Link>
-          </section>
-        ) : (
-          <section className="grid gap-5">
-            {propertyList.map((property) => (
-              <article
+          </div>
+        )}
+
+        {properties && properties.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {properties.map((property) => (
+              <div
                 key={property.id}
-                className="border border-[#d8d3ca] bg-[#f8f5ef] p-6"
+                className="bg-white border border-ink/10 p-6"
               >
-                <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
-                  <div>
-                    <p className="mb-2 text-xs uppercase tracking-[0.25em] text-[#8a9a90]">
-                      {property.property_type || "Imóvel"}
+                <div className="flex items-start justify-between mb-4 gap-4">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] tracking-[0.25em] uppercase text-forest/60 mb-1">
+                      {PROPERTY_TYPE_LABELS[property.property_type] ||
+                        property.property_type}
                     </p>
-
-                    <h2 className="font-serif text-3xl text-[#1f1f1f]">
+                    <h3 className="font-display text-2xl text-ink leading-tight mb-1 truncate">
                       {property.name}
-                    </h2>
-
-                    <p className="mt-3 text-sm text-[#7d7d7d]">
-                      {[property.address, property.city, property.state]
-                        .filter(Boolean)
-                        .join(" — ") || "Endereço não informado"}
+                    </h3>
+                    <p className="text-xs text-ink/40 font-mono">
+                      @{property.nickname}
                     </p>
                   </div>
-
                   <form action={deleteProperty}>
                     <input type="hidden" name="id" value={property.id} />
-
                     <button
                       type="submit"
-                      className="text-xs uppercase tracking-[0.25em] text-[#a05a4f] hover:text-[#1f1f1f]"
+                      className="text-[10px] uppercase tracking-wider text-ink/30 hover:text-red-700 transition-colors whitespace-nowrap"
+                      title="Remover imóvel"
                     >
-                      Excluir
+                      Remover
                     </button>
                   </form>
                 </div>
 
-                <div className="mt-8 grid gap-4 border-t border-[#d8d3ca] pt-6 md:grid-cols-3">
-                  <div>
-                    <p className="mb-2 text-xs uppercase tracking-wider text-[#8a9a90]">
-                      Compra
-                    </p>
-                    <p className="text-lg text-[#1f1f1f]">
-                      {formatCurrency(property.acquisition_value)}
-                    </p>
-                  </div>
+                {(property.city || property.state) && (
+                  <p className="text-xs text-ink/50 mb-4">
+                    {[property.city, property.state].filter(Boolean).join(" — ")}
+                  </p>
+                )}
 
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-ink/10">
                   <div>
-                    <p className="mb-2 text-xs uppercase tracking-wider text-[#8a9a90]">
+                    <p className="text-[10px] uppercase tracking-wider text-ink/40 mb-1">
                       Valor atual
                     </p>
-                    <p className="text-lg text-[#1f1f1f]">
+                    <p className="text-sm text-ink font-medium">
                       {formatCurrency(property.current_value)}
                     </p>
                   </div>
-
                   <div>
-                    <p className="mb-2 text-xs uppercase tracking-wider text-[#8a9a90]">
+                    <p className="text-[10px] uppercase tracking-wider text-ink/40 mb-1">
                       Aluguel mensal
                     </p>
-                    <p className="text-lg text-[#1f1f1f]">
+                    <p className="text-sm text-ink font-medium">
                       {formatCurrency(property.monthly_rent)}
                     </p>
                   </div>
                 </div>
-              </article>
+              </div>
             ))}
-          </section>
+          </div>
         )}
       </div>
     </main>
