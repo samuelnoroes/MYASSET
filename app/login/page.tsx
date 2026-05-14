@@ -1,4 +1,4 @@
-import { login, signup } from "./actions";
+import { auth } from "./actions";
 
 export default function LoginPage() {
   return (
@@ -14,7 +14,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <form className="space-y-5">
+        <form action={auth} className="space-y-5">
           <div>
             <label
               htmlFor="email"
@@ -59,7 +59,8 @@ export default function LoginPage() {
           <div className="pt-5 space-y-3">
             <button
               type="submit"
-              formAction={login}
+              name="mode"
+              value="login"
               className="w-full h-14 bg-[#2f5a46] text-white text-xs uppercase tracking-widest font-medium hover:bg-[#1f1f1f] transition-colors"
             >
               Entrar
@@ -67,7 +68,8 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              formAction={signup}
+              name="mode"
+              value="signup"
               className="w-full h-14 bg-transparent border border-[#d8d3ca] text-[#1f1f1f] text-xs uppercase tracking-widest font-medium hover:border-[#2f5a46] hover:text-[#2f5a46] transition-colors"
             >
               Criar conta
