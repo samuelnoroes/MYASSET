@@ -15,7 +15,7 @@ Plataforma de gestão de portfólio imobiliário para investidores.
 
 - [x] Sprint 0 — Schema do banco no Supabase
 - [x] Sprint 1a — Landing inicial deployada
-- [ ] Sprint 1b — Auth (login/cadastro)
+- [x] Sprint 1b — Auth com email/senha funcionando
 - [ ] Sprint 1c — Cadastro de imóveis
 - [ ] Sprint 2 — Dashboard com KPIs
 - [ ] Sprint 3 — Lançamento de transações
@@ -37,3 +37,8 @@ Acesse `http://localhost:3000`.
 ## Deploy
 
 Deploy automático via Vercel a cada push na branch `main`.
+
+## Variáveis de ambiente necessárias
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
