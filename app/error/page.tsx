@@ -1,22 +1,34 @@
 import Link from "next/link";
 
-export default function ErrorPage() {
+type ErrorPageProps = {
+  searchParams: {
+    message?: string;
+  };
+};
+
+export default function ErrorPage({ searchParams }: ErrorPageProps) {
+  const message = searchParams.message
+    ? decodeURIComponent(searchParams.message)
+    : "Erro não identificado.";
+
   return (
-    <main className="min-h-screen flex items-center justify-center px-6 bg-cream">
-      <div className="text-center max-w-md">
-        <p className="text-xs tracking-[0.3em] uppercase text-forest/60 mb-6">
+    <main className="min-h-screen bg-[#f4f1ea] flex items-center justify-center px-6">
+      <div className="max-w-xl text-center">
+        <p className="mb-6 text-xs uppercase tracking-[0.35em] text-[#8a9a90]">
           Algo deu errado
         </p>
-        <h1 className="font-display text-5xl text-ink mb-6">
+
+        <h1 className="font-serif text-5xl text-[#1f1f1f]">
           Não foi possível continuar
         </h1>
-        <p className="text-sm text-ink/70 mb-10 leading-relaxed">
-          Verifique suas credenciais ou tente novamente em alguns instantes. Se
-          o problema persistir, talvez o e-mail já esteja cadastrado.
+
+        <p className="mt-6 text-sm leading-6 text-[#7d7d7d]">
+          {message}
         </p>
+
         <Link
           href="/login"
-          className="inline-block px-8 py-4 bg-forest text-cream font-medium tracking-wider uppercase text-xs hover:bg-ink transition-colors"
+          className="mt-10 inline-flex h-14 items-center justify-center bg-[#2f5a46] px-8 text-xs font-medium uppercase tracking-widest text-white transition-colors hover:bg-[#1f1f1f]"
         >
           Voltar ao login
         </Link>
