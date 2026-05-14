@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { createProperty } from "../actions";
+import PropertyFormFields from "../_components/PropertyFormFields";
 
 export default async function NewPropertyPage() {
   const supabase = createClient();
@@ -15,7 +16,6 @@ export default async function NewPropertyPage() {
 
   return (
     <main className="min-h-screen bg-cream">
-      {/* Header */}
       <header className="border-b border-ink/10">
         <div className="max-w-3xl mx-auto px-6 py-5 flex items-center justify-between">
           <Link href="/dashboard" className="font-display text-2xl text-ink">
@@ -36,218 +36,14 @@ export default async function NewPropertyPage() {
             Novo imóvel
           </p>
           <h1 className="font-display text-4xl text-ink">Cadastre um ativo</h1>
+          <p className="text-sm text-ink/60 mt-3">
+            Selecione a modalidade correta pra ver os campos relevantes.
+          </p>
         </div>
 
         <form action={createProperty} className="space-y-10">
-          {/* Identificação */}
-          <section className="space-y-5">
-            <h2 className="text-xs tracking-[0.3em] uppercase text-ink/40 pb-2 border-b border-ink/10">
-              Identificação
-            </h2>
+          <PropertyFormFields />
 
-            <div>
-              <label
-                htmlFor="name"
-                className="block text-xs uppercase tracking-wider text-ink/60 mb-2"
-              >
-                Nome completo <span className="text-forest">*</span>
-              </label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                required
-                placeholder="Ex: Apartamento na Aldeota Tower"
-                className="w-full px-4 py-3 bg-white border border-ink/10 focus:border-forest focus:outline-none transition-colors text-ink"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="nickname"
-                className="block text-xs uppercase tracking-wider text-ink/60 mb-2"
-              >
-                Apelido curto <span className="text-forest">*</span>
-              </label>
-              <input
-                id="nickname"
-                name="nickname"
-                type="text"
-                required
-                pattern="[a-z0-9]+"
-                placeholder="Ex: aldeota101"
-                className="w-full px-4 py-3 bg-white border border-ink/10 focus:border-forest focus:outline-none transition-colors text-ink"
-              />
-              <p className="text-[10px] text-ink/40 mt-2">
-                Letras minúsculas e números, sem espaços. Vai ser usado pra
-                identificar o imóvel no WhatsApp.
-              </p>
-            </div>
-
-            <div>
-              <label
-                htmlFor="property_type"
-                className="block text-xs uppercase tracking-wider text-ink/60 mb-2"
-              >
-                Tipo <span className="text-forest">*</span>
-              </label>
-              <select
-                id="property_type"
-                name="property_type"
-                required
-                defaultValue="residential"
-                className="w-full px-4 py-3 bg-white border border-ink/10 focus:border-forest focus:outline-none transition-colors text-ink"
-              >
-                <option value="residential">Residencial</option>
-                <option value="commercial">Comercial</option>
-                <option value="land">Terreno</option>
-                <option value="mixed">Misto</option>
-              </select>
-            </div>
-          </section>
-
-          {/* Localização */}
-          <section className="space-y-5">
-            <h2 className="text-xs tracking-[0.3em] uppercase text-ink/40 pb-2 border-b border-ink/10">
-              Localização
-            </h2>
-
-            <div>
-              <label
-                htmlFor="address"
-                className="block text-xs uppercase tracking-wider text-ink/60 mb-2"
-              >
-                Endereço
-              </label>
-              <input
-                id="address"
-                name="address"
-                type="text"
-                placeholder="Rua, número, complemento"
-                className="w-full px-4 py-3 bg-white border border-ink/10 focus:border-forest focus:outline-none transition-colors text-ink"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              <div className="md:col-span-2">
-                <label
-                  htmlFor="city"
-                  className="block text-xs uppercase tracking-wider text-ink/60 mb-2"
-                >
-                  Cidade
-                </label>
-                <input
-                  id="city"
-                  name="city"
-                  type="text"
-                  className="w-full px-4 py-3 bg-white border border-ink/10 focus:border-forest focus:outline-none transition-colors text-ink"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="state"
-                  className="block text-xs uppercase tracking-wider text-ink/60 mb-2"
-                >
-                  UF
-                </label>
-                <input
-                  id="state"
-                  name="state"
-                  type="text"
-                  maxLength={2}
-                  placeholder="CE"
-                  className="w-full px-4 py-3 bg-white border border-ink/10 focus:border-forest focus:outline-none transition-colors text-ink uppercase"
-                />
-              </div>
-            </div>
-          </section>
-
-          {/* Financeiro */}
-          <section className="space-y-5">
-            <h2 className="text-xs tracking-[0.3em] uppercase text-ink/40 pb-2 border-b border-ink/10">
-              Financeiro
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div>
-                <label
-                  htmlFor="acquisition_value"
-                  className="block text-xs uppercase tracking-wider text-ink/60 mb-2"
-                >
-                  Valor de compra (R$)
-                </label>
-                <input
-                  id="acquisition_value"
-                  name="acquisition_value"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0,00"
-                  className="w-full px-4 py-3 bg-white border border-ink/10 focus:border-forest focus:outline-none transition-colors text-ink"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="acquisition_date"
-                  className="block text-xs uppercase tracking-wider text-ink/60 mb-2"
-                >
-                  Data de compra
-                </label>
-                <input
-                  id="acquisition_date"
-                  name="acquisition_date"
-                  type="date"
-                  className="w-full px-4 py-3 bg-white border border-ink/10 focus:border-forest focus:outline-none transition-colors text-ink"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div>
-                <label
-                  htmlFor="current_value"
-                  className="block text-xs uppercase tracking-wider text-ink/60 mb-2"
-                >
-                  Valor atual (R$)
-                </label>
-                <input
-                  id="current_value"
-                  name="current_value"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0,00"
-                  className="w-full px-4 py-3 bg-white border border-ink/10 focus:border-forest focus:outline-none transition-colors text-ink"
-                />
-                <p className="text-[10px] text-ink/40 mt-2">
-                  Valor de mercado estimado hoje
-                </p>
-              </div>
-              <div>
-                <label
-                  htmlFor="monthly_rent"
-                  className="block text-xs uppercase tracking-wider text-ink/60 mb-2"
-                >
-                  Aluguel esperado (R$)
-                </label>
-                <input
-                  id="monthly_rent"
-                  name="monthly_rent"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0,00"
-                  className="w-full px-4 py-3 bg-white border border-ink/10 focus:border-forest focus:outline-none transition-colors text-ink"
-                />
-                <p className="text-[10px] text-ink/40 mt-2">
-                  Aluguel contratual mensal. Receitas reais serão lançadas em
-                  transações.
-                </p>
-              </div>
-            </div>
-          </section>
-
-          {/* Botões */}
           <div className="flex flex-col gap-3 pt-4">
             <button
               type="submit"
