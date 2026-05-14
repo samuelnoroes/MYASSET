@@ -8,18 +8,24 @@ function err(message: string): never {
   redirect("/error?message=" + encodeURIComponent(message));
 }
 
-export async function createProperty(formData: FormData) {
-  const supabase = createClient();
+// ============================================================
+// Helpers de leitura/validação compartilhados entre create/update
+// ============================================================
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+type PropertyInput = {
+  name: string;
+  nickname: string;
+  property_type: string;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  acquisition_value: number | null;
+  acquisition_date: string | null;
+  current_value: number | null;
+  monthly_rent: number | null;
+};
 
-  if (!user) {
-    redirect("/login");
-  }
-
-  // Lê e valida os campos
+function parsePropertyForm(formData: FormData): PropertyInput {
   const name = String(formData.get("name") || "").trim();
   const nickname = String(formData.get("nickname") || "")
     .trim()
@@ -50,8 +56,7 @@ export async function createProperty(formData: FormData) {
     err("Tipo de imóvel inválido.");
   }
 
-  const property = {
-    user_id: user.id,
+  return {
     name,
     nickname,
     property_type: propertyType,
@@ -64,6 +69,27 @@ export async function createProperty(formData: FormData) {
     acquisition_date: acquisitionDateRaw ? String(acquisitionDateRaw) : null,
     current_value: currentValueRaw ? Number(currentValueRaw) : null,
     monthly_rent: monthlyRentRaw ? Number(monthlyRentRaw) : null,
+  };
+}
+
+// ============================================================
+// CREATE
+// ============================================================
+
+export async function createProperty(formData: FormData) {
+  const supabase = createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const property = {
+    user_id: user.id,
+    ...parsePropertyForm(formData),
   };
 
   const { error } = await supabase.from("properties").insert(property);
@@ -79,6 +105,49 @@ export async function createProperty(formData: FormData) {
   revalidatePath("/dashboard/properties");
   redirect("/dashboard/properties");
 }
+
+// ============================================================
+// UPDATE
+// ============================================================
+
+export async function updateProperty(formData: FormData) {
+  const supabase = createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const id = String(formData.get("id") || "");
+  if (!id) err("ID do imóvel não fornecido.");
+
+  const updates = parsePropertyForm(formData);
+
+  const { error } = await supabase
+    .from("properties")
+    .update(updates)
+    .eq("id", id)
+    .eq("user_id", user.id);
+
+  if (error) {
+    if (error.code === "23505") {
+      err("Já existe outro imóvel com esse apelido. Escolha outro.");
+    }
+    err(error.message);
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/properties");
+  revalidatePath(`/dashboard/properties/${id}/edit`);
+  redirect("/dashboard/properties");
+}
+
+// ============================================================
+// DELETE
+// ============================================================
 
 export async function deleteProperty(formData: FormData) {
   const supabase = createClient();

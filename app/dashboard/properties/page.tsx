@@ -118,16 +118,24 @@ export default async function PropertiesPage() {
                       @{property.nickname}
                     </p>
                   </div>
-                  <form action={deleteProperty}>
-                    <input type="hidden" name="id" value={property.id} />
-                    <button
-                      type="submit"
-                      className="text-[10px] uppercase tracking-wider text-ink/30 hover:text-red-700 transition-colors whitespace-nowrap"
-                      title="Remover imóvel"
+                  <div className="flex items-center gap-4 shrink-0">
+                    <Link
+                      href={`/dashboard/properties/${property.id}/edit`}
+                      className="text-[10px] uppercase tracking-wider text-ink/40 hover:text-forest transition-colors whitespace-nowrap"
                     >
-                      Remover
-                    </button>
-                  </form>
+                      Editar
+                    </Link>
+                    <form action={deleteProperty}>
+                      <input type="hidden" name="id" value={property.id} />
+                      <button
+                        type="submit"
+                        className="text-[10px] uppercase tracking-wider text-ink/30 hover:text-red-700 transition-colors whitespace-nowrap"
+                        title="Remover imóvel"
+                      >
+                        Remover
+                      </button>
+                    </form>
+                  </div>
                 </div>
 
                 {(property.city || property.state) && (
@@ -147,7 +155,7 @@ export default async function PropertiesPage() {
                   </div>
                   <div>
                     <p className="text-[10px] uppercase tracking-wider text-ink/40 mb-1">
-                      Aluguel mensal
+                      Aluguel esperado
                     </p>
                     <p className="text-sm text-ink font-medium">
                       {formatCurrency(property.monthly_rent)}

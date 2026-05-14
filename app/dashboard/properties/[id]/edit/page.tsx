@@ -1,9 +1,17 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
-import { createProperty } from "../actions";
+import { updateProperty } from "../../actions";
 
-export default async function NewPropertyPage() {
+type EditPropertyPageProps = {
+  params: {
+    id: string;
+  };
+};
+
+export default async function EditPropertyPage({
+  params,
+}: EditPropertyPageProps) {
   const supabase = createClient();
   const {
     data: { user },
@@ -11,6 +19,17 @@ export default async function NewPropertyPage() {
 
   if (!user) {
     redirect("/login");
+  }
+
+  const { data: property, error } = await supabase
+    .from("properties")
+    .select("*")
+    .eq("id", params.id)
+    .eq("user_id", user.id)
+    .single();
+
+  if (error || !property) {
+    notFound();
   }
 
   return (
@@ -33,12 +52,14 @@ export default async function NewPropertyPage() {
       <div className="max-w-3xl mx-auto px-6 py-12">
         <div className="mb-10">
           <p className="text-xs tracking-[0.3em] uppercase text-forest/60 mb-3">
-            Novo imóvel
+            Editar imóvel
           </p>
-          <h1 className="font-display text-4xl text-ink">Cadastre um ativo</h1>
+          <h1 className="font-display text-4xl text-ink">{property.name}</h1>
         </div>
 
-        <form action={createProperty} className="space-y-10">
+        <form action={updateProperty} className="space-y-10">
+          <input type="hidden" name="id" value={property.id} />
+
           {/* Identificação */}
           <section className="space-y-5">
             <h2 className="text-xs tracking-[0.3em] uppercase text-ink/40 pb-2 border-b border-ink/10">
@@ -57,7 +78,7 @@ export default async function NewPropertyPage() {
                 name="name"
                 type="text"
                 required
-                placeholder="Ex: Apartamento na Aldeota Tower"
+                defaultValue={property.name}
                 className="w-full px-4 py-3 bg-white border border-ink/10 focus:border-forest focus:outline-none transition-colors text-ink"
               />
             </div>
@@ -75,7 +96,7 @@ export default async function NewPropertyPage() {
                 type="text"
                 required
                 pattern="[a-z0-9]+"
-                placeholder="Ex: aldeota101"
+                defaultValue={property.nickname}
                 className="w-full px-4 py-3 bg-white border border-ink/10 focus:border-forest focus:outline-none transition-colors text-ink"
               />
               <p className="text-[10px] text-ink/40 mt-2">
@@ -95,7 +116,7 @@ export default async function NewPropertyPage() {
                 id="property_type"
                 name="property_type"
                 required
-                defaultValue="residential"
+                defaultValue={property.property_type}
                 className="w-full px-4 py-3 bg-white border border-ink/10 focus:border-forest focus:outline-none transition-colors text-ink"
               >
                 <option value="residential">Residencial</option>
@@ -123,7 +144,7 @@ export default async function NewPropertyPage() {
                 id="address"
                 name="address"
                 type="text"
-                placeholder="Rua, número, complemento"
+                defaultValue={property.address || ""}
                 className="w-full px-4 py-3 bg-white border border-ink/10 focus:border-forest focus:outline-none transition-colors text-ink"
               />
             </div>
@@ -140,6 +161,7 @@ export default async function NewPropertyPage() {
                   id="city"
                   name="city"
                   type="text"
+                  defaultValue={property.city || ""}
                   className="w-full px-4 py-3 bg-white border border-ink/10 focus:border-forest focus:outline-none transition-colors text-ink"
                 />
               </div>
@@ -155,7 +177,7 @@ export default async function NewPropertyPage() {
                   name="state"
                   type="text"
                   maxLength={2}
-                  placeholder="CE"
+                  defaultValue={property.state || ""}
                   className="w-full px-4 py-3 bg-white border border-ink/10 focus:border-forest focus:outline-none transition-colors text-ink uppercase"
                 />
               </div>
@@ -182,7 +204,7 @@ export default async function NewPropertyPage() {
                   type="number"
                   step="0.01"
                   min="0"
-                  placeholder="0,00"
+                  defaultValue={property.acquisition_value || ""}
                   className="w-full px-4 py-3 bg-white border border-ink/10 focus:border-forest focus:outline-none transition-colors text-ink"
                 />
               </div>
@@ -197,6 +219,7 @@ export default async function NewPropertyPage() {
                   id="acquisition_date"
                   name="acquisition_date"
                   type="date"
+                  defaultValue={property.acquisition_date || ""}
                   className="w-full px-4 py-3 bg-white border border-ink/10 focus:border-forest focus:outline-none transition-colors text-ink"
                 />
               </div>
@@ -216,7 +239,7 @@ export default async function NewPropertyPage() {
                   type="number"
                   step="0.01"
                   min="0"
-                  placeholder="0,00"
+                  defaultValue={property.current_value || ""}
                   className="w-full px-4 py-3 bg-white border border-ink/10 focus:border-forest focus:outline-none transition-colors text-ink"
                 />
                 <p className="text-[10px] text-ink/40 mt-2">
@@ -236,7 +259,7 @@ export default async function NewPropertyPage() {
                   type="number"
                   step="0.01"
                   min="0"
-                  placeholder="0,00"
+                  defaultValue={property.monthly_rent || ""}
                   className="w-full px-4 py-3 bg-white border border-ink/10 focus:border-forest focus:outline-none transition-colors text-ink"
                 />
                 <p className="text-[10px] text-ink/40 mt-2">
@@ -253,7 +276,7 @@ export default async function NewPropertyPage() {
               type="submit"
               className="w-full py-4 bg-forest text-cream font-medium tracking-wider uppercase text-xs hover:bg-ink transition-colors"
             >
-              Cadastrar imóvel
+              Salvar alterações
             </button>
             <Link
               href="/dashboard/properties"
