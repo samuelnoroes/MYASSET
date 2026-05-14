@@ -103,7 +103,7 @@ export default async function PropertiesPage() {
             {properties.map((property) => (
               <div
                 key={property.id}
-                className="bg-white border border-ink/10 p-6"
+                className="bg-white border border-ink/10 p-6 group"
               >
                 <div className="flex items-start justify-between mb-4 gap-4">
                   <div className="flex-1 min-w-0">
@@ -111,9 +111,13 @@ export default async function PropertiesPage() {
                       {PROPERTY_TYPE_LABELS[property.property_type] ||
                         property.property_type}
                     </p>
-                    <h3 className="font-display text-2xl text-ink leading-tight mb-1 truncate">
+                    {/* Nome clicável → página de detalhe */}
+                    <Link
+                      href={`/dashboard/properties/${property.id}`}
+                      className="block font-display text-2xl text-ink leading-tight mb-1 truncate hover:text-forest transition-colors"
+                    >
                       {property.name}
-                    </h3>
+                    </Link>
                     <p className="text-xs text-ink/40 font-mono">
                       @{property.nickname}
                     </p>
@@ -140,7 +144,9 @@ export default async function PropertiesPage() {
 
                 {(property.city || property.state) && (
                   <p className="text-xs text-ink/50 mb-4">
-                    {[property.city, property.state].filter(Boolean).join(" — ")}
+                    {[property.city, property.state]
+                      .filter(Boolean)
+                      .join(" — ")}
                   </p>
                 )}
 
@@ -161,6 +167,16 @@ export default async function PropertiesPage() {
                       {formatCurrency(property.monthly_rent)}
                     </p>
                   </div>
+                </div>
+
+                {/* Link pra detalhe */}
+                <div className="mt-4 pt-4 border-t border-ink/5">
+                  <Link
+                    href={`/dashboard/properties/${property.id}`}
+                    className="text-[10px] uppercase tracking-wider text-forest/60 hover:text-forest transition-colors"
+                  >
+                    Ver transações →
+                  </Link>
                 </div>
               </div>
             ))}
