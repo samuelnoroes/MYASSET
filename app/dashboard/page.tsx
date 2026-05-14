@@ -18,6 +18,17 @@ function formatPercent(value: number): string {
   }).format(value);
 }
 
+type AlertType = "warning" | "danger";
+
+type PropertyAlert = {
+  propertyId: string;
+  propertyName: string;
+  type: AlertType;
+  message: string;
+  detail: string;
+  daysOverdue: number;
+};
+
 export default async function DashboardPage() {
   const supabase = createClient();
 
@@ -52,14 +63,15 @@ export default async function DashboardPage() {
       ? (totalCurrentValue - totalAcquisitionValue) / totalAcquisitionValue
       : 0;
 
-  // Yield médio (apenas imóveis com current_value e monthly_rent preenchidos)
+  // Yield médio
   const propsWithYield = props.filter(
-    (p) => p.current_value && p.monthly_rent
+    (p) => p.current_value && p.monthly_rent && p.modality !== "under_construction"
   );
   const avgYield =
     propsWithYield.length > 0
       ? propsWithYield.reduce(
-          (acc, p) => acc + (Number(p.monthly_rent) / Number(p.current_value)) * 12,
+          (acc, p) =>
+            acc + (Number(p.monthly_rent) / Number(p.current_value)) * 12,
           0
         ) / propsWithYield.length
       : null;
@@ -81,7 +93,7 @@ export default async function DashboardPage() {
 
   const { data: monthlyTransactions } = await supabase
     .from("transactions")
-    .select("transaction_type, amount")
+    .select("transaction_type, amount, property_id")
     .eq("user_id", user.id)
     .gte("transaction_date", startOfMonth)
     .lt("transaction_date", endOfMonth);
@@ -97,6 +109,69 @@ export default async function DashboardPage() {
     .reduce((acc, t) => acc + Number(t.amount), 0);
 
   const totalMonthlySaldo = totalMonthlyIncome - totalMonthlyExpense;
+
+  // ── ALERTAS DE COBRANÇA E INADIMPLÊNCIA ─────────────────
+  // Só pra imóveis de locação anual com aluguel esperado
+  const today = now.getDate(); // dia do mês atual (1-31)
+
+  const alerts: PropertyAlert[] = [];
+
+  for (const p of props) {
+    // Só locação anual com aluguel esperado preenchido
+    if (p.modality !== "annual_lease" || !p.monthly_rent) continue;
+
+    // Dia de vencimento (padrão 5 se não preenchido)
+    const dueDay = p.lease_due_day ?? 5;
+
+    // Verificar se já tem receita lançada este mês pra este imóvel
+    const hasIncomeThisMonth = txs.some(
+      (t) => t.transaction_type === "income" && t.property_id === p.id
+    );
+
+    if (hasIncomeThisMonth) continue; // Aluguel já recebido, sem alerta
+
+    const daysUntilDue = dueDay - today; // negativo = passou do vencimento
+    const daysOverdue = today - dueDay;  // positivo = dias em atraso
+
+    if (daysUntilDue <= 5 && daysUntilDue > 0) {
+      // Falta 5 dias ou menos pro vencimento → alerta de cobrança
+      alerts.push({
+        propertyId: p.id,
+        propertyName: p.name,
+        type: "warning",
+        message: `Efetue a cobrança`,
+        detail: `Vence em ${daysUntilDue} ${daysUntilDue === 1 ? "dia" : "dias"} · ${formatCurrency(p.monthly_rent)} esperado`,
+        daysOverdue: 0,
+      });
+    } else if (daysUntilDue === 0) {
+      // Vence hoje
+      alerts.push({
+        propertyId: p.id,
+        propertyName: p.name,
+        type: "danger",
+        message: `Em atraso`,
+        detail: `Venceu hoje · ${formatCurrency(p.monthly_rent)} pendente`,
+        daysOverdue: 0,
+      });
+    } else if (daysOverdue > 0) {
+      // Passou do vencimento
+      alerts.push({
+        propertyId: p.id,
+        propertyName: p.name,
+        type: "danger",
+        message: `Em atraso`,
+        detail: `${daysOverdue} ${daysOverdue === 1 ? "dia" : "dias"} em atraso · ${formatCurrency(p.monthly_rent)} pendente`,
+        daysOverdue,
+      });
+    }
+  }
+
+  // Ordena: danger primeiro, depois por dias em atraso
+  alerts.sort((a, b) => {
+    if (a.type === "danger" && b.type !== "danger") return -1;
+    if (a.type !== "danger" && b.type === "danger") return 1;
+    return b.daysOverdue - a.daysOverdue;
+  });
 
   return (
     <main className="min-h-screen bg-cream">
@@ -129,7 +204,50 @@ export default async function DashboardPage() {
           <p className="text-ink/60 text-sm">{user.email}</p>
         </div>
 
-        {/* Grid patrimonial */}
+        {/* ── ALERTAS ───────────────────────────────────── */}
+        {alerts.length > 0 && (
+          <div className="mb-10 space-y-3">
+            <p className="text-[10px] uppercase tracking-[0.25em] text-ink/30 mb-3">
+              Atenção
+            </p>
+            {alerts.map((alert) => (
+              <Link
+                key={alert.propertyId}
+                href={`/dashboard/properties/${alert.propertyId}`}
+                className={`flex items-center justify-between px-5 py-4 border transition-colors group ${
+                  alert.type === "danger"
+                    ? "border-red-200 bg-red-50 hover:bg-red-100"
+                    : "border-amber-200 bg-amber-50 hover:bg-amber-100"
+                }`}
+              >
+                <div className="flex items-center gap-4">
+                  <span className="text-lg select-none">
+                    {alert.type === "danger" ? "🔴" : "🟡"}
+                  </span>
+                  <div>
+                    <p
+                      className={`text-xs uppercase tracking-wider font-medium ${
+                        alert.type === "danger"
+                          ? "text-red-700"
+                          : "text-amber-700"
+                      }`}
+                    >
+                      {alert.message}
+                    </p>
+                    <p className="text-sm text-ink/80 mt-0.5">
+                      <strong>{alert.propertyName}</strong> · {alert.detail}
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[10px] uppercase tracking-wider text-ink/40 group-hover:text-forest transition-colors shrink-0">
+                  Ver →
+                </span>
+              </Link>
+            ))}
+          </div>
+        )}
+
+        {/* ── PATRIMÔNIO ────────────────────────────────── */}
         <p className="text-[10px] uppercase tracking-[0.25em] text-ink/30 mb-2">
           Patrimônio
         </p>
@@ -157,9 +275,7 @@ export default async function DashboardPage() {
                 appreciation >= 0 ? "text-forest" : "text-red-700"
               }`}
             >
-              {totalAcquisitionValue > 0
-                ? formatPercent(appreciation)
-                : "—"}
+              {totalAcquisitionValue > 0 ? formatPercent(appreciation) : "—"}
             </p>
           </div>
           <div className="bg-cream p-6">
@@ -173,7 +289,7 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* Grid financeiro do mês */}
+        {/* ── MÊS CORRENTE ──────────────────────────────── */}
         <p className="text-[10px] uppercase tracking-[0.25em] text-ink/30 mb-2 mt-6">
           {monthName}
         </p>
@@ -208,7 +324,7 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* Portfólio */}
+        {/* ── PORTFÓLIO ─────────────────────────────────── */}
         <div className="flex items-end justify-between mb-8">
           <div>
             <p className="text-xs tracking-[0.3em] uppercase text-forest/60 mb-2">
@@ -237,8 +353,7 @@ export default async function DashboardPage() {
               Cadastre seu primeiro imóvel
             </p>
             <p className="text-sm text-ink/50 max-w-md mx-auto mb-6">
-              Você ainda não tem imóveis cadastrados. Adicione o primeiro pra
-              começar a acompanhar seu patrimônio.
+              Adicione imóveis de locação anual, temporada ou na planta.
             </p>
             <Link
               href="/dashboard/properties/new"
