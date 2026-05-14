@@ -1,17 +1,29 @@
 import Link from "next/link";
-import { redirect, notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
-import { updateProperty } from "../../actions";
+import { deleteProperty } from "./actions";
 
-type EditPropertyPageProps = {
-  params: {
-    id: string;
-  };
+const MODALITY_LABELS: Record<string, string> = {
+  annual_lease: "Locação anual",
+  short_stay: "Temporada",
+  under_construction: "Na planta",
 };
 
-export default async function EditPropertyPage({
-  params,
-}: EditPropertyPageProps) {
+const MODALITY_COLORS: Record<string, string> = {
+  annual_lease: "text-forest/60",
+  short_stay: "text-blue-600/60",
+  under_construction: "text-amber-600/60",
+};
+
+function formatCurrency(value: number | null): string {
+  if (value === null || value === undefined) return "—";
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(value);
+}
+
+export default async function PropertiesPage() {
   const supabase = createClient();
   const {
     data: { user },
@@ -21,271 +33,187 @@ export default async function EditPropertyPage({
     redirect("/login");
   }
 
-  const { data: property, error } = await supabase
+  const { data: properties, error } = await supabase
     .from("properties")
     .select("*")
-    .eq("id", params.id)
     .eq("user_id", user.id)
-    .single();
+    .order("created_at", { ascending: false });
 
-  if (error || !property) {
-    notFound();
+  if (error) {
+    redirect("/error?message=" + encodeURIComponent(error.message));
   }
 
   return (
     <main className="min-h-screen bg-cream">
-      {/* Header */}
       <header className="border-b border-ink/10">
-        <div className="max-w-3xl mx-auto px-6 py-5 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
           <Link href="/dashboard" className="font-display text-2xl text-ink">
             My<span className="italic text-forest">Asset</span>
           </Link>
           <Link
-            href="/dashboard/properties"
+            href="/dashboard"
             className="text-xs uppercase tracking-wider text-ink/60 hover:text-forest transition-colors"
           >
-            Cancelar
+            ← Dashboard
           </Link>
         </div>
       </header>
 
-      <div className="max-w-3xl mx-auto px-6 py-12">
-        <div className="mb-10">
-          <p className="text-xs tracking-[0.3em] uppercase text-forest/60 mb-3">
-            Editar imóvel
-          </p>
-          <h1 className="font-display text-4xl text-ink">{property.name}</h1>
+      <div className="max-w-6xl mx-auto px-6 py-12">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10">
+          <div>
+            <p className="text-xs tracking-[0.3em] uppercase text-forest/60 mb-3">
+              Portfólio
+            </p>
+            <h1 className="font-display text-4xl text-ink">Seus imóveis</h1>
+            <p className="text-sm text-ink/60 mt-2">
+              {properties?.length ?? 0}{" "}
+              {properties?.length === 1
+                ? "imóvel cadastrado"
+                : "imóveis cadastrados"}
+            </p>
+          </div>
+          <Link
+            href="/dashboard/properties/new"
+            className="self-start md:self-end px-6 py-3 bg-forest text-cream font-medium tracking-wider uppercase text-xs hover:bg-ink transition-colors"
+          >
+            + Novo imóvel
+          </Link>
         </div>
 
-        <form action={updateProperty} className="space-y-10">
-          <input type="hidden" name="id" value={property.id} />
-
-          {/* Identificação */}
-          <section className="space-y-5">
-            <h2 className="text-xs tracking-[0.3em] uppercase text-ink/40 pb-2 border-b border-ink/10">
-              Identificação
-            </h2>
-
-            <div>
-              <label
-                htmlFor="name"
-                className="block text-xs uppercase tracking-wider text-ink/60 mb-2"
-              >
-                Nome completo <span className="text-forest">*</span>
-              </label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                required
-                defaultValue={property.name}
-                className="w-full px-4 py-3 bg-white border border-ink/10 focus:border-forest focus:outline-none transition-colors text-ink"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="nickname"
-                className="block text-xs uppercase tracking-wider text-ink/60 mb-2"
-              >
-                Apelido curto <span className="text-forest">*</span>
-              </label>
-              <input
-                id="nickname"
-                name="nickname"
-                type="text"
-                required
-                pattern="[a-z0-9]+"
-                defaultValue={property.nickname}
-                className="w-full px-4 py-3 bg-white border border-ink/10 focus:border-forest focus:outline-none transition-colors text-ink"
-              />
-              <p className="text-[10px] text-ink/40 mt-2">
-                Letras minúsculas e números, sem espaços. Vai ser usado pra
-                identificar o imóvel no WhatsApp.
-              </p>
-            </div>
-
-            <div>
-              <label
-                htmlFor="property_type"
-                className="block text-xs uppercase tracking-wider text-ink/60 mb-2"
-              >
-                Tipo <span className="text-forest">*</span>
-              </label>
-              <select
-                id="property_type"
-                name="property_type"
-                required
-                defaultValue={property.property_type}
-                className="w-full px-4 py-3 bg-white border border-ink/10 focus:border-forest focus:outline-none transition-colors text-ink"
-              >
-                <option value="residential">Residencial</option>
-                <option value="commercial">Comercial</option>
-                <option value="land">Terreno</option>
-                <option value="mixed">Misto</option>
-              </select>
-            </div>
-          </section>
-
-          {/* Localização */}
-          <section className="space-y-5">
-            <h2 className="text-xs tracking-[0.3em] uppercase text-ink/40 pb-2 border-b border-ink/10">
-              Localização
-            </h2>
-
-            <div>
-              <label
-                htmlFor="address"
-                className="block text-xs uppercase tracking-wider text-ink/60 mb-2"
-              >
-                Endereço
-              </label>
-              <input
-                id="address"
-                name="address"
-                type="text"
-                defaultValue={property.address || ""}
-                className="w-full px-4 py-3 bg-white border border-ink/10 focus:border-forest focus:outline-none transition-colors text-ink"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              <div className="md:col-span-2">
-                <label
-                  htmlFor="city"
-                  className="block text-xs uppercase tracking-wider text-ink/60 mb-2"
-                >
-                  Cidade
-                </label>
-                <input
-                  id="city"
-                  name="city"
-                  type="text"
-                  defaultValue={property.city || ""}
-                  className="w-full px-4 py-3 bg-white border border-ink/10 focus:border-forest focus:outline-none transition-colors text-ink"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="state"
-                  className="block text-xs uppercase tracking-wider text-ink/60 mb-2"
-                >
-                  UF
-                </label>
-                <input
-                  id="state"
-                  name="state"
-                  type="text"
-                  maxLength={2}
-                  defaultValue={property.state || ""}
-                  className="w-full px-4 py-3 bg-white border border-ink/10 focus:border-forest focus:outline-none transition-colors text-ink uppercase"
-                />
-              </div>
-            </div>
-          </section>
-
-          {/* Financeiro */}
-          <section className="space-y-5">
-            <h2 className="text-xs tracking-[0.3em] uppercase text-ink/40 pb-2 border-b border-ink/10">
-              Financeiro
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div>
-                <label
-                  htmlFor="acquisition_value"
-                  className="block text-xs uppercase tracking-wider text-ink/60 mb-2"
-                >
-                  Valor de compra (R$)
-                </label>
-                <input
-                  id="acquisition_value"
-                  name="acquisition_value"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  defaultValue={property.acquisition_value || ""}
-                  className="w-full px-4 py-3 bg-white border border-ink/10 focus:border-forest focus:outline-none transition-colors text-ink"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="acquisition_date"
-                  className="block text-xs uppercase tracking-wider text-ink/60 mb-2"
-                >
-                  Data de compra
-                </label>
-                <input
-                  id="acquisition_date"
-                  name="acquisition_date"
-                  type="date"
-                  defaultValue={property.acquisition_date || ""}
-                  className="w-full px-4 py-3 bg-white border border-ink/10 focus:border-forest focus:outline-none transition-colors text-ink"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div>
-                <label
-                  htmlFor="current_value"
-                  className="block text-xs uppercase tracking-wider text-ink/60 mb-2"
-                >
-                  Valor atual (R$)
-                </label>
-                <input
-                  id="current_value"
-                  name="current_value"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  defaultValue={property.current_value || ""}
-                  className="w-full px-4 py-3 bg-white border border-ink/10 focus:border-forest focus:outline-none transition-colors text-ink"
-                />
-                <p className="text-[10px] text-ink/40 mt-2">
-                  Valor de mercado estimado hoje
-                </p>
-              </div>
-              <div>
-                <label
-                  htmlFor="monthly_rent"
-                  className="block text-xs uppercase tracking-wider text-ink/60 mb-2"
-                >
-                  Aluguel esperado (R$)
-                </label>
-                <input
-                  id="monthly_rent"
-                  name="monthly_rent"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  defaultValue={property.monthly_rent || ""}
-                  className="w-full px-4 py-3 bg-white border border-ink/10 focus:border-forest focus:outline-none transition-colors text-ink"
-                />
-                <p className="text-[10px] text-ink/40 mt-2">
-                  Aluguel contratual mensal. Receitas reais serão lançadas em
-                  transações.
-                </p>
-              </div>
-            </div>
-          </section>
-
-          {/* Botões */}
-          <div className="flex flex-col gap-3 pt-4">
-            <button
-              type="submit"
-              className="w-full py-4 bg-forest text-cream font-medium tracking-wider uppercase text-xs hover:bg-ink transition-colors"
-            >
-              Salvar alterações
-            </button>
+        {(!properties || properties.length === 0) && (
+          <div className="border border-dashed border-ink/15 p-12 text-center">
+            <p className="text-xs tracking-[0.3em] uppercase text-ink/40 mb-3">
+              Nenhum imóvel
+            </p>
+            <p className="font-display text-2xl text-ink/70 mb-3">
+              Comece adicionando seu primeiro ativo
+            </p>
+            <p className="text-sm text-ink/50 max-w-md mx-auto mb-6">
+              Cadastre imóveis de locação anual, temporada ou na planta.
+            </p>
             <Link
-              href="/dashboard/properties"
-              className="w-full py-4 bg-transparent border border-ink/20 text-ink font-medium tracking-wider uppercase text-xs hover:border-forest hover:text-forest transition-colors text-center"
+              href="/dashboard/properties/new"
+              className="inline-block px-6 py-3 bg-forest text-cream font-medium tracking-wider uppercase text-xs hover:bg-ink transition-colors"
             >
-              Cancelar
+              Cadastrar imóvel
             </Link>
           </div>
-        </form>
+        )}
+
+        {properties && properties.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {properties.map((property) => {
+              const modality = property.modality || "annual_lease";
+              const modalityLabel = MODALITY_LABELS[modality] || modality;
+              const modalityColor = MODALITY_COLORS[modality] || "text-ink/60";
+              const isPlanta = modality === "under_construction";
+
+              return (
+                <div
+                  key={property.id}
+                  className="bg-white border border-ink/10 p-6"
+                >
+                  <div className="flex items-start justify-between mb-4 gap-4">
+                    <div className="flex-1 min-w-0">
+                      {/* Badge de modalidade */}
+                      <p className={`text-[10px] tracking-[0.25em] uppercase mb-1 ${modalityColor}`}>
+                        {modalityLabel}
+                      </p>
+                      <Link
+                        href={`/dashboard/properties/${property.id}`}
+                        className="block font-display text-2xl text-ink leading-tight mb-1 truncate hover:text-forest transition-colors"
+                      >
+                        {property.name}
+                      </Link>
+                      <p className="text-xs text-ink/40 font-mono">
+                        @{property.nickname}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-4 shrink-0">
+                      <Link
+                        href={`/dashboard/properties/${property.id}/edit`}
+                        className="text-[10px] uppercase tracking-wider text-ink/40 hover:text-forest transition-colors whitespace-nowrap"
+                      >
+                        Editar
+                      </Link>
+                      <form action={deleteProperty}>
+                        <input type="hidden" name="id" value={property.id} />
+                        <button
+                          type="submit"
+                          className="text-[10px] uppercase tracking-wider text-ink/30 hover:text-red-700 transition-colors whitespace-nowrap"
+                        >
+                          Remover
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+
+                  {(property.city || property.state) && (
+                    <p className="text-xs text-ink/50 mb-4">
+                      {[property.city, property.state]
+                        .filter(Boolean)
+                        .join(" — ")}
+                    </p>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-ink/10">
+                    {isPlanta ? (
+                      <>
+                        <div>
+                          <p className="text-[10px] uppercase tracking-wider text-ink/40 mb-1">
+                            Já pago
+                          </p>
+                          <p className="text-sm text-ink font-medium">
+                            {formatCurrency(property.acquisition_value)}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] uppercase tracking-wider text-ink/40 mb-1">
+                            VGV total
+                          </p>
+                          <p className="text-sm text-ink font-medium">
+                            {formatCurrency(property.total_investment)}
+                          </p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div>
+                          <p className="text-[10px] uppercase tracking-wider text-ink/40 mb-1">
+                            Valor atual
+                          </p>
+                          <p className="text-sm text-ink font-medium">
+                            {formatCurrency(property.current_value)}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] uppercase tracking-wider text-ink/40 mb-1">
+                            {modality === "short_stay"
+                              ? "Receita estimada/mês"
+                              : "Aluguel esperado"}
+                          </p>
+                          <p className="text-sm text-ink font-medium">
+                            {formatCurrency(property.monthly_rent)}
+                          </p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="mt-4 pt-4 border-t border-ink/5">
+                    <Link
+                      href={`/dashboard/properties/${property.id}`}
+                      className="text-[10px] uppercase tracking-wider text-forest/60 hover:text-forest transition-colors"
+                    >
+                      {isPlanta ? "Ver detalhes →" : "Ver transações →"}
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </main>
   );
