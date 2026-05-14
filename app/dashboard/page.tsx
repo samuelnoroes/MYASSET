@@ -29,6 +29,7 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
+  // Imóveis
   const { data: properties } = await supabase
     .from("properties")
     .select("*")
@@ -37,6 +38,7 @@ export default async function DashboardPage() {
   const props = properties ?? [];
   const totalProperties = props.length;
 
+  // KPIs patrimoniais
   const totalCurrentValue = props.reduce(
     (acc, p) => acc + Number(p.current_value || 0),
     0
@@ -45,15 +47,56 @@ export default async function DashboardPage() {
     (acc, p) => acc + Number(p.acquisition_value || 0),
     0
   );
-  const totalMonthlyRent = props.reduce(
-    (acc, p) => acc + Number(p.monthly_rent || 0),
-    0
-  );
-
   const appreciation =
     totalAcquisitionValue > 0
       ? (totalCurrentValue - totalAcquisitionValue) / totalAcquisitionValue
       : 0;
+
+  // Yield médio (apenas imóveis com current_value e monthly_rent preenchidos)
+  const propsWithYield = props.filter(
+    (p) => p.current_value && p.monthly_rent
+  );
+  const avgYield =
+    propsWithYield.length > 0
+      ? propsWithYield.reduce(
+          (acc, p) => acc + (Number(p.monthly_rent) / Number(p.current_value)) * 12,
+          0
+        ) / propsWithYield.length
+      : null;
+
+  // Transações do mês corrente
+  const now = new Date();
+  const monthName = new Intl.DateTimeFormat("pt-BR", {
+    month: "long",
+  }).format(now);
+
+  const startOfMonth = `${now.getFullYear()}-${String(
+    now.getMonth() + 1
+  ).padStart(2, "0")}-01`;
+
+  const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const endOfMonth = `${nextMonth.getFullYear()}-${String(
+    nextMonth.getMonth() + 1
+  ).padStart(2, "0")}-01`;
+
+  const { data: monthlyTransactions } = await supabase
+    .from("transactions")
+    .select("transaction_type, amount")
+    .eq("user_id", user.id)
+    .gte("transaction_date", startOfMonth)
+    .lt("transaction_date", endOfMonth);
+
+  const txs = monthlyTransactions ?? [];
+
+  const totalMonthlyIncome = txs
+    .filter((t) => t.transaction_type === "income")
+    .reduce((acc, t) => acc + Number(t.amount), 0);
+
+  const totalMonthlyExpense = txs
+    .filter((t) => t.transaction_type === "expense")
+    .reduce((acc, t) => acc + Number(t.amount), 0);
+
+  const totalMonthlySaldo = totalMonthlyIncome - totalMonthlyExpense;
 
   return (
     <main className="min-h-screen bg-cream">
@@ -75,8 +118,8 @@ export default async function DashboardPage() {
       </header>
 
       <div className="max-w-6xl mx-auto px-6 py-12">
-        {/* Cabeçalho do dashboard */}
-        <div className="mb-12">
+        {/* Cabeçalho */}
+        <div className="mb-10">
           <p className="text-xs tracking-[0.3em] uppercase text-forest/60 mb-3">
             Visão geral
           </p>
@@ -86,8 +129,11 @@ export default async function DashboardPage() {
           <p className="text-ink/60 text-sm">{user.email}</p>
         </div>
 
-        {/* KPIs */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-ink/10 mb-12 border border-ink/10">
+        {/* Grid patrimonial */}
+        <p className="text-[10px] uppercase tracking-[0.25em] text-ink/30 mb-2">
+          Patrimônio
+        </p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-ink/10 mb-2 border border-ink/10">
           <div className="bg-cream p-6">
             <p className="text-[10px] uppercase tracking-wider text-ink/40 mb-2">
               Imóveis
@@ -104,14 +150,6 @@ export default async function DashboardPage() {
           </div>
           <div className="bg-cream p-6">
             <p className="text-[10px] uppercase tracking-wider text-ink/40 mb-2">
-              Aluguel/mês
-            </p>
-            <p className="font-display text-2xl text-forest">
-              {formatCurrency(totalMonthlyRent)}
-            </p>
-          </div>
-          <div className="bg-cream p-6">
-            <p className="text-[10px] uppercase tracking-wider text-ink/40 mb-2">
               Valorização
             </p>
             <p
@@ -119,12 +157,58 @@ export default async function DashboardPage() {
                 appreciation >= 0 ? "text-forest" : "text-red-700"
               }`}
             >
-              {totalAcquisitionValue > 0 ? formatPercent(appreciation) : "—"}
+              {totalAcquisitionValue > 0
+                ? formatPercent(appreciation)
+                : "—"}
+            </p>
+          </div>
+          <div className="bg-cream p-6">
+            <p className="text-[10px] uppercase tracking-wider text-ink/40 mb-2">
+              Yield médio
+            </p>
+            <p className="font-display text-2xl text-ink">
+              {avgYield !== null ? formatPercent(avgYield) : "—"}
+            </p>
+            <p className="text-[9px] text-ink/30 mt-1">ao ano</p>
+          </div>
+        </div>
+
+        {/* Grid financeiro do mês */}
+        <p className="text-[10px] uppercase tracking-[0.25em] text-ink/30 mb-2 mt-6">
+          {monthName}
+        </p>
+        <div className="grid grid-cols-3 gap-px bg-ink/10 mb-12 border border-ink/10">
+          <div className="bg-cream p-6">
+            <p className="text-[10px] uppercase tracking-wider text-ink/40 mb-2">
+              Receitas
+            </p>
+            <p className="font-display text-2xl text-forest">
+              {formatCurrency(totalMonthlyIncome)}
+            </p>
+          </div>
+          <div className="bg-cream p-6">
+            <p className="text-[10px] uppercase tracking-wider text-ink/40 mb-2">
+              Despesas
+            </p>
+            <p className="font-display text-2xl text-ink">
+              {formatCurrency(totalMonthlyExpense)}
+            </p>
+          </div>
+          <div className="bg-cream p-6">
+            <p className="text-[10px] uppercase tracking-wider text-ink/40 mb-2">
+              Saldo
+            </p>
+            <p
+              className={`font-display text-2xl ${
+                totalMonthlySaldo >= 0 ? "text-forest" : "text-red-700"
+              }`}
+            >
+              {formatCurrency(totalMonthlySaldo)}
             </p>
           </div>
         </div>
 
-        {/* Bloco de ação */}
+        {/* Portfólio */}
         <div className="flex items-end justify-between mb-8">
           <div>
             <p className="text-xs tracking-[0.3em] uppercase text-forest/60 mb-2">
@@ -171,7 +255,7 @@ export default async function DashboardPage() {
               {totalProperties === 1
                 ? "imóvel cadastrado"
                 : "imóveis cadastrados"}
-              .
+              . Clique num imóvel pra ver e lançar transações.
             </p>
             <Link
               href="/dashboard/properties"
