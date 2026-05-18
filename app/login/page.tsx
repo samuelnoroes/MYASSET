@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { login, signup } from "./actions";
+import GoogleLoginButton from "./_components/GoogleLoginButton";
 
 export default function LoginPage() {
   return (
@@ -16,6 +17,21 @@ export default function LoginPage() {
           </p>
         </div>
 
+        {/* Login com Google */}
+        <div className="mb-6">
+          <GoogleLoginButton />
+        </div>
+
+        {/* Divisor */}
+        <div className="flex items-center gap-4 mb-6">
+          <div className="flex-1 h-px bg-ink/10" />
+          <span className="text-[10px] uppercase tracking-wider text-ink/40">
+            ou com e-mail
+          </span>
+          <div className="flex-1 h-px bg-ink/10" />
+        </div>
+
+        {/* Login com email */}
         <form className="space-y-5">
           <div>
             <label
