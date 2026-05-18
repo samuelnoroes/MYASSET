@@ -37,5 +37,6 @@ export async function signup(formData: FormData) {
   }
 
   revalidatePath("/", "layout");
-  redirect("/dashboard");
+  // Após cadastro vai para onboarding para coletar nome e WhatsApp
+  redirect("/onboarding");
 }
