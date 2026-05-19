@@ -1,22 +1,32 @@
-import Image from "next/image";
-
 type Props = {
-  light?: boolean;  // true = logo branca (pra fundos escuros)
+  light?: boolean; // true = branco (fundos escuros), false = azul navy (fundos claros)
   height?: number;
 };
 
 export default function A5Logo({ light = false, height = 28 }: Props) {
+  const color = light ? "#FFFFFF" : "#1B3564";
+  const width = Math.round(height * 1.65);
+
   return (
-    <Image
-      src="/a5-logo.png"
-      alt="A5 Asset"
+    <svg
+      width={width}
       height={height}
-      width={Math.round(height * 1.8)}
-      style={
-        light
-          ? { filter: "brightness(0) invert(1)", opacity: 0.85 }
-          : {}
-      }
-    />
+      viewBox="0 0 66 40"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-label="A5 Asset"
+    >
+      <text
+        x="1"
+        y="36"
+        fontFamily="'Arial Black', 'Arial Bold', Impact, sans-serif"
+        fontWeight="900"
+        fontSize="40"
+        fill={color}
+        letterSpacing="-2"
+      >
+        A5
+      </text>
+    </svg>
   );
 }
