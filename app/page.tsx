@@ -13,16 +13,16 @@ export default async function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-cream flex flex-col">
+    <main className="min-h-screen bg-header text-white flex flex-col">
       {/* Header */}
-      <header className="border-b border-ink/10">
-        <div className="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
-          <span className="font-display text-2xl text-ink">
-            My<span className="italic text-forest">Asset</span>
-          </span>
+      <header className="border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <h1 className="font-display text-2xl italic">
+            My<span style={{ color: "#6BA68A" }}>Asset</span>
+          </h1>
           <Link
             href="/login"
-            className="text-xs uppercase tracking-wider text-ink/60 hover:text-forest transition-colors"
+            className="text-sm text-gray-400 hover:text-white transition-colors uppercase tracking-wider"
           >
             Entrar
           </Link>
@@ -31,30 +31,29 @@ export default async function Home() {
 
       {/* Hero */}
       <section className="flex-1 flex flex-col items-center justify-center px-6 py-24 text-center">
-        <p className="text-xs tracking-[0.3em] uppercase text-forest/60 mb-10">
+        <p className="text-xs tracking-[0.3em] uppercase text-gray-400 mb-8">
           Gestão de portfólio imobiliário
         </p>
 
-        <h1 className="font-display text-6xl md:text-8xl lg:text-9xl text-ink leading-none mb-8 max-w-4xl">
-          My<span className="italic text-forest">Asset</span>
-        </h1>
+        <h2 className="font-display text-6xl md:text-8xl italic mb-8 leading-tight">
+          My<span style={{ color: "#6BA68A" }}>Asset</span>
+        </h2>
 
-        <p className="font-sans text-base md:text-lg text-ink/70 max-w-lg mx-auto leading-relaxed mb-14">
+        <p className="text-base md:text-lg text-gray-400 max-w-lg mx-auto leading-relaxed mb-12">
           A clareza que o investidor imobiliário sempre quis sobre o próprio
-          patrimônio. Dashboard completo, lançamentos simples, visão real do
-          seu portfólio.
+          patrimônio. Dashboard completo, gráficos reais, alertas automáticos.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
             href="/login"
-            className="px-8 py-4 bg-forest text-cream font-medium tracking-wider uppercase text-xs hover:bg-ink transition-colors"
+            className="px-8 py-4 bg-forest text-white font-bold tracking-wider uppercase text-sm hover:bg-forest-light transition-colors rounded"
           >
             Criar conta gratuita
           </Link>
           <Link
             href="/login"
-            className="px-8 py-4 bg-transparent border border-ink/20 text-ink font-medium tracking-wider uppercase text-xs hover:border-forest hover:text-forest transition-colors"
+            className="px-8 py-4 bg-transparent border border-white/20 text-white font-bold tracking-wider uppercase text-sm hover:border-white/50 transition-colors rounded"
           >
             Já tenho conta
           </Link>
@@ -62,45 +61,43 @@ export default async function Home() {
       </section>
 
       {/* Features */}
-      <section className="border-t border-ink/10">
-        <div className="max-w-6xl mx-auto px-6 py-16">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-ink/10 border border-ink/10">
-            <div className="bg-cream p-8">
-              <p className="text-xs tracking-[0.25em] uppercase text-forest/60 mb-4">
+      <section className="border-t border-white/10">
+        <div className="max-w-7xl mx-auto px-6 py-16">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div>
+              <p className="text-xs tracking-[0.25em] uppercase mb-3" style={{ color: "#6BA68A" }}>
                 01
               </p>
-              <h3 className="font-display text-2xl text-ink mb-3">
+              <h3 className="text-lg font-bold text-white mb-3">
                 Dashboard completo
               </h3>
-              <p className="text-sm text-ink/60 leading-relaxed">
-                Yield, ROI, valorização e fluxo de caixa de todos os imóveis
-                numa tela. Visão patrimonial e financeira em tempo real.
+              <p className="text-sm text-gray-400 leading-relaxed">
+                Yield, ROI, valorização e fluxo de caixa. Donut chart de
+                distribuição e histórico de 6 meses — tudo numa tela.
               </p>
             </div>
-
-            <div className="bg-cream p-8">
-              <p className="text-xs tracking-[0.25em] uppercase text-forest/60 mb-4">
+            <div>
+              <p className="text-xs tracking-[0.25em] uppercase mb-3" style={{ color: "#6BA68A" }}>
                 02
               </p>
-              <h3 className="font-display text-2xl text-ink mb-3">
-                Lançamentos simples
+              <h3 className="text-lg font-bold text-white mb-3">
+                Alertas inteligentes
               </h3>
-              <p className="text-sm text-ink/60 leading-relaxed">
-                Registre aluguéis recebidos, IPTU, condomínio e manutenções em
-                segundos. Em breve: lance pelo WhatsApp com uma mensagem.
+              <p className="text-sm text-gray-400 leading-relaxed">
+                Cobrança 5 dias antes do vencimento. Alerta de inadimplência no
+                dia. Quite com um clique e o saldo atualiza automaticamente.
               </p>
             </div>
-
-            <div className="bg-cream p-8">
-              <p className="text-xs tracking-[0.25em] uppercase text-forest/60 mb-4">
+            <div>
+              <p className="text-xs tracking-[0.25em] uppercase mb-3" style={{ color: "#6BA68A" }}>
                 03
               </p>
-              <h3 className="font-display text-2xl text-ink mb-3">
-                Por imóvel
+              <h3 className="text-lg font-bold text-white mb-3">
+                3 perfis de investidor
               </h3>
-              <p className="text-sm text-ink/60 leading-relaxed">
-                Cada ativo tem seu histórico de transações, yield individual e
-                saldo do mês. Veja qual imóvel performa melhor no portfólio.
+              <p className="text-sm text-gray-400 leading-relaxed">
+                Locação anual, temporada/Airbnb ou na planta. Cada perfil com
+                KPIs e fluxos específicos — sem campo desnecessário.
               </p>
             </div>
           </div>
@@ -108,14 +105,10 @@ export default async function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-ink/10">
-        <div className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
-          <span className="font-display italic text-sm text-ink/40">
-            MyAsset
-          </span>
-          <p className="text-[10px] uppercase tracking-wider text-ink/30">
-            Versão beta
-          </p>
+      <footer className="border-t border-white/10 py-6">
+        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
+          <span className="font-display italic text-sm text-gray-500">MyAsset</span>
+          <p className="text-xs uppercase tracking-wider text-gray-600">Versão beta</p>
         </div>
       </footer>
     </main>
