@@ -10,9 +10,9 @@ const MODALITY_LABELS: Record<string, string> = {
 };
 
 const MODALITY_COLORS: Record<string, string> = {
-  annual_lease: "text-forest/60",
-  short_stay: "text-blue-600/60",
-  under_construction: "text-amber-600/60",
+  annual_lease: "#2D4A3E",
+  short_stay: "#3B82F6",
+  under_construction: "#F59E0B",
 };
 
 function formatCurrency(value: number | null): string {
@@ -29,9 +29,7 @@ export default async function PropertiesPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/login");
-  }
+  if (!user) redirect("/login");
 
   const { data: properties, error } = await supabase
     .from("properties")
@@ -39,62 +37,58 @@ export default async function PropertiesPage() {
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
-  if (error) {
-    redirect("/error?message=" + encodeURIComponent(error.message));
-  }
+  if (error) redirect("/error?message=" + encodeURIComponent(error.message));
 
   return (
-    <main className="min-h-screen bg-cream">
-      <header className="border-b border-ink/10">
-        <div className="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
-          <Link href="/dashboard" className="font-display text-2xl text-ink">
-            My<span className="italic text-forest">Asset</span>
+    <main className="min-h-screen bg-surface">
+      {/* Header */}
+      <header className="bg-header text-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <Link href="/dashboard" className="font-display text-xl italic">
+            My<span style={{ color: "#6BA68A" }}>Asset</span>
           </Link>
           <Link
             href="/dashboard"
-            className="text-xs uppercase tracking-wider text-ink/60 hover:text-forest transition-colors"
+            className="text-xs text-gray-400 hover:text-white transition-colors uppercase tracking-wider"
           >
             ← Dashboard
           </Link>
         </div>
       </header>
 
-      <div className="max-w-6xl mx-auto px-6 py-12">
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10">
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Título + botão */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
           <div>
-            <p className="text-xs tracking-[0.3em] uppercase text-forest/60 mb-3">
-              Portfólio
-            </p>
-            <h1 className="font-display text-4xl text-ink">Seus imóveis</h1>
-            <p className="text-sm text-ink/60 mt-2">
+            <p className="section-title">Portfólio</p>
+            <p className="text-sm text-ink-2">
               {properties?.length ?? 0}{" "}
-              {properties?.length === 1
-                ? "imóvel cadastrado"
-                : "imóveis cadastrados"}
+              {properties?.length === 1 ? "imóvel cadastrado" : "imóveis cadastrados"}
             </p>
           </div>
           <Link
             href="/dashboard/properties/new"
-            className="self-start md:self-end px-6 py-3 bg-forest text-cream font-medium tracking-wider uppercase text-xs hover:bg-ink transition-colors"
+            className="self-start px-6 py-3 bg-forest text-white font-bold tracking-wider uppercase text-sm hover:bg-forest-light transition-colors rounded"
           >
             + Novo imóvel
           </Link>
         </div>
 
         {(!properties || properties.length === 0) && (
-          <div className="border border-dashed border-ink/15 p-12 text-center">
-            <p className="text-xs tracking-[0.3em] uppercase text-ink/40 mb-3">
+          <div className="card text-center py-16">
+            <p className="text-4xl mb-4">🏠</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-ink-3 mb-3">
               Nenhum imóvel
             </p>
-            <p className="font-display text-2xl text-ink/70 mb-3">
+            <p className="text-base font-semibold text-ink mb-2">
               Comece adicionando seu primeiro ativo
             </p>
-            <p className="text-sm text-ink/50 max-w-md mx-auto mb-6">
+            <p className="text-sm text-ink-2 max-w-md mx-auto mb-6">
               Cadastre imóveis de locação anual, temporada ou na planta.
             </p>
             <Link
               href="/dashboard/properties/new"
-              className="inline-block px-6 py-3 bg-forest text-cream font-medium tracking-wider uppercase text-xs hover:bg-ink transition-colors"
+              className="inline-block px-6 py-3 bg-forest text-white font-bold tracking-wider uppercase text-sm hover:bg-forest-light transition-colors rounded"
             >
               Cadastrar imóvel
             </Link>
@@ -102,112 +96,110 @@ export default async function PropertiesPage() {
         )}
 
         {properties && properties.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="card divide-y divide-border p-0 overflow-hidden">
             {properties.map((property) => {
               const modality = property.modality || "annual_lease";
-              const modalityLabel = MODALITY_LABELS[modality] || modality;
-              const modalityColor = MODALITY_COLORS[modality] || "text-ink/60";
               const isPlanta = modality === "under_construction";
+              const color = MODALITY_COLORS[modality] || "#2D4A3E";
+
+              // Gauge
+              let gaugeValue = 0;
+              let gaugeLabel = "";
+              if (isPlanta && property.total_investment && property.acquisition_value) {
+                gaugeValue = Math.min((property.acquisition_value / property.total_investment) * 100, 100);
+                gaugeLabel = `${Math.round(gaugeValue)}%`;
+              } else if (property.current_value && property.monthly_rent) {
+                const y = (Number(property.monthly_rent) / Number(property.current_value)) * 12 * 100;
+                gaugeValue = Math.min(y * 5, 100);
+                gaugeLabel = `${y.toFixed(1)}%`;
+              }
+
+              const radius = 18;
+              const circumference = 2 * Math.PI * radius;
+              const strokeDashoffset = circumference - (gaugeValue / 100) * circumference;
 
               return (
-                <div
-                  key={property.id}
-                  className="bg-white border border-ink/10 p-6"
-                >
-                  <div className="flex items-start justify-between mb-4 gap-4">
-                    <div className="flex-1 min-w-0">
-                      {/* Badge de modalidade */}
-                      <p className={`text-[10px] tracking-[0.25em] uppercase mb-1 ${modalityColor}`}>
-                        {modalityLabel}
-                      </p>
-                      <Link
-                        href={`/dashboard/properties/${property.id}`}
-                        className="block font-display text-2xl text-ink leading-tight mb-1 truncate hover:text-forest transition-colors"
-                      >
-                        {property.name}
-                      </Link>
-                      <p className="text-xs text-ink/40 font-mono">
-                        @{property.nickname}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-4 shrink-0">
-                      <Link
-                        href={`/dashboard/properties/${property.id}/edit`}
-                        className="text-[10px] uppercase tracking-wider text-ink/40 hover:text-forest transition-colors whitespace-nowrap"
-                      >
-                        Editar
-                      </Link>
-                      <form action={deleteProperty}>
-                        <input type="hidden" name="id" value={property.id} />
-                        <button
-                          type="submit"
-                          className="text-[10px] uppercase tracking-wider text-ink/30 hover:text-red-700 transition-colors whitespace-nowrap"
-                        >
-                          Remover
-                        </button>
-                      </form>
+                <div key={property.id} className="flex items-center gap-5 px-6 py-5 hover:bg-surface transition-colors">
+                  {/* Gauge */}
+                  <div className="shrink-0 relative" style={{ width: 48, height: 48 }}>
+                    <svg width="48" height="48" viewBox="0 0 48 48">
+                      <circle cx="24" cy="24" r={radius} fill="none" stroke="#E5E7EB" strokeWidth="4" />
+                      {gaugeValue > 0 && (
+                        <circle
+                          cx="24" cy="24" r={radius}
+                          fill="none"
+                          stroke={color}
+                          strokeWidth="4"
+                          strokeDasharray={circumference}
+                          strokeDashoffset={strokeDashoffset}
+                          strokeLinecap="round"
+                          transform="rotate(-90 24 24)"
+                        />
+                      )}
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span style={{ fontSize: 8, fontWeight: 700, color, lineHeight: 1 }}>
+                        {gaugeLabel || "—"}
+                      </span>
                     </div>
                   </div>
 
-                  {(property.city || property.state) && (
-                    <p className="text-xs text-ink/50 mb-4">
-                      {[property.city, property.state]
-                        .filter(Boolean)
-                        .join(" — ")}
-                    </p>
-                  )}
-
-                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-ink/10">
-                    {isPlanta ? (
-                      <>
-                        <div>
-                          <p className="text-[10px] uppercase tracking-wider text-ink/40 mb-1">
-                            Já pago
-                          </p>
-                          <p className="text-sm text-ink font-medium">
-                            {formatCurrency(property.acquisition_value)}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-[10px] uppercase tracking-wider text-ink/40 mb-1">
-                            VGV total
-                          </p>
-                          <p className="text-sm text-ink font-medium">
-                            {formatCurrency(property.total_investment)}
-                          </p>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div>
-                          <p className="text-[10px] uppercase tracking-wider text-ink/40 mb-1">
-                            Valor atual
-                          </p>
-                          <p className="text-sm text-ink font-medium">
-                            {formatCurrency(property.current_value)}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-[10px] uppercase tracking-wider text-ink/40 mb-1">
-                            {modality === "short_stay"
-                              ? "Receita estimada/mês"
-                              : "Aluguel esperado"}
-                          </p>
-                          <p className="text-sm text-ink font-medium">
-                            {formatCurrency(property.monthly_rent)}
-                          </p>
-                        </div>
-                      </>
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color }}>
+                        {MODALITY_LABELS[modality]}
+                      </span>
+                    </div>
+                    <Link
+                      href={`/dashboard/properties/${property.id}`}
+                      className="text-base font-semibold text-ink hover:text-forest transition-colors truncate block"
+                    >
+                      {property.name}
+                    </Link>
+                    {(property.city || property.state) && (
+                      <p className="text-sm text-ink-3">
+                        {[property.city, property.state].filter(Boolean).join(" · ")}
+                      </p>
                     )}
                   </div>
 
-                  <div className="mt-4 pt-4 border-t border-ink/5">
+                  {/* Valores */}
+                  <div className="hidden md:block text-right shrink-0">
+                    <p className="text-xs text-ink-3 uppercase tracking-wider">
+                      {isPlanta ? "Já pago" : "Valor atual"}
+                    </p>
+                    <p className="text-base font-bold text-ink">
+                      {formatCurrency(isPlanta ? property.acquisition_value : property.current_value)}
+                    </p>
+                  </div>
+
+                  <div className="hidden lg:block text-right shrink-0 ml-6 w-32">
+                    <p className="text-xs text-ink-3 uppercase tracking-wider">
+                      {isPlanta ? "VGV" : "Aluguel"}
+                    </p>
+                    <p className="text-base font-bold text-positive">
+                      {formatCurrency(isPlanta ? property.total_investment : property.monthly_rent)}
+                    </p>
+                  </div>
+
+                  {/* Ações */}
+                  <div className="flex items-center gap-3 shrink-0 ml-2">
                     <Link
-                      href={`/dashboard/properties/${property.id}`}
-                      className="text-[10px] uppercase tracking-wider text-forest/60 hover:text-forest transition-colors"
+                      href={`/dashboard/properties/${property.id}/edit`}
+                      className="text-xs text-ink-3 hover:text-forest transition-colors uppercase tracking-wider"
                     >
-                      {isPlanta ? "Ver detalhes →" : "Ver transações →"}
+                      Editar
                     </Link>
+                    <form action={deleteProperty}>
+                      <input type="hidden" name="id" value={property.id} />
+                      <button
+                        type="submit"
+                        className="text-xs text-ink-3 hover:text-negative transition-colors uppercase tracking-wider"
+                      >
+                        Remover
+                      </button>
+                    </form>
                   </div>
                 </div>
               );
