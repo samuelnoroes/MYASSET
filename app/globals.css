@@ -10,4 +10,38 @@ body {
 body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #F2F2F0;
+  color: #1A1A1A;
+  font-size: 15px;
+}
+
+@layer components {
+  /* Label de seção estilo XP — com linha colorida embaixo */
+  .section-title {
+    @apply text-xs font-bold uppercase tracking-widest text-ink-2;
+    display: inline-block;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #2D4A3E;
+    margin-bottom: 20px;
+  }
+
+  /* Card padrão */
+  .card {
+    @apply bg-card rounded-card shadow-card p-6;
+  }
+
+  /* KPI label */
+  .kpi-label {
+    @apply text-xs uppercase tracking-widest text-ink-3 font-semibold mb-1;
+  }
+
+  /* KPI valor */
+  .kpi-value {
+    @apply text-2xl font-bold text-ink;
+  }
+
+  /* KPI valor grande */
+  .kpi-value-lg {
+    @apply text-3xl font-bold text-ink;
+  }
 }
