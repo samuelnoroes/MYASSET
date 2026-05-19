@@ -27,6 +27,6 @@ export async function updateProfile(formData: FormData) {
     redirect("/error?message=" + encodeURIComponent(error.message));
   }
 
+  // Sem redirect — o cliente controla o estado após salvar
   revalidatePath("/dashboard/profile");
-  redirect("/dashboard/profile");
 }
