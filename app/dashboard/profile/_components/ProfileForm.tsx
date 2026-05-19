@@ -10,11 +10,7 @@ type Props = {
   defaultPhone: string;
 };
 
-export default function ProfileForm({
-  email,
-  defaultFullName,
-  defaultPhone,
-}: Props) {
+export default function ProfileForm({ email, defaultFullName, defaultPhone }: Props) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -22,16 +18,16 @@ export default function ProfileForm({
   const [fullName, setFullName] = useState(defaultFullName);
   const [phone, setPhone] = useState(defaultPhone);
 
+  const inputBase = "w-full px-4 py-3 border rounded text-sm transition-colors";
+  const inputEditing = `${inputBase} bg-surface border-border focus:border-forest focus:outline-none text-ink`;
+  const inputReadonly = `${inputBase} bg-surface border-transparent text-ink-2 cursor-default`;
+
   async function handleSave() {
     setSaving(true);
-
-    // Monta o FormData manualmente — sem depender de <form>
     const formData = new FormData();
     formData.append("full_name", fullName);
     formData.append("phone", phone);
-
     await updateProfile(formData);
-
     router.refresh();
     setSaving(false);
     setEditing(false);
@@ -40,52 +36,40 @@ export default function ProfileForm({
   }
 
   function handleCancel() {
-    // Restaura os valores originais ao cancelar
     setFullName(defaultFullName);
     setPhone(defaultPhone);
     setEditing(false);
     setSaved(false);
   }
 
-  const inputEditing =
-    "w-full px-4 py-3 bg-white border border-ink/10 focus:border-forest focus:outline-none transition-colors text-ink";
-  const inputReadonly =
-    "w-full px-4 py-3 bg-ink/5 border border-ink/10 text-ink/50 cursor-default";
-
   return (
-    <div className="space-y-6">
-      {/* Notificação de sucesso */}
+    <div className="space-y-5">
       {saved && (
-        <div className="flex items-center gap-3 px-5 py-4 bg-forest/10 border border-forest/20">
-          <span className="text-forest text-lg select-none">✓</span>
-          <p className="text-sm text-forest font-medium">
+        <div className="flex items-center gap-3 px-4 py-3 bg-green-50 border border-green-200 rounded">
+          <span className="text-positive text-base select-none">✓</span>
+          <p className="text-sm font-semibold text-positive">
             Alterações salvas com sucesso.
           </p>
         </div>
       )}
 
-      {/* E-mail — sempre bloqueado */}
+      {/* E-mail */}
       <div>
-        <label className="block text-xs uppercase tracking-wider text-ink/60 mb-2">
+        <label className="block text-xs font-semibold uppercase tracking-wider text-ink-2 mb-2">
           E-mail
         </label>
         <input
           type="email"
           value={email}
           disabled
-          className={`${inputReadonly} cursor-not-allowed`}
+          className={`${inputReadonly} cursor-not-allowed opacity-60`}
         />
-        <p className="text-[10px] text-ink/40 mt-2">
-          O e-mail não pode ser alterado.
-        </p>
+        <p className="text-xs text-ink-3 mt-1">O e-mail não pode ser alterado.</p>
       </div>
 
       {/* Nome */}
       <div>
-        <label
-          htmlFor="full_name"
-          className="block text-xs uppercase tracking-wider text-ink/60 mb-2"
-        >
+        <label htmlFor="full_name" className="block text-xs font-semibold uppercase tracking-wider text-ink-2 mb-2">
           Nome completo
         </label>
         <input
@@ -101,10 +85,7 @@ export default function ProfileForm({
 
       {/* WhatsApp */}
       <div>
-        <label
-          htmlFor="phone"
-          className="block text-xs uppercase tracking-wider text-ink/60 mb-2"
-        >
+        <label htmlFor="phone" className="block text-xs font-semibold uppercase tracking-wider text-ink-2 mb-2">
           WhatsApp
         </label>
         <input
@@ -117,28 +98,28 @@ export default function ProfileForm({
           className={editing ? inputEditing : inputReadonly}
         />
         {editing && (
-          <p className="text-[10px] text-ink/40 mt-2">
-            Usado para alertas de aluguel e oportunidades do portfólio.
+          <p className="text-xs text-ink-3 mt-1">
+            Para alertas de aluguel e oportunidades do portfólio.
           </p>
         )}
       </div>
 
-      {/* Botões — sem <form>, sem risco de submit automático */}
-      <div className="flex gap-3 pt-4">
+      {/* Botões */}
+      <div className="flex gap-3 pt-2">
         {editing ? (
           <>
             <button
               type="button"
               onClick={handleSave}
               disabled={saving}
-              className="px-8 py-4 bg-forest text-cream font-medium tracking-wider uppercase text-xs hover:bg-ink transition-colors disabled:opacity-60"
+              className="px-6 py-3 bg-forest text-white font-bold tracking-wider uppercase text-sm hover:bg-forest-light transition-colors rounded disabled:opacity-60"
             >
               {saving ? "Salvando..." : "Salvar"}
             </button>
             <button
               type="button"
               onClick={handleCancel}
-              className="px-8 py-4 bg-transparent border border-ink/20 text-ink font-medium tracking-wider uppercase text-xs hover:border-forest hover:text-forest transition-colors"
+              className="px-6 py-3 bg-surface border border-border text-ink font-bold tracking-wider uppercase text-sm hover:border-forest hover:text-forest transition-colors rounded"
             >
               Cancelar
             </button>
@@ -147,7 +128,7 @@ export default function ProfileForm({
           <button
             type="button"
             onClick={() => setEditing(true)}
-            className="px-8 py-4 bg-forest text-cream font-medium tracking-wider uppercase text-xs hover:bg-ink transition-colors"
+            className="px-6 py-3 bg-forest text-white font-bold tracking-wider uppercase text-sm hover:bg-forest-light transition-colors rounded"
           >
             Editar
           </button>
