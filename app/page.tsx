@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
-import Image from "next/image";
+import A5Logo from "@/app/components/A5Logo";
 
 export default async function Home() {
   const supabase = createClient();
@@ -20,13 +20,7 @@ export default async function Home() {
             <div className="w-px h-5 bg-white/20" />
             <div className="flex items-center gap-1.5">
               <span className="text-[10px] text-gray-500 uppercase tracking-wider">by</span>
-              <Image
-                src="/a5-logo.png"
-                alt="A5 Asset"
-                height={20}
-                width={36}
-                style={{ filter: "brightness(0) invert(1)", opacity: 0.7 }}
-              />
+              <A5Logo light height={20} />
             </div>
           </div>
           <Link href="/login" className="text-sm text-gray-400 hover:text-white transition-colors uppercase tracking-wider">
@@ -95,13 +89,7 @@ export default async function Home() {
           <span className="font-display italic text-sm text-gray-500">MyAsset</span>
           <div className="flex items-center gap-3">
             <span className="text-xs text-gray-600 uppercase tracking-wider">Uma solução</span>
-            <Image
-              src="/a5-logo.png"
-              alt="A5 Asset"
-              height={24}
-              width={44}
-              style={{ filter: "brightness(0) invert(1)", opacity: 0.4 }}
-            />
+            <A5Logo light height={22} />
             <span className="text-xs text-gray-600 uppercase tracking-wider">Asset</span>
           </div>
           <p className="text-xs uppercase tracking-wider text-gray-600">Versão beta</p>
