@@ -3,12 +3,23 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { logout } from "./actions";
 import { markAsPaid } from "./alertActions";
+import PortfolioCharts from "./_components/PortfolioCharts";
 
 function formatCurrency(value: number): string {
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",
     currency: "BRL",
   }).format(value);
+}
+
+function formatCurrencyShort(value: number): string {
+  if (value >= 1_000_000) {
+    return `R$ ${(value / 1_000_000).toFixed(1).replace(".", ",")}M`;
+  }
+  if (value >= 1_000) {
+    return `R$ ${Math.round(value / 1_000)}K`;
+  }
+  return formatCurrency(value);
 }
 
 function formatPercent(value: number): string {
@@ -42,6 +53,7 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
+  // ── IMÓVEIS ─────────────────────────────────────────────
   const { data: properties } = await supabase
     .from("properties")
     .select("*")
@@ -50,6 +62,7 @@ export default async function DashboardPage() {
   const props = properties ?? [];
   const totalProperties = props.length;
 
+  // KPIs patrimoniais
   const totalCurrentValue = props.reduce(
     (acc, p) => acc + Number(p.current_value || 0),
     0
@@ -63,32 +76,25 @@ export default async function DashboardPage() {
       ? (totalCurrentValue - totalAcquisitionValue) / totalAcquisitionValue
       : 0;
 
+  // Yield médio
   const propsWithYield = props.filter(
-    (p) =>
-      p.current_value && p.monthly_rent && p.modality !== "under_construction"
+    (p) => p.current_value && p.monthly_rent && p.modality !== "under_construction"
   );
   const avgYield =
     propsWithYield.length > 0
       ? propsWithYield.reduce(
           (acc, p) =>
-            acc +
-            (Number(p.monthly_rent) / Number(p.current_value)) * 12,
+            acc + (Number(p.monthly_rent) / Number(p.current_value)) * 12,
           0
         ) / propsWithYield.length
       : null;
 
+  // ── TRANSAÇÕES DO MÊS ───────────────────────────────────
   const now = new Date();
-  const monthName = new Intl.DateTimeFormat("pt-BR", {
-    month: "long",
-  }).format(now);
-
-  const startOfMonth = `${now.getFullYear()}-${String(
-    now.getMonth() + 1
-  ).padStart(2, "0")}-01`;
+  const monthName = new Intl.DateTimeFormat("pt-BR", { month: "long" }).format(now);
+  const startOfMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
   const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-  const endOfMonth = `${nextMonth.getFullYear()}-${String(
-    nextMonth.getMonth() + 1
-  ).padStart(2, "0")}-01`;
+  const endOfMonth = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, "0")}-01`;
 
   const { data: monthlyTransactions } = await supabase
     .from("transactions")
@@ -98,7 +104,6 @@ export default async function DashboardPage() {
     .lt("transaction_date", endOfMonth);
 
   const txs = monthlyTransactions ?? [];
-
   const totalMonthlyIncome = txs
     .filter((t) => t.transaction_type === "income")
     .reduce((acc, t) => acc + Number(t.amount), 0);
@@ -107,19 +112,94 @@ export default async function DashboardPage() {
     .reduce((acc, t) => acc + Number(t.amount), 0);
   const totalMonthlySaldo = totalMonthlyIncome - totalMonthlyExpense;
 
+  // Eficiência de cobrança (aluguel recebido / esperado)
+  const annualLeaseProps = props.filter(
+    (p) => p.modality === "annual_lease" && p.monthly_rent
+  );
+  const totalExpectedThisMonth = annualLeaseProps.reduce(
+    (acc, p) => acc + Number(p.monthly_rent),
+    0
+  );
+  const collectionEfficiency =
+    totalExpectedThisMonth > 0
+      ? Math.min(totalMonthlyIncome / totalExpectedThisMonth, 1)
+      : null;
+
+  // ── ÚLTIMOS 6 MESES ─────────────────────────────────────
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+  const historyStart = `${sixMonthsAgo.getFullYear()}-${String(sixMonthsAgo.getMonth() + 1).padStart(2, "0")}-01`;
+
+  const { data: allTransactions } = await supabase
+    .from("transactions")
+    .select("transaction_type, amount, transaction_date")
+    .eq("user_id", user.id)
+    .gte("transaction_date", historyStart)
+    .order("transaction_date", { ascending: true });
+
+  const months = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date();
+    d.setMonth(d.getMonth() - i);
+    months.push({
+      key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
+      label: new Intl.DateTimeFormat("pt-BR", { month: "short" })
+        .format(d)
+        .replace(".", ""),
+    });
+  }
+
+  const monthlyData = months.map(({ key, label }) => {
+    const mt = allTransactions?.filter((t) =>
+      t.transaction_date.startsWith(key)
+    ) ?? [];
+    return {
+      month: label.charAt(0).toUpperCase() + label.slice(1),
+      receitas: mt
+        .filter((t) => t.transaction_type === "income")
+        .reduce((acc, t) => acc + Number(t.amount), 0),
+      despesas: mt
+        .filter((t) => t.transaction_type === "expense")
+        .reduce((acc, t) => acc + Number(t.amount), 0),
+    };
+  });
+
+  // ── DONUT — Distribuição por modalidade ─────────────────
+  const annualValue = props
+    .filter((p) => p.modality === "annual_lease")
+    .reduce((acc, p) => acc + Number(p.current_value || 0), 0);
+  const shortStayValue = props
+    .filter((p) => p.modality === "short_stay")
+    .reduce((acc, p) => acc + Number(p.current_value || 0), 0);
+  const constructionValue = props
+    .filter((p) => p.modality === "under_construction")
+    .reduce(
+      (acc, p) => acc + Number(p.total_investment || p.acquisition_value || 0),
+      0
+    );
+
+  const totalForChart = annualValue + shortStayValue + constructionValue || 1;
+
+  const pct = (v: number) =>
+    totalForChart > 0 ? `${Math.round((v / totalForChart) * 100)}%` : "0%";
+
+  const modalityData = [
+    { name: "Locação anual", value: annualValue, color: "#2D4A3E", percentage: pct(annualValue) },
+    { name: "Temporada / Airbnb", value: shortStayValue, color: "#3B82F6", percentage: pct(shortStayValue) },
+    { name: "Na planta", value: constructionValue, color: "#F59E0B", percentage: pct(constructionValue) },
+  ];
+
   // ── ALERTAS ─────────────────────────────────────────────
   const today = now.getDate();
   const alerts: PropertyAlert[] = [];
 
   for (const p of props) {
     if (p.modality !== "annual_lease" || !p.monthly_rent) continue;
-
     const dueDay = p.lease_due_day ?? 5;
-    const hasIncomeThisMonth = txs.some(
+    const hasIncome = txs.some(
       (t) => t.transaction_type === "income" && t.property_id === p.id
     );
-
-    if (hasIncomeThisMonth) continue;
+    if (hasIncome) continue;
 
     const daysUntilDue = dueDay - today;
     const daysOverdue = today - dueDay;
@@ -164,23 +244,71 @@ export default async function DashboardPage() {
   });
 
   return (
-    <main className="min-h-screen bg-cream">
-      <header className="border-b border-ink/10">
-        <div className="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
-          <h1 className="font-display text-2xl text-ink">
-            My<span className="italic text-forest">Asset</span>
+    <main className="min-h-screen bg-surface">
+
+      {/* ── HEADER ESCURO ────────────────────────────────── */}
+      <header className="bg-header text-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-6">
+          {/* Logo */}
+          <h1 className="font-display text-xl italic shrink-0">
+            My<span style={{ color: "#6BA68A" }}>Asset</span>
           </h1>
-          <div className="flex items-center gap-6">
+
+          {/* KPIs sempre visíveis */}
+          <div className="hidden md:flex items-center gap-6 flex-1 justify-center">
+            <div className="text-center">
+              <p className="text-[10px] uppercase tracking-widest text-gray-400">
+                Patrimônio
+              </p>
+              <p className="text-sm font-bold text-white">
+                {formatCurrencyShort(totalCurrentValue)}
+              </p>
+            </div>
+            <div className="w-px h-8 bg-gray-600" />
+            <div className="text-center">
+              <p className="text-[10px] uppercase tracking-widest text-gray-400">
+                Receitas de {monthName}
+              </p>
+              <p className="text-sm font-bold text-green-400">
+                {formatCurrency(totalMonthlyIncome)}
+              </p>
+            </div>
+            <div className="w-px h-8 bg-gray-600" />
+            <div className="text-center">
+              <p className="text-[10px] uppercase tracking-widest text-gray-400">
+                Yield médio
+              </p>
+              <p className="text-sm font-bold text-white">
+                {avgYield !== null ? formatPercent(avgYield) : "—"}
+              </p>
+            </div>
+            {alerts.length > 0 && (
+              <>
+                <div className="w-px h-8 bg-gray-600" />
+                <div className="text-center">
+                  <p className="text-[10px] uppercase tracking-widest text-gray-400">
+                    Alertas
+                  </p>
+                  <p className="text-sm font-bold text-red-400">
+                    {alerts.length}
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Ações */}
+          <div className="flex items-center gap-4 shrink-0">
             <Link
               href="/dashboard/profile"
-              className="text-xs uppercase tracking-wider text-ink/60 hover:text-forest transition-colors"
+              className="text-xs text-gray-400 hover:text-white transition-colors uppercase tracking-wider"
             >
               Perfil
             </Link>
             <form action={logout}>
               <button
                 type="submit"
-                className="text-xs uppercase tracking-wider text-ink/60 hover:text-forest transition-colors"
+                className="text-xs text-gray-400 hover:text-white transition-colors uppercase tracking-wider"
               >
                 Sair
               </button>
@@ -189,79 +317,69 @@ export default async function DashboardPage() {
         </div>
       </header>
 
-      <div className="max-w-6xl mx-auto px-6 py-12">
-        <div className="mb-10">
-          <p className="text-xs tracking-[0.3em] uppercase text-forest/60 mb-3">
-            Visão geral
-          </p>
-          <h2 className="font-display text-4xl md:text-5xl text-ink mb-2">
-            Seu portfólio
-          </h2>
-          <p className="text-ink/60 text-sm">{user.email}</p>
+      {/* ── TABS ─────────────────────────────────────────── */}
+      <div className="bg-white border-b border-border">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex gap-8">
+            <span className="py-4 text-sm font-bold text-forest border-b-2 border-forest cursor-default">
+              Posição
+            </span>
+            <Link
+              href="/dashboard/properties"
+              className="py-4 text-sm text-ink-2 hover:text-ink transition-colors"
+            >
+              Imóveis
+            </Link>
+          </div>
         </div>
+      </div>
 
-        {/* ── ALERTAS ─────────────────────────────────── */}
+      {/* ── CONTENT ──────────────────────────────────────── */}
+      <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
+
+        {/* Alertas */}
         {alerts.length > 0 && (
-          <div className="mb-10 space-y-3">
-            <p className="text-[10px] uppercase tracking-[0.25em] text-ink/30 mb-3">
-              Atenção
-            </p>
+          <div className="space-y-2">
             {alerts.map((alert) => (
               <div
                 key={alert.propertyId}
-                className={`flex items-center justify-between px-5 py-4 border ${
+                className={`flex items-center justify-between px-5 py-4 rounded-card border ${
                   alert.type === "danger"
                     ? "border-red-200 bg-red-50"
                     : "border-amber-200 bg-amber-50"
                 }`}
               >
-                {/* Info */}
                 <div className="flex items-center gap-4 flex-1 min-w-0">
                   <span className="text-lg select-none shrink-0">
                     {alert.type === "danger" ? "🔴" : "🟡"}
                   </span>
                   <div className="min-w-0">
                     <p
-                      className={`text-xs uppercase tracking-wider font-medium ${
-                        alert.type === "danger"
-                          ? "text-red-700"
-                          : "text-amber-700"
+                      className={`text-xs font-bold uppercase tracking-wider ${
+                        alert.type === "danger" ? "text-red-700" : "text-amber-700"
                       }`}
                     >
                       {alert.message}
                     </p>
-                    <p className="text-sm text-ink/80 mt-0.5 truncate">
+                    <p className="text-sm text-ink mt-0.5 truncate">
                       <strong>{alert.propertyName}</strong> · {alert.detail}
                     </p>
                   </div>
                 </div>
-
-                {/* Ações */}
                 <div className="flex items-center gap-3 shrink-0 ml-4">
-                  {/* Botão Quitado */}
                   <form action={markAsPaid}>
-                    <input
-                      type="hidden"
-                      name="property_id"
-                      value={alert.propertyId}
-                    />
-                    <input
-                      type="hidden"
-                      name="amount"
-                      value={alert.amount}
-                    />
+                    <input type="hidden" name="property_id" value={alert.propertyId} />
+                    <input type="hidden" name="amount" value={alert.amount} />
                     <button
                       type="submit"
-                      className="px-3 py-2 bg-forest text-cream text-[10px] uppercase tracking-wider font-medium hover:bg-ink transition-colors whitespace-nowrap"
+                      className="px-4 py-2 bg-forest text-white text-xs font-bold uppercase tracking-wider rounded hover:bg-forest-light transition-colors"
                     >
                       Quitado ✓
                     </button>
                   </form>
-
-                  {/* Link Ver */}
                   <Link
                     href={`/dashboard/properties/${alert.propertyId}`}
-                    className="text-[10px] uppercase tracking-wider text-ink/50 hover:text-forest transition-colors whitespace-nowrap"
+                    className="text-xs text-ink-2 hover:text-forest transition-colors uppercase tracking-wider"
                   >
                     Ver →
                   </Link>
@@ -271,141 +389,231 @@ export default async function DashboardPage() {
           </div>
         )}
 
-        {/* ── PATRIMÔNIO ──────────────────────────────── */}
-        <p className="text-[10px] uppercase tracking-[0.25em] text-ink/30 mb-2">
-          Patrimônio
-        </p>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-ink/10 mb-2 border border-ink/10">
-          <div className="bg-cream p-6">
-            <p className="text-[10px] uppercase tracking-wider text-ink/40 mb-2">
-              Imóveis
-            </p>
-            <p className="font-display text-3xl text-ink">{totalProperties}</p>
+        {/* Gráficos */}
+        <PortfolioCharts
+          modalityData={modalityData}
+          monthlyData={monthlyData}
+          totalCurrentValue={totalCurrentValue}
+          totalProperties={totalProperties}
+        />
+
+        {/* ── KPIs DETALHADOS ────────────────────────────── */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="card col-span-1">
+            <p className="kpi-label">Imóveis</p>
+            <p className="kpi-value-lg">{totalProperties}</p>
           </div>
-          <div className="bg-cream p-6">
-            <p className="text-[10px] uppercase tracking-wider text-ink/40 mb-2">
-              Patrimônio
-            </p>
-            <p className="font-display text-2xl text-ink">
-              {formatCurrency(totalCurrentValue)}
-            </p>
-          </div>
-          <div className="bg-cream p-6">
-            <p className="text-[10px] uppercase tracking-wider text-ink/40 mb-2">
-              Valorização
-            </p>
+
+          <div className="card col-span-1">
+            <p className="kpi-label">Valorização</p>
             <p
-              className={`font-display text-2xl ${
-                appreciation >= 0 ? "text-forest" : "text-red-700"
+              className={`kpi-value ${
+                appreciation >= 0 ? "text-positive" : "text-negative"
               }`}
             >
-              {totalAcquisitionValue > 0
-                ? formatPercent(appreciation)
+              {totalAcquisitionValue > 0 ? formatPercent(appreciation) : "—"}
+            </p>
+          </div>
+
+          <div className="card col-span-1">
+            <p className="kpi-label">Receitas — {monthName}</p>
+            <p className="kpi-value text-positive">
+              {formatCurrencyShort(totalMonthlyIncome)}
+            </p>
+          </div>
+
+          <div className="card col-span-1">
+            <p className="kpi-label">Despesas — {monthName}</p>
+            <p className="kpi-value">
+              {formatCurrencyShort(totalMonthlyExpense)}
+            </p>
+          </div>
+
+          <div className="card col-span-1">
+            <p className="kpi-label">Saldo — {monthName}</p>
+            <p
+              className={`kpi-value ${
+                totalMonthlySaldo >= 0 ? "text-positive" : "text-negative"
+              }`}
+            >
+              {formatCurrencyShort(totalMonthlySaldo)}
+            </p>
+          </div>
+
+          <div className="card col-span-1">
+            <p className="kpi-label">Eficiência</p>
+            <p
+              className={`kpi-value ${
+                collectionEfficiency === null
+                  ? "text-ink"
+                  : collectionEfficiency >= 1
+                  ? "text-positive"
+                  : collectionEfficiency >= 0.8
+                  ? "text-warning"
+                  : "text-negative"
+              }`}
+            >
+              {collectionEfficiency !== null
+                ? formatPercent(collectionEfficiency)
                 : "—"}
             </p>
-          </div>
-          <div className="bg-cream p-6">
-            <p className="text-[10px] uppercase tracking-wider text-ink/40 mb-2">
-              Yield médio
-            </p>
-            <p className="font-display text-2xl text-ink">
-              {avgYield !== null ? formatPercent(avgYield) : "—"}
-            </p>
-            <p className="text-[9px] text-ink/30 mt-1">ao ano</p>
+            {collectionEfficiency !== null && (
+              <p className="text-xs text-ink-3 mt-1">recebido / esperado</p>
+            )}
           </div>
         </div>
 
-        {/* ── MÊS CORRENTE ────────────────────────────── */}
-        <p className="text-[10px] uppercase tracking-[0.25em] text-ink/30 mb-2 mt-6">
-          {monthName}
-        </p>
-        <div className="grid grid-cols-3 gap-px bg-ink/10 mb-12 border border-ink/10">
-          <div className="bg-cream p-6">
-            <p className="text-[10px] uppercase tracking-wider text-ink/40 mb-2">
-              Receitas
+        {/* ── PORTFÓLIO ──────────────────────────────────── */}
+        <div className="card">
+          <div className="flex items-center justify-between mb-5">
+            <p className="section-title" style={{ marginBottom: 0 }}>
+              Seus imóveis
             </p>
-            <p className="font-display text-2xl text-forest">
-              {formatCurrency(totalMonthlyIncome)}
-            </p>
-          </div>
-          <div className="bg-cream p-6">
-            <p className="text-[10px] uppercase tracking-wider text-ink/40 mb-2">
-              Despesas
-            </p>
-            <p className="font-display text-2xl text-ink">
-              {formatCurrency(totalMonthlyExpense)}
-            </p>
-          </div>
-          <div className="bg-cream p-6">
-            <p className="text-[10px] uppercase tracking-wider text-ink/40 mb-2">
-              Saldo
-            </p>
-            <p
-              className={`font-display text-2xl ${
-                totalMonthlySaldo >= 0 ? "text-forest" : "text-red-700"
-              }`}
-            >
-              {formatCurrency(totalMonthlySaldo)}
-            </p>
-          </div>
-        </div>
-
-        {/* ── PORTFÓLIO ───────────────────────────────── */}
-        <div className="flex items-end justify-between mb-8">
-          <div>
-            <p className="text-xs tracking-[0.3em] uppercase text-forest/60 mb-2">
-              Imóveis
-            </p>
-            <h3 className="font-display text-2xl text-ink">
-              Seu portfólio detalhado
-            </h3>
-          </div>
-          {totalProperties > 0 && (
             <Link
               href="/dashboard/properties"
-              className="text-xs uppercase tracking-wider text-forest hover:text-ink transition-colors"
+              className="text-xs text-forest font-semibold uppercase tracking-wider hover:text-forest-light transition-colors"
             >
               Ver todos →
             </Link>
+          </div>
+
+          {totalProperties === 0 ? (
+            <div className="text-center py-10">
+              <p className="text-ink-2 mb-2">Nenhum imóvel cadastrado ainda.</p>
+              <Link
+                href="/dashboard/properties/new"
+                className="inline-block mt-3 px-6 py-3 bg-forest text-white text-xs font-bold uppercase tracking-wider rounded hover:bg-forest-light transition-colors"
+              >
+                + Cadastrar imóvel
+              </Link>
+            </div>
+          ) : (
+            <div className="divide-y divide-border">
+              {props.slice(0, 5).map((p) => {
+                const modality = p.modality || "annual_lease";
+                const isPlanta = modality === "under_construction";
+                const isAirbnb = modality === "short_stay";
+
+                let gaugeValue = 0;
+                let gaugeLabel = "";
+                let gaugeColor = "#2D4A3E";
+
+                if (isPlanta) {
+                  gaugeValue = p.total_investment && p.acquisition_value
+                    ? Math.min((p.acquisition_value / p.total_investment) * 100, 100)
+                    : 0;
+                  gaugeLabel = `${Math.round(gaugeValue)}%`;
+                  gaugeColor = "#F59E0B";
+                } else if (p.current_value && p.monthly_rent) {
+                  const yieldAnual = (Number(p.monthly_rent) / Number(p.current_value)) * 12 * 100;
+                  gaugeValue = Math.min(yieldAnual * 5, 100);
+                  gaugeLabel = `${yieldAnual.toFixed(1)}%`;
+                  gaugeColor = isAirbnb ? "#3B82F6" : "#2D4A3E";
+                }
+
+                const modalityColors: Record<string, string> = {
+                  annual_lease: "#2D4A3E",
+                  short_stay: "#3B82F6",
+                  under_construction: "#F59E0B",
+                };
+
+                const modalityLabels: Record<string, string> = {
+                  annual_lease: "Locação anual",
+                  short_stay: "Temporada",
+                  under_construction: "Na planta",
+                };
+
+                const radius = 20;
+                const circumference = 2 * Math.PI * radius;
+                const strokeDashoffset = circumference - (gaugeValue / 100) * circumference;
+
+                return (
+                  <div key={p.id} className="flex items-center gap-5 py-4">
+                    {/* Gauge circular */}
+                    <div className="shrink-0 relative" style={{ width: 52, height: 52 }}>
+                      <svg width="52" height="52" viewBox="0 0 52 52">
+                        <circle
+                          cx="26" cy="26" r={radius}
+                          fill="none"
+                          stroke="#E5E7EB"
+                          strokeWidth="5"
+                        />
+                        {gaugeValue > 0 && (
+                          <circle
+                            cx="26" cy="26" r={radius}
+                            fill="none"
+                            stroke={gaugeColor}
+                            strokeWidth="5"
+                            strokeDasharray={circumference}
+                            strokeDashoffset={strokeDashoffset}
+                            strokeLinecap="round"
+                            transform="rotate(-90 26 26)"
+                          />
+                        )}
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span style={{ fontSize: 9, fontWeight: 700, color: gaugeColor, lineHeight: 1 }}>
+                          {gaugeLabel || "—"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span
+                          className="text-[10px] font-bold uppercase tracking-wider"
+                          style={{ color: modalityColors[modality] }}
+                        >
+                          {modalityLabels[modality]}
+                        </span>
+                      </div>
+                      <Link
+                        href={`/dashboard/properties/${p.id}`}
+                        className="text-base font-semibold text-ink hover:text-forest transition-colors truncate block"
+                      >
+                        {p.name}
+                      </Link>
+                      {(p.city || p.state) && (
+                        <p className="text-sm text-ink-3">
+                          {[p.city, p.state].filter(Boolean).join(" · ")}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Valores */}
+                    <div className="hidden md:block text-right shrink-0">
+                      <p className="text-xs text-ink-3 uppercase tracking-wider">
+                        {isPlanta ? "Já pago" : "Valor atual"}
+                      </p>
+                      <p className="text-base font-bold text-ink">
+                        {isPlanta
+                          ? formatCurrencyShort(Number(p.acquisition_value || 0))
+                          : formatCurrencyShort(Number(p.current_value || 0))}
+                      </p>
+                    </div>
+
+                    <div className="hidden lg:block text-right shrink-0 ml-6">
+                      <p className="text-xs text-ink-3 uppercase tracking-wider">
+                        {isPlanta ? "VGV" : isAirbnb ? "Receita est." : "Aluguel"}
+                      </p>
+                      <p className="text-base font-bold text-positive">
+                        {formatCurrencyShort(Number(p.monthly_rent || 0))}
+                      </p>
+                    </div>
+
+                    <Link
+                      href={`/dashboard/properties/${p.id}`}
+                      className="shrink-0 ml-4 text-xs text-ink-3 hover:text-forest transition-colors"
+                    >
+                      →
+                    </Link>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
-
-        {totalProperties === 0 ? (
-          <div className="border border-dashed border-ink/15 p-12 text-center">
-            <p className="text-xs tracking-[0.3em] uppercase text-ink/40 mb-3">
-              Comece aqui
-            </p>
-            <p className="font-display text-2xl text-ink/70 mb-3">
-              Cadastre seu primeiro imóvel
-            </p>
-            <p className="text-sm text-ink/50 max-w-md mx-auto mb-6">
-              Adicione imóveis de locação anual, temporada ou na planta.
-            </p>
-            <Link
-              href="/dashboard/properties/new"
-              className="inline-block px-6 py-3 bg-forest text-cream font-medium tracking-wider uppercase text-xs hover:bg-ink transition-colors"
-            >
-              + Cadastrar imóvel
-            </Link>
-          </div>
-        ) : (
-          <div className="border border-ink/10 p-6 bg-white">
-            <p className="text-sm text-ink/70 mb-4">
-              Você tem{" "}
-              <strong className="text-ink">{totalProperties}</strong>{" "}
-              {totalProperties === 1
-                ? "imóvel cadastrado"
-                : "imóveis cadastrados"}
-              . Clique num imóvel pra ver e lançar transações.
-            </p>
-            <Link
-              href="/dashboard/properties"
-              className="inline-block px-6 py-3 bg-forest text-cream font-medium tracking-wider uppercase text-xs hover:bg-ink transition-colors"
-            >
-              Gerenciar portfólio →
-            </Link>
-          </div>
-        )}
       </div>
     </main>
   );
