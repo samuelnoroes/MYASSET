@@ -4,21 +4,15 @@ import { createClient } from "@/utils/supabase/server";
 import { updateProperty } from "../../actions";
 import PropertyFormFields from "../../_components/PropertyFormFields";
 
-type EditPropertyPageProps = {
-  params: { id: string };
-};
+type Props = { params: { id: string } };
 
-export default async function EditPropertyPage({
-  params,
-}: EditPropertyPageProps) {
+export default async function EditPropertyPage({ params }: Props) {
   const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/login");
-  }
+  if (!user) redirect("/login");
 
   const { data: property, error } = await supabase
     .from("properties")
@@ -27,35 +21,34 @@ export default async function EditPropertyPage({
     .eq("user_id", user.id)
     .single();
 
-  if (error || !property) {
-    notFound();
-  }
+  if (error || !property) notFound();
 
   return (
-    <main className="min-h-screen bg-cream">
-      <header className="border-b border-ink/10">
-        <div className="max-w-3xl mx-auto px-6 py-5 flex items-center justify-between">
-          <Link href="/dashboard" className="font-display text-2xl text-ink">
-            My<span className="italic text-forest">Asset</span>
+    <main className="min-h-screen bg-surface">
+      {/* Header */}
+      <header className="bg-header text-white shadow-sm">
+        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+          <Link href="/dashboard" className="font-display text-xl italic">
+            My<span style={{ color: "#6BA68A" }}>Asset</span>
           </Link>
           <Link
             href={`/dashboard/properties/${params.id}`}
-            className="text-xs uppercase tracking-wider text-ink/60 hover:text-forest transition-colors"
+            className="text-xs text-gray-400 hover:text-white transition-colors uppercase tracking-wider"
           >
             Cancelar
           </Link>
         </div>
       </header>
 
-      <div className="max-w-3xl mx-auto px-6 py-12">
-        <div className="mb-10">
-          <p className="text-xs tracking-[0.3em] uppercase text-forest/60 mb-3">
+      <div className="max-w-4xl mx-auto px-6 py-8">
+        <div className="mb-8">
+          <p className="text-xs font-bold uppercase tracking-widest text-forest mb-2">
             Editar imóvel
           </p>
-          <h1 className="font-display text-4xl text-ink">{property.name}</h1>
+          <h1 className="text-3xl font-bold text-ink">{property.name}</h1>
         </div>
 
-        <form action={updateProperty} className="space-y-10">
+        <form action={updateProperty} className="space-y-5">
           <input type="hidden" name="id" value={property.id} />
 
           <PropertyFormFields
@@ -81,16 +74,16 @@ export default async function EditPropertyPage({
             }}
           />
 
-          <div className="flex flex-col gap-3 pt-4">
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <button
               type="submit"
-              className="w-full py-4 bg-forest text-cream font-medium tracking-wider uppercase text-xs hover:bg-ink transition-colors"
+              className="px-8 py-4 bg-forest text-white font-bold tracking-wider uppercase text-sm hover:bg-forest-light transition-colors rounded"
             >
               Salvar alterações
             </button>
             <Link
               href={`/dashboard/properties/${params.id}`}
-              className="w-full py-4 bg-transparent border border-ink/20 text-ink font-medium tracking-wider uppercase text-xs hover:border-forest hover:text-forest transition-colors text-center"
+              className="px-8 py-4 bg-surface border border-border text-ink font-bold tracking-wider uppercase text-sm hover:border-forest hover:text-forest transition-colors rounded text-center"
             >
               Cancelar
             </Link>
