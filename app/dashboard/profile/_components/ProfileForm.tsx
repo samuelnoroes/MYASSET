@@ -19,16 +19,17 @@ export default function ProfileForm({
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [fullName, setFullName] = useState(defaultFullName);
+  const [phone, setPhone] = useState(defaultPhone);
 
-  const inputBase = "w-full px-4 py-3 border text-ink transition-colors";
-  const inputEditing = `${inputBase} bg-white border-ink/10 focus:border-forest focus:outline-none`;
-  const inputReadonly = `${inputBase} bg-ink/5 border-ink/10 text-ink/50`;
-
-  async function handleSave(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  async function handleSave() {
     setSaving(true);
 
-    const formData = new FormData(e.currentTarget);
+    // Monta o FormData manualmente — sem depender de <form>
+    const formData = new FormData();
+    formData.append("full_name", fullName);
+    formData.append("phone", phone);
+
     await updateProfile(formData);
 
     router.refresh();
@@ -39,9 +40,17 @@ export default function ProfileForm({
   }
 
   function handleCancel() {
+    // Restaura os valores originais ao cancelar
+    setFullName(defaultFullName);
+    setPhone(defaultPhone);
     setEditing(false);
     setSaved(false);
   }
+
+  const inputEditing =
+    "w-full px-4 py-3 bg-white border border-ink/10 focus:border-forest focus:outline-none transition-colors text-ink";
+  const inputReadonly =
+    "w-full px-4 py-3 bg-ink/5 border border-ink/10 text-ink/50 cursor-default";
 
   return (
     <div className="space-y-6">
@@ -55,7 +64,7 @@ export default function ProfileForm({
         </div>
       )}
 
-      {/* E-mail — sempre readonly, fora do form */}
+      {/* E-mail — sempre bloqueado */}
       <div>
         <label className="block text-xs uppercase tracking-wider text-ink/60 mb-2">
           E-mail
@@ -71,79 +80,79 @@ export default function ProfileForm({
         </p>
       </div>
 
-      {/* Form controlado via onSubmit — sem action */}
-      <form onSubmit={handleSave} className="space-y-5">
-        <div>
-          <label
-            htmlFor="full_name"
-            className="block text-xs uppercase tracking-wider text-ink/60 mb-2"
-          >
-            Nome completo
-          </label>
-          <input
-            id="full_name"
-            name="full_name"
-            type="text"
-            defaultValue={defaultFullName}
-            readOnly={!editing}
-            placeholder={editing ? "Seu nome completo" : "—"}
-            className={editing ? inputEditing : inputReadonly}
-          />
-        </div>
+      {/* Nome */}
+      <div>
+        <label
+          htmlFor="full_name"
+          className="block text-xs uppercase tracking-wider text-ink/60 mb-2"
+        >
+          Nome completo
+        </label>
+        <input
+          id="full_name"
+          type="text"
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+          readOnly={!editing}
+          placeholder={editing ? "Seu nome completo" : "—"}
+          className={editing ? inputEditing : inputReadonly}
+        />
+      </div>
 
-        <div>
-          <label
-            htmlFor="phone"
-            className="block text-xs uppercase tracking-wider text-ink/60 mb-2"
-          >
-            WhatsApp
-          </label>
-          <input
-            id="phone"
-            name="phone"
-            type="tel"
-            defaultValue={defaultPhone}
-            readOnly={!editing}
-            placeholder={editing ? "(85) 99999-9999" : "—"}
-            className={editing ? inputEditing : inputReadonly}
-          />
-          {editing && (
-            <p className="text-[10px] text-ink/40 mt-2">
-              Usado para alertas de aluguel e oportunidades do portfólio.
-            </p>
-          )}
-        </div>
+      {/* WhatsApp */}
+      <div>
+        <label
+          htmlFor="phone"
+          className="block text-xs uppercase tracking-wider text-ink/60 mb-2"
+        >
+          WhatsApp
+        </label>
+        <input
+          id="phone"
+          type="tel"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          readOnly={!editing}
+          placeholder={editing ? "(85) 99999-9999" : "—"}
+          className={editing ? inputEditing : inputReadonly}
+        />
+        {editing && (
+          <p className="text-[10px] text-ink/40 mt-2">
+            Usado para alertas de aluguel e oportunidades do portfólio.
+          </p>
+        )}
+      </div>
 
-        {/* Botões de ação */}
-        <div className="flex gap-3 pt-4">
-          {editing ? (
-            <>
-              <button
-                type="submit"
-                disabled={saving}
-                className="px-8 py-4 bg-forest text-cream font-medium tracking-wider uppercase text-xs hover:bg-ink transition-colors disabled:opacity-60"
-              >
-                {saving ? "Salvando..." : "Salvar"}
-              </button>
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="px-8 py-4 bg-transparent border border-ink/20 text-ink font-medium tracking-wider uppercase text-xs hover:border-forest hover:text-forest transition-colors"
-              >
-                Cancelar
-              </button>
-            </>
-          ) : (
+      {/* Botões — sem <form>, sem risco de submit automático */}
+      <div className="flex gap-3 pt-4">
+        {editing ? (
+          <>
             <button
               type="button"
-              onClick={() => setEditing(true)}
-              className="px-8 py-4 bg-forest text-cream font-medium tracking-wider uppercase text-xs hover:bg-ink transition-colors"
+              onClick={handleSave}
+              disabled={saving}
+              className="px-8 py-4 bg-forest text-cream font-medium tracking-wider uppercase text-xs hover:bg-ink transition-colors disabled:opacity-60"
             >
-              Editar
+              {saving ? "Salvando..." : "Salvar"}
             </button>
-          )}
-        </div>
-      </form>
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="px-8 py-4 bg-transparent border border-ink/20 text-ink font-medium tracking-wider uppercase text-xs hover:border-forest hover:text-forest transition-colors"
+            >
+              Cancelar
+            </button>
+          </>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            className="px-8 py-4 bg-forest text-cream font-medium tracking-wider uppercase text-xs hover:bg-ink transition-colors"
+          >
+            Editar
+          </button>
+        )}
+      </div>
     </div>
   );
 }
