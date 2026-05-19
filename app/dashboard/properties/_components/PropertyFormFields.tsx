@@ -26,11 +26,14 @@ type DefaultValues = {
 };
 
 const inputClass =
-  "w-full px-4 py-3 bg-white border border-ink/10 focus:border-forest focus:outline-none transition-colors text-ink";
-const labelClass = "block text-xs uppercase tracking-wider text-ink/60 mb-2";
-const hintClass = "text-[10px] text-ink/40 mt-2";
+  "w-full px-4 py-3 bg-surface border border-border rounded text-sm text-ink focus:border-forest focus:outline-none transition-colors";
+const selectClass =
+  "w-full px-4 py-3 bg-surface border border-border rounded text-sm text-ink focus:border-forest focus:outline-none transition-colors";
+const labelClass =
+  "block text-xs font-semibold uppercase tracking-wider text-ink-2 mb-2";
+const hintClass = "text-xs text-ink-3 mt-1";
 const sectionTitleClass =
-  "text-xs tracking-[0.3em] uppercase text-ink/40 pb-2 border-b border-ink/10";
+  "text-xs font-bold uppercase tracking-widest text-ink-2 pb-2 border-b-2 border-forest inline-block mb-5";
 
 export default function PropertyFormFields({
   defaults = {},
@@ -44,8 +47,8 @@ export default function PropertyFormFields({
   return (
     <>
       {/* ── IDENTIFICAÇÃO ─────────────────────────────── */}
-      <section className="space-y-5">
-        <h2 className={sectionTitleClass}>Identificação</h2>
+      <div className="card space-y-5">
+        <p className={sectionTitleClass}>Identificação</p>
 
         <div>
           <label htmlFor="name" className={labelClass}>
@@ -56,7 +59,7 @@ export default function PropertyFormFields({
             name="name"
             type="text"
             required
-            placeholder="Ex: Apartamento na Aldeota Tower"
+            placeholder="Ex: Apartamento no Aldeota Tower"
             defaultValue={defaults.name || ""}
             className={inputClass}
           />
@@ -77,8 +80,7 @@ export default function PropertyFormFields({
             className={inputClass}
           />
           <p className={hintClass}>
-            Letras minúsculas e números, sem espaços. Usado pra identificar o
-            imóvel no WhatsApp.
+            Letras minúsculas e números, sem espaços. Usado no WhatsApp.
           </p>
         </div>
 
@@ -92,19 +94,16 @@ export default function PropertyFormFields({
             required
             value={modality}
             onChange={(e) => setModality(e.target.value as Modality)}
-            className={inputClass}
+            className={selectClass}
           >
             <option value="annual_lease">Locação anual (contrato)</option>
             <option value="short_stay">Temporada / Airbnb</option>
             <option value="under_construction">Na planta / em construção</option>
           </select>
           <p className={hintClass}>
-            {modality === "annual_lease" &&
-              "Imóvel com contrato de locação fixo. Aluguel mensal previsível."}
-            {modality === "short_stay" &&
-              "Imóvel alugado por período curto (diárias). Receita variável."}
-            {modality === "under_construction" &&
-              "Imóvel ainda não entregue. Sem receita por enquanto."}
+            {modality === "annual_lease" && "Contrato de locação fixo. Aluguel mensal previsível."}
+            {modality === "short_stay" && "Aluguel por período curto (diárias). Receita variável."}
+            {modality === "under_construction" && "Imóvel ainda não entregue. Sem receita por enquanto."}
           </p>
         </div>
 
@@ -117,7 +116,7 @@ export default function PropertyFormFields({
             name="property_type"
             required
             defaultValue={defaults.property_type || "residential"}
-            className={inputClass}
+            className={selectClass}
           >
             <option value="residential">Residencial</option>
             <option value="commercial">Comercial</option>
@@ -125,16 +124,14 @@ export default function PropertyFormFields({
             <option value="mixed">Misto</option>
           </select>
         </div>
-      </section>
+      </div>
 
       {/* ── LOCALIZAÇÃO ───────────────────────────────── */}
-      <section className="space-y-5">
-        <h2 className={sectionTitleClass}>Localização</h2>
+      <div className="card space-y-5">
+        <p className={sectionTitleClass}>Localização</p>
 
         <div>
-          <label htmlFor="address" className={labelClass}>
-            Endereço
-          </label>
+          <label htmlFor="address" className={labelClass}>Endereço</label>
           <input
             id="address"
             name="address"
@@ -147,9 +144,7 @@ export default function PropertyFormFields({
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           <div className="md:col-span-2">
-            <label htmlFor="city" className={labelClass}>
-              Cidade
-            </label>
+            <label htmlFor="city" className={labelClass}>Cidade</label>
             <input
               id="city"
               name="city"
@@ -159,9 +154,7 @@ export default function PropertyFormFields({
             />
           </div>
           <div>
-            <label htmlFor="state" className={labelClass}>
-              UF
-            </label>
+            <label htmlFor="state" className={labelClass}>UF</label>
             <input
               id="state"
               name="state"
@@ -173,18 +166,16 @@ export default function PropertyFormFields({
             />
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* ── FINANCEIRO BASE (todos) ───────────────────── */}
-      <section className="space-y-5">
-        <h2 className={sectionTitleClass}>Financeiro</h2>
+      {/* ── FINANCEIRO BASE ───────────────────────────── */}
+      <div className="card space-y-5">
+        <p className={sectionTitleClass}>Financeiro</p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
             <label htmlFor="acquisition_value" className={labelClass}>
-              {modality === "under_construction"
-                ? "Valor já pago (R$)"
-                : "Valor de compra (R$)"}
+              {modality === "under_construction" ? "Valor já pago (R$)" : "Valor de compra (R$)"}
             </label>
             <input
               id="acquisition_value"
@@ -197,16 +188,12 @@ export default function PropertyFormFields({
               className={inputClass}
             />
             {modality === "under_construction" && (
-              <p className={hintClass}>
-                Valor já desembolsado até hoje (parcelas pagas, entrada, etc.)
-              </p>
+              <p className={hintClass}>Valor já desembolsado até hoje</p>
             )}
           </div>
           <div>
             <label htmlFor="acquisition_date" className={labelClass}>
-              {modality === "under_construction"
-                ? "Data de assinatura"
-                : "Data de compra"}
+              {modality === "under_construction" ? "Data de assinatura" : "Data de compra"}
             </label>
             <input
               id="acquisition_date"
@@ -218,7 +205,6 @@ export default function PropertyFormFields({
           </div>
         </div>
 
-        {/* Valor atual — só pra imóveis entregues */}
         {modality !== "under_construction" && (
           <div>
             <label htmlFor="current_value" className={labelClass}>
@@ -237,18 +223,17 @@ export default function PropertyFormFields({
             <p className={hintClass}>Estimativa do valor de mercado hoje</p>
           </div>
         )}
-      </section>
+      </div>
 
       {/* ── LOCAÇÃO ANUAL ─────────────────────────────── */}
       {modality === "annual_lease" && (
-        <section className="space-y-5">
-          <h2 className={sectionTitleClass}>Contrato de locação</h2>
+        <div className="card space-y-5">
+          <p className={sectionTitleClass}>Contrato de locação</p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
               <label htmlFor="monthly_rent" className={labelClass}>
-                Aluguel contratual (R$/mês){" "}
-                <span className="text-forest">*</span>
+                Aluguel contratual (R$/mês) <span className="text-forest">*</span>
               </label>
               <input
                 id="monthly_rent"
@@ -260,10 +245,7 @@ export default function PropertyFormFields({
                 defaultValue={defaults.monthly_rent ?? ""}
                 className={inputClass}
               />
-              <p className={hintClass}>
-                Valor fixo do contrato. Receitas reais são lançadas em
-                transações.
-              </p>
+              <p className={hintClass}>Valor fixo do contrato</p>
             </div>
             <div>
               <label htmlFor="lease_due_day" className={labelClass}>
@@ -279,16 +261,14 @@ export default function PropertyFormFields({
                 defaultValue={defaults.lease_due_day ?? ""}
                 className={inputClass}
               />
-              <p className={hintClass}>
-                Dia do mês em que o aluguel vence
-              </p>
+              <p className={hintClass}>Dia do mês em que o aluguel vence</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
               <label htmlFor="lease_renewal_date" className={labelClass}>
-                Data de renovação do contrato
+                Data de renovação
               </label>
               <input
                 id="lease_renewal_date"
@@ -306,7 +286,7 @@ export default function PropertyFormFields({
                 id="adjustment_index"
                 name="adjustment_index"
                 defaultValue={defaults.adjustment_index || ""}
-                className={inputClass}
+                className={selectClass}
               >
                 <option value="">Não definido</option>
                 <option value="igpm">IGP-M</option>
@@ -317,13 +297,13 @@ export default function PropertyFormFields({
               </select>
             </div>
           </div>
-        </section>
+        </div>
       )}
 
-      {/* ── TEMPORADA / AIRBNB ────────────────────────── */}
+      {/* ── TEMPORADA ─────────────────────────────────── */}
       {modality === "short_stay" && (
-        <section className="space-y-5">
-          <h2 className={sectionTitleClass}>Temporada</h2>
+        <div className="card space-y-5">
+          <p className={sectionTitleClass}>Temporada</p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
@@ -340,7 +320,6 @@ export default function PropertyFormFields({
                 defaultValue={defaults.daily_rate ?? ""}
                 className={inputClass}
               />
-              <p className={hintClass}>Valor médio cobrado por diária</p>
             </div>
             <div>
               <label htmlFor="target_occupancy" className={labelClass}>
@@ -357,9 +336,7 @@ export default function PropertyFormFields({
                 defaultValue={defaults.target_occupancy ?? ""}
                 className={inputClass}
               />
-              <p className={hintClass}>
-                % médio de dias ocupados no mês
-              </p>
+              <p className={hintClass}>% médio de dias ocupados no mês</p>
             </div>
           </div>
 
@@ -378,17 +355,16 @@ export default function PropertyFormFields({
               className={inputClass}
             />
             <p className={hintClass}>
-              Estimativa de receita mensal média pra cálculo de yield. Receitas
-              reais são lançadas em transações.
+              Estimativa de receita mensal média para cálculo de yield
             </p>
           </div>
-        </section>
+        </div>
       )}
 
       {/* ── NA PLANTA ─────────────────────────────────── */}
       {modality === "under_construction" && (
-        <section className="space-y-5">
-          <h2 className={sectionTitleClass}>Planta</h2>
+        <div className="card space-y-5">
+          <p className={sectionTitleClass}>Planta</p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
@@ -436,10 +412,10 @@ export default function PropertyFormFields({
               className={inputClass}
             />
             <p className={hintClass}>
-              Estimativa de aluguel futuro pra calcular yield projetado
+              Estimativa de aluguel futuro para cálculo de yield projetado
             </p>
           </div>
-        </section>
+        </div>
       )}
     </>
   );
