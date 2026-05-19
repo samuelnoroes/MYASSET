@@ -1,9 +1,7 @@
 import Link from "next/link";
 
 type ErrorPageProps = {
-  searchParams: {
-    message?: string;
-  };
+  searchParams: { message?: string };
 };
 
 export default function ErrorPage({ searchParams }: ErrorPageProps) {
@@ -12,26 +10,26 @@ export default function ErrorPage({ searchParams }: ErrorPageProps) {
     : "Erro não identificado.";
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-6 bg-cream">
-      <div className="text-center max-w-xl">
-        <p className="text-xs tracking-[0.3em] uppercase text-forest/60 mb-6">
-          Algo deu errado
-        </p>
-        <h1 className="font-display text-5xl text-ink mb-6">
-          Não foi possível continuar
-        </h1>
-        <p className="text-sm text-ink/70 mb-3 leading-relaxed">
-          Detalhe do erro:
-        </p>
-        <p className="text-sm text-forest mb-10 font-mono bg-white border border-ink/10 p-4 break-words text-left">
-          {message}
-        </p>
-        <Link
-          href="/login"
-          className="inline-block px-8 py-4 bg-forest text-cream font-medium tracking-wider uppercase text-xs hover:bg-ink transition-colors"
-        >
-          Voltar ao login
-        </Link>
+    <main className="min-h-screen bg-surface flex items-center justify-center px-6">
+      <div className="w-full max-w-md">
+        <div className="card text-center py-12">
+          <p className="text-5xl mb-6">⚠️</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-ink-3 mb-3">
+            Algo deu errado
+          </p>
+          <h1 className="text-2xl font-bold text-ink mb-6">
+            Não foi possível continuar
+          </h1>
+          <div className="bg-surface rounded px-4 py-3 mb-8 text-left">
+            <p className="text-sm font-mono text-ink-2 break-words">{message}</p>
+          </div>
+          <Link
+            href="/login"
+            className="inline-block px-8 py-3 bg-forest text-white font-bold tracking-wider uppercase text-sm hover:bg-forest-light transition-colors rounded"
+          >
+            Voltar ao login
+          </Link>
+        </div>
       </div>
     </main>
   );
