@@ -13,29 +13,34 @@ type Notification = {
   body: string;
   type: "opportunity" | "optimization" | "news";
   created_at: string;
+  contact_label: string | null;
+  contact_url: string | null;
 };
 
 const TYPE_CONFIG: Record<
   string,
-  { label: string; color: string; bg: string; icon: string }
+  { label: string; color: string; bg: string; icon: string; btnBg: string }
 > = {
   opportunity: {
     label: "Oportunidade",
     color: "#D97706",
     bg: "#FFFBEB",
     icon: "💡",
+    btnBg: "#D97706",
   },
   optimization: {
     label: "Otimização",
     color: "#2D4A3E",
     bg: "#F0FDF4",
     icon: "📈",
+    btnBg: "#2D4A3E",
   },
   news: {
     label: "Mercado",
     color: "#3B82F6",
     bg: "#EFF6FF",
     icon: "📰",
+    btnBg: "#3B82F6",
   },
 };
 
@@ -65,16 +70,14 @@ export default function DashboardShell({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Restaura estado do painel (padrão: aberto)
     const saved = localStorage.getItem("notif-panel-open");
     setPanelOpen(saved === null ? true : saved === "true");
     setMounted(true);
 
-    // Busca notificações
     const supabase = createClient();
     supabase
       .from("notifications")
-      .select("id, title, body, type, created_at")
+      .select("id, title, body, type, created_at, contact_label, contact_url")
       .eq("active", true)
       .order("created_at", { ascending: false })
       .limit(30)
@@ -89,14 +92,11 @@ export default function DashboardShell({
     localStorage.setItem("notif-panel-open", String(open));
   }
 
-  // Antes do mount não renderiza o painel para evitar layout shift
-  if (!mounted) {
-    return <>{children}</>;
-  }
+  if (!mounted) return <>{children}</>;
 
   return (
     <div style={{ position: "relative" }}>
-      {/* Conteúdo principal — recua quando painel está aberto */}
+      {/* Conteúdo principal */}
       <div
         style={{
           paddingRight: panelOpen ? PANEL_WIDTH : 0,
@@ -115,7 +115,9 @@ export default function DashboardShell({
           right: 0,
           bottom: 0,
           width: PANEL_WIDTH,
-          transform: panelOpen ? "translateX(0)" : `translateX(${PANEL_WIDTH}px)`,
+          transform: panelOpen
+            ? "translateX(0)"
+            : `translateX(${PANEL_WIDTH}px)`,
           transition: "transform 0.3s ease",
           zIndex: 40,
           display: "flex",
@@ -125,7 +127,7 @@ export default function DashboardShell({
           boxShadow: "-4px 0 24px rgba(0,0,0,0.10)",
         }}
       >
-        {/* Header do painel */}
+        {/* Header */}
         <div
           style={{
             backgroundColor: "#1F2937",
@@ -193,7 +195,13 @@ export default function DashboardShell({
           ) : notifications.length === 0 ? (
             <div style={{ textAlign: "center", padding: "40px 16px" }}>
               <p style={{ fontSize: 32, marginBottom: 10 }}>📭</p>
-              <p style={{ color: "#9CA3AF", fontSize: 13, lineHeight: 1.5 }}>
+              <p
+                style={{
+                  color: "#9CA3AF",
+                  fontSize: 13,
+                  lineHeight: 1.5,
+                }}
+              >
                 Nenhum informativo no momento.
                 <br />
                 Novidades aparecerão aqui.
@@ -212,6 +220,7 @@ export default function DashboardShell({
                     padding: "10px 12px",
                   }}
                 >
+                  {/* Tipo + data */}
                   <div
                     style={{
                       display: "flex",
@@ -221,11 +230,7 @@ export default function DashboardShell({
                     }}
                   >
                     <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 5,
-                      }}
+                      style={{ display: "flex", alignItems: "center", gap: 5 }}
                     >
                       <span style={{ fontSize: 12 }}>{cfg.icon}</span>
                       <span
@@ -244,6 +249,8 @@ export default function DashboardShell({
                       {formatDate(n.created_at)}
                     </span>
                   </div>
+
+                  {/* Título */}
                   <p
                     style={{
                       fontSize: 13,
@@ -255,22 +262,64 @@ export default function DashboardShell({
                   >
                     {n.title}
                   </p>
+
+                  {/* Corpo */}
                   <p
                     style={{
                       fontSize: 12,
                       color: "#4B5563",
                       lineHeight: 1.55,
+                      marginBottom: n.contact_url ? 10 : 0,
                     }}
                   >
                     {n.body}
                   </p>
+
+                  {/* Botão de contato — só aparece se contact_url estiver preenchido */}
+                  {n.contact_url && (
+                    <a
+                      href={n.contact_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 6,
+                        width: "100%",
+                        padding: "7px 12px",
+                        backgroundColor: cfg.btnBg,
+                        color: "white",
+                        borderRadius: 5,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.08em",
+                        textDecoration: "none",
+                        marginTop: 2,
+                      }}
+                    >
+                      {/* Ícone WhatsApp se for link wa.me */}
+                      {n.contact_url.includes("wa.me") && (
+                        <svg
+                          width="13"
+                          height="13"
+                          viewBox="0 0 32 32"
+                          fill="white"
+                        >
+                          <path d="M16 2C8.268 2 2 8.268 2 16c0 2.478.675 4.796 1.851 6.782L2 30l7.438-1.82A13.93 13.93 0 0016 30c7.732 0 14-6.268 14-14S23.732 2 16 2zm6.29 19.927c-.344-.172-2.035-1.003-2.35-1.118-.316-.115-.546-.172-.776.172-.23.344-.888 1.118-1.088 1.348-.2.23-.4.258-.744.086-.344-.172-1.454-.535-2.768-1.703-1.023-.912-1.714-2.037-1.914-2.381-.2-.344-.022-.53.15-.701.155-.154.344-.4.516-.601.172-.2.23-.344.344-.573.115-.23.057-.43-.028-.601-.086-.172-.776-1.872-1.062-2.564-.28-.672-.565-.58-.776-.59l-.66-.012c-.23 0-.601.086-.916.43-.315.344-1.204 1.175-1.204 2.866 0 1.69 1.233 3.324 1.405 3.553.172.23 2.428 3.71 5.882 5.203.822.355 1.464.567 1.965.726.826.262 1.578.225 2.173.137.663-.098 2.035-.832 2.322-1.635.287-.803.287-1.49.2-1.635-.086-.144-.315-.23-.659-.4z" />
+                        </svg>
+                      )}
+                      {n.contact_label || "Entrar em contato"}
+                    </a>
+                  )}
                 </div>
               );
             })
           )}
         </div>
 
-        {/* Rodapé do painel */}
+        {/* Rodapé */}
         <div
           style={{
             padding: "10px 16px",
