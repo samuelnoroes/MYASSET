@@ -23,6 +23,11 @@ type DefaultValues = {
   target_occupancy?: number | null;
   delivery_date?: string | null;
   total_investment?: number | null;
+  next_installment_date?: string | null;
+  installment_amount?: number | null;
+  balloon_date?: string | null;
+  balloon_amount?: number | null;
+  payment_notes?: string | null;
 };
 
 const inputClass =
@@ -363,59 +368,130 @@ export default function PropertyFormFields({
 
       {/* ── NA PLANTA ─────────────────────────────────── */}
       {modality === "under_construction" && (
-        <div className="card space-y-5">
-          <p className={sectionTitleClass}>Planta</p>
+        <>
+          {/* Contrato */}
+          <div className="card space-y-5">
+            <p className={sectionTitleClass}>Contrato</p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-              <label htmlFor="total_investment" className={labelClass}>
-                Valor total do contrato (R$)
-              </label>
-              <input
-                id="total_investment"
-                name="total_investment"
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="0,00"
-                defaultValue={defaults.total_investment ?? ""}
-                className={inputClass}
-              />
-              <p className={hintClass}>VGV ou valor total a pagar</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label htmlFor="total_investment" className={labelClass}>
+                  Valor total do contrato (R$)
+                </label>
+                <input
+                  id="total_investment"
+                  name="total_investment"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0,00"
+                  defaultValue={defaults.total_investment ?? ""}
+                  className={inputClass}
+                />
+                <p className={hintClass}>VGV ou valor total a pagar</p>
+              </div>
+              <div>
+                <label htmlFor="delivery_date" className={labelClass}>
+                  Previsão de entrega
+                </label>
+                <input
+                  id="delivery_date"
+                  name="delivery_date"
+                  type="date"
+                  defaultValue={defaults.delivery_date || ""}
+                  className={inputClass}
+                />
+              </div>
             </div>
+
             <div>
-              <label htmlFor="delivery_date" className={labelClass}>
-                Previsão de entrega
+              <label htmlFor="payment_notes" className={labelClass}>
+                Modelo de pagamento
               </label>
               <input
-                id="delivery_date"
-                name="delivery_date"
-                type="date"
-                defaultValue={defaults.delivery_date || ""}
+                id="payment_notes"
+                name="payment_notes"
+                type="text"
+                placeholder="Ex: 30% entrada + 60x mensais + 10% nas chaves"
+                defaultValue={defaults.payment_notes || ""}
                 className={inputClass}
               />
+              <p className={hintClass}>
+                Descreva a estrutura do contrato em texto livre
+              </p>
             </div>
           </div>
 
-          <div>
-            <label htmlFor="monthly_rent" className={labelClass}>
-              Aluguel projetado após entrega (R$)
-            </label>
-            <input
-              id="monthly_rent"
-              name="monthly_rent"
-              type="number"
-              step="0.01"
-              min="0"
-              placeholder="0,00"
-              defaultValue={defaults.monthly_rent ?? ""}
-              className={inputClass}
-            />
-            <p className={hintClass}>
-              Estimativa de aluguel futuro para cálculo de yield projetado
-            </p>
+          {/* Próxima parcela */}
+          <div className="card space-y-5">
+            <p className={sectionTitleClass}>Parcelas</p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label htmlFor="installment_amount" className={labelClass}>
+                  Valor da parcela mensal (R$)
+                </label>
+                <input
+                  id="installment_amount"
+                  name="installment_amount"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0,00"
+                  defaultValue={defaults.installment_amount ?? ""}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label htmlFor="next_installment_date" className={labelClass}>
+                  Data da próxima parcela
+                </label>
+                <input
+                  id="next_installment_date"
+                  name="next_installment_date"
+                  type="date"
+                  defaultValue={defaults.next_installment_date || ""}
+                  className={inputClass}
+                />
+                <p className={hintClass}>
+                  Gera lembrete de pagamento quando estiver próxima
+                </p>
+              </div>
+            </div>
+
+            {/* Balão */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label htmlFor="balloon_amount" className={labelClass}>
+                  Valor do balão / parcela especial (R$)
+                </label>
+                <input
+                  id="balloon_amount"
+                  name="balloon_amount"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0,00"
+                  defaultValue={defaults.balloon_amount ?? ""}
+                  className={inputClass}
+                />
+                <p className={hintClass}>Opcional — ex: parcela das chaves</p>
+              </div>
+              <div>
+                <label htmlFor="balloon_date" className={labelClass}>
+                  Data do balão
+                </label>
+                <input
+                  id="balloon_date"
+                  name="balloon_date"
+                  type="date"
+                  defaultValue={defaults.balloon_date || ""}
+                  className={inputClass}
+                />
+              </div>
+            </div>
           </div>
-        </div>
+        </>
       )}
     </>
   );
