@@ -6,16 +6,21 @@ import { toggleAvailableForSale } from "../actions";
 
 const CATEGORY_LABELS: Record<string, string> = {
   rent: "Aluguel", iptu: "IPTU", condominium: "Condomínio",
-  maintenance: "Manutenção", insurance: "Seguro", other: "Outros",
+  maintenance: "Manutenção", insurance: "Seguro",
+  investment: "Aporte / Parcela", other: "Outros",
 };
 const ADJUSTMENT_LABELS: Record<string, string> = {
   igpm: "IGP-M", ipca: "IPCA", ivar: "IVAR", inpc: "INPC", other: "Outro",
 };
 const MODALITY_LABELS: Record<string, string> = {
-  annual_lease: "Locação anual", short_stay: "Temporada / Airbnb", under_construction: "Na planta",
+  annual_lease: "Locação anual",
+  short_stay: "Temporada / Airbnb",
+  under_construction: "Na planta",
 };
 const MODALITY_COLORS: Record<string, string> = {
-  annual_lease: "#2D4A3E", short_stay: "#3B82F6", under_construction: "#F59E0B",
+  annual_lease: "#2D4A3E",
+  short_stay: "#3B82F6",
+  under_construction: "#F59E0B",
 };
 
 function formatCurrency(value: number | null): string {
@@ -24,24 +29,26 @@ function formatCurrency(value: number | null): string {
 }
 function formatDate(dateStr: string): string {
   const [y, m, d] = dateStr.split("-").map(Number);
-  return new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "short", year: "numeric" }).format(new Date(y, m - 1, d));
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "numeric", month: "short", year: "numeric",
+  }).format(new Date(y, m - 1, d));
 }
 function formatDateShort(dateStr: string): string {
   const [y, m, d] = dateStr.split("-").map(Number);
-  return new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "short" }).format(new Date(y, m - 1, d));
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "numeric", month: "short",
+  }).format(new Date(y, m - 1, d));
 }
 function formatPercent(value: number): string {
-  return new Intl.NumberFormat("pt-BR", { style: "percent", minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value);
+  return new Intl.NumberFormat("pt-BR", {
+    style: "percent", minimumFractionDigits: 1, maximumFractionDigits: 1,
+  }).format(value);
 }
 
 function buildProposalWhatsAppUrl(property: any): string {
   const phone = "5511987266842";
   const modality = MODALITY_LABELS[property.modality] || property.modality;
   const location = [property.address, property.city, property.state].filter(Boolean).join(", ") || "Não informada";
-  const currentValue = property.current_value ? formatCurrency(Number(property.current_value)) : "—";
-  const rent = property.monthly_rent ? formatCurrency(Number(property.monthly_rent)) : "—";
-  const totalInvestment = property.total_investment ? formatCurrency(Number(property.total_investment)) : null;
-
   const lines = [
     `Olá! Tenho um imóvel disponível para propostas no MyAsset.`,
     ``,
@@ -49,19 +56,12 @@ function buildProposalWhatsAppUrl(property: any): string {
     `📋 Modalidade: ${modality}`,
     `📍 Localização: ${location}`,
     property.modality === "under_construction"
-      ? `💰 VGV total: ${totalInvestment}`
-      : `💰 Valor atual: ${currentValue}`,
-    property.modality === "under_construction"
-      ? `🔑 Aluguel projetado: ${rent}/mês`
-      : `🔑 Aluguel/mês: ${rent}`,
+      ? `💰 VGV total: ${formatCurrency(Number(property.total_investment))}`
+      : `💰 Valor atual: ${formatCurrency(Number(property.current_value))}`,
+    `🔑 ${property.modality === "under_construction" ? "Aluguel projetado" : "Aluguel/mês"}: ${formatCurrency(Number(property.monthly_rent))}`,
+    ``,
+    `Gostaria de receber propostas ou uma avaliação da A5 Asset.`,
   ];
-
-  if (property.modality === "annual_lease" && property.lease_renewal_date) {
-    lines.push(`📅 Renovação: ${formatDate(property.lease_renewal_date)}`);
-  }
-
-  lines.push(``, `Gostaria de receber propostas ou uma avaliação da A5 Asset.`);
-
   return `https://wa.me/${phone}?text=${encodeURIComponent(lines.join("\n"))}`;
 }
 
@@ -86,7 +86,7 @@ export default async function PropertyDetailPage({ params }: Props) {
   const monthTxs = allTxs.filter(t => t.transaction_date.startsWith(currentMonthStr));
 
   const monthlyIncome = monthTxs.filter(t => t.transaction_type === "income").reduce((acc, t) => acc + Number(t.amount), 0);
-  const monthlyExpense = monthTxs.filter(t => t.transaction_type === "expense").reduce((acc, t) => acc + Number(t.amount), 0);
+  const monthlyExpense = monthTxs.filter(t => t.transaction_type === "expense" && t.category !== "investment").reduce((acc, t) => acc + Number(t.amount), 0);
   const monthlySaldo = monthlyIncome - monthlyExpense;
 
   const modality = property.modality || "annual_lease";
@@ -99,10 +99,19 @@ export default async function PropertyDetailPage({ params }: Props) {
     ? (Number(property.monthly_rent) / Number(property.current_value)) * 12 : null;
   const progressPago = property.total_investment && property.acquisition_value
     ? Number(property.acquisition_value) / Number(property.total_investment) : null;
-  const yieldProjetado = isPlanta && property.total_investment && property.monthly_rent
-    ? (Number(property.monthly_rent) / Number(property.total_investment)) * 12 : null;
 
   const proposalUrl = buildProposalWhatsAppUrl(property);
+
+  // Alertas de parcela
+  const nextInstallmentDays = property.next_installment_date
+    ? Math.ceil((new Date(property.next_installment_date).getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+    : null;
+  const balloonDays = property.balloon_date
+    ? Math.ceil((new Date(property.balloon_date).getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+    : null;
+
+  const showInstallmentAlert = nextInstallmentDays !== null && nextInstallmentDays <= 5;
+  const showBalloonAlert = balloonDays !== null && balloonDays >= 0 && balloonDays <= 30;
 
   return (
     <main className="min-h-screen bg-surface">
@@ -147,24 +156,13 @@ export default async function PropertyDetailPage({ params }: Props) {
             >
               Editar imóvel
             </Link>
-
-            {/* Toggle disponível para proposta */}
             <form action={toggleAvailableForSale}>
               <input type="hidden" name="id" value={property.id} />
               <input type="hidden" name="current" value={String(property.available_for_sale)} />
-              <button
-                type="submit"
-                className={`w-full px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-colors text-center ${
-                  property.available_for_sale
-                    ? "bg-blue-600 text-white hover:bg-blue-700"
-                    : "bg-surface border border-border text-ink hover:border-blue-500 hover:text-blue-600"
-                }`}
-              >
+              <button type="submit" className={`w-full px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-colors text-center ${property.available_for_sale ? "bg-blue-600 text-white hover:bg-blue-700" : "bg-surface border border-border text-ink hover:border-blue-500 hover:text-blue-600"}`}>
                 {property.available_for_sale ? "✓ Disponível para proposta" : "Marcar para proposta"}
               </button>
             </form>
-
-            {/* Botão WhatsApp proposta — só aparece quando disponível */}
             {property.available_for_sale && (
               <a
                 href={proposalUrl}
@@ -182,55 +180,57 @@ export default async function PropertyDetailPage({ params }: Props) {
           </div>
         </div>
 
-        {/* KPIs principais */}
+        {/* ── KPIs PRINCIPAIS ──────────────────────────── */}
         {isPlanta ? (
           <>
-            {/* Alerta de próxima parcela */}
-            {(() => {
-              if (!property.next_installment_date) return null;
-              const due = new Date(property.next_installment_date);
-              const now = new Date();
-              const diffDays = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-              if (diffDays > 7) return null;
-              const isOverdue = diffDays < 0;
-              const isToday = diffDays === 0;
-              return (
-                <div className={`flex items-center gap-4 px-5 py-4 rounded-card border ${isOverdue ? "border-red-200 bg-red-50" : "border-amber-200 bg-amber-50"}`}>
-                  <span className="text-lg">{isOverdue ? "🔴" : "🟡"}</span>
-                  <div>
-                    <p className={`text-xs font-bold uppercase tracking-wider ${isOverdue ? "text-red-700" : "text-amber-700"}`}>
-                      {isOverdue ? `Parcela em atraso — ${Math.abs(diffDays)} ${Math.abs(diffDays) === 1 ? "dia" : "dias"}` : isToday ? "Parcela vence hoje" : `Parcela vence em ${diffDays} ${diffDays === 1 ? "dia" : "dias"}`}
-                    </p>
-                    <p className="text-sm text-ink mt-0.5">
-                      {property.installment_amount ? formatCurrency(property.installment_amount) : "Valor não informado"} · {formatDate(property.next_installment_date)}
-                    </p>
-                  </div>
+            {/* Alerta de parcela mensal */}
+            {showInstallmentAlert && (
+              <div className={`flex items-center gap-4 px-5 py-4 rounded-card border ${nextInstallmentDays! < 0 ? "border-red-200 bg-red-50" : "border-amber-200 bg-amber-50"}`}>
+                <span className="text-lg">{nextInstallmentDays! < 0 ? "🔴" : "🟡"}</span>
+                <div>
+                  <p className={`text-xs font-bold uppercase tracking-wider ${nextInstallmentDays! < 0 ? "text-red-700" : "text-amber-700"}`}>
+                    {nextInstallmentDays! < 0
+                      ? `Parcela em atraso — ${Math.abs(nextInstallmentDays!)} ${Math.abs(nextInstallmentDays!) === 1 ? "dia" : "dias"}`
+                      : nextInstallmentDays === 0
+                      ? "Parcela vence hoje"
+                      : `Parcela vence em ${nextInstallmentDays} ${nextInstallmentDays === 1 ? "dia" : "dias"}`}
+                  </p>
+                  <p className="text-sm text-ink mt-0.5">
+                    {formatCurrency(property.installment_amount)} · {formatDate(property.next_installment_date)}
+                  </p>
                 </div>
-              );
-            })()}
+                <a
+                  href={`/dashboard/properties/${params.id}/transactions/new?type=expense`}
+                  className="ml-auto text-xs font-bold uppercase tracking-wider px-3 py-2 rounded text-white"
+                  style={{ backgroundColor: nextInstallmentDays! < 0 ? "#DC2626" : "#2D4A3E" }}
+                >
+                  Registrar
+                </a>
+              </div>
+            )}
 
             {/* Alerta de balão */}
-            {(() => {
-              if (!property.balloon_date) return null;
-              const due = new Date(property.balloon_date);
-              const now = new Date();
-              const diffDays = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-              if (diffDays > 30 || diffDays < 0) return null;
-              return (
-                <div className="flex items-center gap-4 px-5 py-4 rounded-card border border-blue-200 bg-blue-50">
-                  <span className="text-lg">🏗️</span>
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-wider text-blue-700">
-                      Balão / parcela especial em {diffDays === 0 ? "hoje" : `${diffDays} ${diffDays === 1 ? "dia" : "dias"}`}
-                    </p>
-                    <p className="text-sm text-ink mt-0.5">
-                      {property.balloon_amount ? formatCurrency(property.balloon_amount) : "Valor não informado"} · {formatDate(property.balloon_date)}
-                    </p>
-                  </div>
+            {showBalloonAlert && (
+              <div className="flex items-center gap-4 px-5 py-4 rounded-card border border-blue-200 bg-blue-50">
+                <span className="text-lg">🏗️</span>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-blue-700">
+                    Balão / parcela especial — {balloonDays === 0 ? "vence hoje" : `vence em ${balloonDays} ${balloonDays === 1 ? "dia" : "dias"}`}
+                  </p>
+                  <p className="text-sm text-ink mt-0.5">
+                    {formatCurrency(property.balloon_amount)} · {formatDate(property.balloon_date)}
+                  </p>
                 </div>
-              );
-            })()}
+                <a
+                  href={`/dashboard/properties/${params.id}/transactions/new?type=expense`}
+                  className="ml-auto text-xs font-bold uppercase tracking-wider px-3 py-2 rounded text-white bg-blue-600"
+                >
+                  Registrar
+                </a>
+              </div>
+            )}
 
+            {/* KPIs planta */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="card"><p className="kpi-label">Já pago</p><p className="kpi-value">{formatCurrency(property.acquisition_value)}</p></div>
               <div className="card"><p className="kpi-label">VGV total</p><p className="kpi-value">{formatCurrency(property.total_investment)}</p></div>
@@ -239,7 +239,9 @@ export default async function PropertyDetailPage({ params }: Props) {
                 <p className="kpi-label">Próxima parcela</p>
                 {property.next_installment_date ? (
                   <>
-                    <p className="kpi-value" style={{ color: "#3B82F6" }}>{formatCurrency(property.installment_amount)}</p>
+                    <p className="kpi-value" style={{ color: "#3B82F6" }}>
+                      {formatCurrency(property.installment_amount)}
+                    </p>
                     <p className="text-xs text-ink-3 mt-1">{formatDate(property.next_installment_date)}</p>
                   </>
                 ) : (
@@ -247,66 +249,75 @@ export default async function PropertyDetailPage({ params }: Props) {
                 )}
               </div>
             </div>
-          </>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="card"><p className="kpi-label">Receitas do mês</p><p className="kpi-value text-positive">{formatCurrency(monthlyIncome)}</p></div>
-            <div className="card"><p className="kpi-label">Despesas do mês</p><p className="kpi-value">{formatCurrency(monthlyExpense)}</p></div>
-            <div className="card"><p className="kpi-label">Saldo do mês</p><p className={`kpi-value ${monthlySaldo >= 0 ? "text-positive" : "text-negative"}`}>{formatCurrency(monthlySaldo)}</p></div>
-            <div className="card"><p className="kpi-label">Yield anual</p><p className="kpi-value">{yieldAnual !== null ? formatPercent(yieldAnual) : "—"}</p><p className="text-xs text-ink-3 mt-1">aluguel esperado / valor atual</p></div>
-          </div>
-        )}
 
-        {/* KPIs secundários */}
-        {isPlanta ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <div className="card"><p className="kpi-label">Previsão de entrega</p><p className="text-base font-semibold text-ink">{property.delivery_date ? formatDate(property.delivery_date) : "—"}</p></div>
-            <div className="card"><p className="kpi-label">Assinatura</p><p className="text-base font-semibold text-ink">{property.acquisition_date ? formatDate(property.acquisition_date) : "—"}</p></div>
-            <div className="card"><p className="kpi-label">Aluguel projetado</p><p className="text-base font-semibold text-positive">{formatCurrency(property.monthly_rent)}/mês</p></div>
-          </div>
-            {(property.payment_notes || property.balloon_date) && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {property.payment_notes && (
-                  <div className="card">
-                    <p className="kpi-label">Modelo de pagamento</p>
-                    <p className="text-sm text-ink mt-1">{property.payment_notes}</p>
-                  </div>
-                )}
-                {property.balloon_date && (
-                  <div className="card">
-                    <p className="kpi-label">Balão / parcela especial</p>
-                    <p className="text-base font-semibold" style={{ color: "#3B82F6" }}>{formatCurrency(property.balloon_amount)}</p>
-                    <p className="text-xs text-ink-3 mt-1">{formatDate(property.balloon_date)}</p>
-                  </div>
-                )}
+            {/* KPIs secundários planta */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="card"><p className="kpi-label">Previsão de entrega</p><p className="text-base font-semibold text-ink">{property.delivery_date ? formatDate(property.delivery_date) : "—"}</p></div>
+              <div className="card"><p className="kpi-label">Assinatura</p><p className="text-base font-semibold text-ink">{property.acquisition_date ? formatDate(property.acquisition_date) : "—"}</p></div>
+              <div className="card"><p className="kpi-label">Aluguel projetado</p><p className="text-base font-semibold text-positive">{formatCurrency(property.monthly_rent)}/mês</p></div>
+              {property.balloon_date ? (
+                <div className="card">
+                  <p className="kpi-label">Balão / parcela especial</p>
+                  <p className="text-base font-semibold" style={{ color: "#3B82F6" }}>{formatCurrency(property.balloon_amount)}</p>
+                  <p className="text-xs text-ink-3 mt-1">{formatDate(property.balloon_date)}</p>
+                </div>
+              ) : (
+                <div className="card"><p className="kpi-label">Modelo de pagamento</p><p className="text-sm text-ink mt-1">{property.payment_notes || "—"}</p></div>
+              )}
+            </div>
+
+            {/* Modelo de pagamento quando há balão */}
+            {property.balloon_date && property.payment_notes && (
+              <div className="card">
+                <p className="kpi-label">Modelo de pagamento</p>
+                <p className="text-sm text-ink mt-1">{property.payment_notes}</p>
               </div>
             )}
+          </>
         ) : isShortStay ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="card"><p className="kpi-label">Valor de compra</p><p className="text-base font-semibold text-ink">{formatCurrency(property.acquisition_value)}</p></div>
-            <div className="card"><p className="kpi-label">Valor atual</p><p className="text-base font-semibold text-ink">{formatCurrency(property.current_value)}</p></div>
-            <div className="card"><p className="kpi-label">Diária média</p><p className="text-base font-semibold text-ink">{formatCurrency(property.daily_rate)}</p></div>
-            <div className="card"><p className="kpi-label">Ocupação esperada</p><p className="text-base font-semibold text-ink">{property.target_occupancy ? `${property.target_occupancy}%` : "—"}</p></div>
-          </div>
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="card"><p className="kpi-label">Receitas do mês</p><p className="kpi-value text-positive">{formatCurrency(monthlyIncome)}</p></div>
+              <div className="card"><p className="kpi-label">Despesas do mês</p><p className="kpi-value">{formatCurrency(monthlyExpense)}</p></div>
+              <div className="card"><p className="kpi-label">Saldo do mês</p><p className={`kpi-value ${monthlySaldo >= 0 ? "text-positive" : "text-negative"}`}>{formatCurrency(monthlySaldo)}</p></div>
+              <div className="card"><p className="kpi-label">Yield anual</p><p className="kpi-value">{yieldAnual !== null ? formatPercent(yieldAnual) : "—"}</p><p className="text-xs text-ink-3 mt-1">aluguel esperado / valor atual</p></div>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="card"><p className="kpi-label">Valor de compra</p><p className="text-base font-semibold text-ink">{formatCurrency(property.acquisition_value)}</p></div>
+              <div className="card"><p className="kpi-label">Valor atual</p><p className="text-base font-semibold text-ink">{formatCurrency(property.current_value)}</p></div>
+              <div className="card"><p className="kpi-label">Diária média</p><p className="text-base font-semibold text-ink">{formatCurrency(property.daily_rate)}</p></div>
+              <div className="card"><p className="kpi-label">Ocupação esperada</p><p className="text-base font-semibold text-ink">{property.target_occupancy ? `${property.target_occupancy}%` : "—"}</p></div>
+            </div>
+          </>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="card"><p className="kpi-label">Valor de compra</p><p className="text-base font-semibold text-ink">{formatCurrency(property.acquisition_value)}</p></div>
-            <div className="card"><p className="kpi-label">Valor atual</p><p className="text-base font-semibold text-ink">{formatCurrency(property.current_value)}</p></div>
-            <div className="card">
-              <p className="kpi-label">Aluguel contratual{property.lease_due_day ? ` · vence dia ${property.lease_due_day}` : ""}</p>
-              <p className="text-base font-semibold text-positive">{formatCurrency(property.monthly_rent)}/mês</p>
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="card"><p className="kpi-label">Receitas do mês</p><p className="kpi-value text-positive">{formatCurrency(monthlyIncome)}</p></div>
+              <div className="card"><p className="kpi-label">Despesas do mês</p><p className="kpi-value">{formatCurrency(monthlyExpense)}</p></div>
+              <div className="card"><p className="kpi-label">Saldo do mês</p><p className={`kpi-value ${monthlySaldo >= 0 ? "text-positive" : "text-negative"}`}>{formatCurrency(monthlySaldo)}</p></div>
+              <div className="card"><p className="kpi-label">Yield anual</p><p className="kpi-value">{yieldAnual !== null ? formatPercent(yieldAnual) : "—"}</p><p className="text-xs text-ink-3 mt-1">aluguel esperado / valor atual</p></div>
             </div>
-            <div className="card">
-              <p className="kpi-label">Renovação{property.adjustment_index ? ` · ${ADJUSTMENT_LABELS[property.adjustment_index] || property.adjustment_index}` : ""}</p>
-              <p className="text-base font-semibold text-ink">{property.lease_renewal_date ? formatDate(property.lease_renewal_date) : "—"}</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="card"><p className="kpi-label">Valor de compra</p><p className="text-base font-semibold text-ink">{formatCurrency(property.acquisition_value)}</p></div>
+              <div className="card"><p className="kpi-label">Valor atual</p><p className="text-base font-semibold text-ink">{formatCurrency(property.current_value)}</p></div>
+              <div className="card">
+                <p className="kpi-label">Aluguel contratual{property.lease_due_day ? ` · vence dia ${property.lease_due_day}` : ""}</p>
+                <p className="text-base font-semibold text-positive">{formatCurrency(property.monthly_rent)}/mês</p>
+              </div>
+              <div className="card">
+                <p className="kpi-label">Renovação{property.adjustment_index ? ` · ${ADJUSTMENT_LABELS[property.adjustment_index] || property.adjustment_index}` : ""}</p>
+                <p className="text-base font-semibold text-ink">{property.lease_renewal_date ? formatDate(property.lease_renewal_date) : "—"}</p>
+              </div>
             </div>
-          </div>
+          </>
         )}
 
-        {/* Transações */}
+        {/* ── TRANSAÇÕES ──────────────────────────────── */}
         <div className="card">
           <div className="flex items-center justify-between mb-5">
-            <p className="section-title" style={{ marginBottom: 0 }}>{isPlanta ? "Despesas e custos" : "Transações"}</p>
+            <p className="section-title" style={{ marginBottom: 0 }}>
+              {isPlanta ? "Aportes e custos" : "Transações"}
+            </p>
             <div className="flex gap-3">
               {!isPlanta && (
                 <Link href={`/dashboard/properties/${params.id}/transactions/new?type=income`} className="px-4 py-2 bg-forest text-white font-bold tracking-wider uppercase text-xs rounded hover:bg-forest-light transition-colors">
@@ -314,14 +325,14 @@ export default async function PropertyDetailPage({ params }: Props) {
                 </Link>
               )}
               <Link href={`/dashboard/properties/${params.id}/transactions/new?type=expense`} className="px-4 py-2 bg-header text-white font-bold tracking-wider uppercase text-xs rounded hover:opacity-80 transition-opacity">
-                + Despesa
+                {isPlanta ? "+ Aporte" : "+ Despesa"}
               </Link>
             </div>
           </div>
 
           {allTxs.length === 0 ? (
             <div className="text-center py-10 text-ink-2 text-sm">
-              {isPlanta ? "Registre as parcelas e custos do imóvel." : "Comece lançando uma receita ou despesa."}
+              {isPlanta ? "Registre os aportes e parcelas do imóvel." : "Comece lançando uma receita ou despesa."}
             </div>
           ) : (
             <div className="divide-y divide-border">
@@ -335,7 +346,8 @@ export default async function PropertyDetailPage({ params }: Props) {
                     </div>
                   </div>
                   <div className="flex items-center gap-4 shrink-0">
-                    <span className={`font-bold text-sm ${t.transaction_type === "income" ? "text-positive" : "text-negative"}`}>
+                    <span className={`font-bold text-sm ${t.transaction_type === "income" ? "text-positive" : t.category === "investment" ? "" : "text-negative"}`}
+                      style={{ color: t.category === "investment" ? "#3B82F6" : undefined }}>
                       {t.transaction_type === "income" ? "+" : "-"}{formatCurrency(Number(t.amount))}
                     </span>
                     <form action={deleteTransaction}>
