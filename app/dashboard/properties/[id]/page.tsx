@@ -184,12 +184,70 @@ export default async function PropertyDetailPage({ params }: Props) {
 
         {/* KPIs principais */}
         {isPlanta ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="card"><p className="kpi-label">Já pago</p><p className="kpi-value">{formatCurrency(property.acquisition_value)}</p></div>
-            <div className="card"><p className="kpi-label">VGV total</p><p className="kpi-value">{formatCurrency(property.total_investment)}</p></div>
-            <div className="card"><p className="kpi-label">% Pago</p><p className="kpi-value text-positive">{progressPago !== null ? formatPercent(progressPago) : "—"}</p></div>
-            <div className="card"><p className="kpi-label">Yield projetado</p><p className="kpi-value">{yieldProjetado !== null ? formatPercent(yieldProjetado) : "—"}</p><p className="text-xs text-ink-3 mt-1">ao ano, após entrega</p></div>
-          </div>
+          <>
+            {/* Alerta de próxima parcela */}
+            {(() => {
+              if (!property.next_installment_date) return null;
+              const due = new Date(property.next_installment_date);
+              const now = new Date();
+              const diffDays = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+              if (diffDays > 7) return null;
+              const isOverdue = diffDays < 0;
+              const isToday = diffDays === 0;
+              return (
+                <div className={`flex items-center gap-4 px-5 py-4 rounded-card border ${isOverdue ? "border-red-200 bg-red-50" : "border-amber-200 bg-amber-50"}`}>
+                  <span className="text-lg">{isOverdue ? "🔴" : "🟡"}</span>
+                  <div>
+                    <p className={`text-xs font-bold uppercase tracking-wider ${isOverdue ? "text-red-700" : "text-amber-700"}`}>
+                      {isOverdue ? `Parcela em atraso — ${Math.abs(diffDays)} ${Math.abs(diffDays) === 1 ? "dia" : "dias"}` : isToday ? "Parcela vence hoje" : `Parcela vence em ${diffDays} ${diffDays === 1 ? "dia" : "dias"}`}
+                    </p>
+                    <p className="text-sm text-ink mt-0.5">
+                      {property.installment_amount ? formatCurrency(property.installment_amount) : "Valor não informado"} · {formatDate(property.next_installment_date)}
+                    </p>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Alerta de balão */}
+            {(() => {
+              if (!property.balloon_date) return null;
+              const due = new Date(property.balloon_date);
+              const now = new Date();
+              const diffDays = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+              if (diffDays > 30 || diffDays < 0) return null;
+              return (
+                <div className="flex items-center gap-4 px-5 py-4 rounded-card border border-blue-200 bg-blue-50">
+                  <span className="text-lg">🏗️</span>
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wider text-blue-700">
+                      Balão / parcela especial em {diffDays === 0 ? "hoje" : `${diffDays} ${diffDays === 1 ? "dia" : "dias"}`}
+                    </p>
+                    <p className="text-sm text-ink mt-0.5">
+                      {property.balloon_amount ? formatCurrency(property.balloon_amount) : "Valor não informado"} · {formatDate(property.balloon_date)}
+                    </p>
+                  </div>
+                </div>
+              );
+            })()}
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="card"><p className="kpi-label">Já pago</p><p className="kpi-value">{formatCurrency(property.acquisition_value)}</p></div>
+              <div className="card"><p className="kpi-label">VGV total</p><p className="kpi-value">{formatCurrency(property.total_investment)}</p></div>
+              <div className="card"><p className="kpi-label">% Pago</p><p className="kpi-value text-positive">{progressPago !== null ? formatPercent(progressPago) : "—"}</p></div>
+              <div className="card">
+                <p className="kpi-label">Próxima parcela</p>
+                {property.next_installment_date ? (
+                  <>
+                    <p className="kpi-value" style={{ color: "#3B82F6" }}>{formatCurrency(property.installment_amount)}</p>
+                    <p className="text-xs text-ink-3 mt-1">{formatDate(property.next_installment_date)}</p>
+                  </>
+                ) : (
+                  <p className="kpi-value text-ink-3">—</p>
+                )}
+              </div>
+            </div>
+          </>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="card"><p className="kpi-label">Receitas do mês</p><p className="kpi-value text-positive">{formatCurrency(monthlyIncome)}</p></div>
@@ -206,6 +264,23 @@ export default async function PropertyDetailPage({ params }: Props) {
             <div className="card"><p className="kpi-label">Assinatura</p><p className="text-base font-semibold text-ink">{property.acquisition_date ? formatDate(property.acquisition_date) : "—"}</p></div>
             <div className="card"><p className="kpi-label">Aluguel projetado</p><p className="text-base font-semibold text-positive">{formatCurrency(property.monthly_rent)}/mês</p></div>
           </div>
+            {(property.payment_notes || property.balloon_date) && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {property.payment_notes && (
+                  <div className="card">
+                    <p className="kpi-label">Modelo de pagamento</p>
+                    <p className="text-sm text-ink mt-1">{property.payment_notes}</p>
+                  </div>
+                )}
+                {property.balloon_date && (
+                  <div className="card">
+                    <p className="kpi-label">Balão / parcela especial</p>
+                    <p className="text-base font-semibold" style={{ color: "#3B82F6" }}>{formatCurrency(property.balloon_amount)}</p>
+                    <p className="text-xs text-ink-3 mt-1">{formatDate(property.balloon_date)}</p>
+                  </div>
+                )}
+              </div>
+            )}
         ) : isShortStay ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="card"><p className="kpi-label">Valor de compra</p><p className="text-base font-semibold text-ink">{formatCurrency(property.acquisition_value)}</p></div>
