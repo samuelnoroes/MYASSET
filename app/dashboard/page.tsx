@@ -149,6 +149,53 @@ export default async function DashboardPage() {
     return b.daysOverdue - a.daysOverdue;
   });
 
+  // Alertas de parcela (imóveis na planta)
+  type InstallmentAlert = {
+    propertyId: string;
+    propertyName: string;
+    alertType: "installment" | "balloon";
+    daysUntil: number;
+    amount: number | null;
+    dateLabel: string;
+  };
+  const installmentAlerts: InstallmentAlert[] = [];
+
+  for (const p of props) {
+    if (p.modality !== "under_construction") continue;
+
+    // Parcela mensal
+    if (p.next_installment_date) {
+      const due = new Date(p.next_installment_date);
+      const diffDays = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      if (diffDays <= 5) {
+        installmentAlerts.push({
+          propertyId: p.id,
+          propertyName: p.name,
+          alertType: "installment",
+          daysUntil: diffDays,
+          amount: p.installment_amount ? Number(p.installment_amount) : null,
+          dateLabel: diffDays < 0 ? `${Math.abs(diffDays)} dias em atraso` : diffDays === 0 ? "vence hoje" : `vence em ${diffDays} ${diffDays === 1 ? "dia" : "dias"}`,
+        });
+      }
+    }
+
+    // Balão
+    if (p.balloon_date) {
+      const due = new Date(p.balloon_date);
+      const diffDays = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      if (diffDays >= 0 && diffDays <= 30) {
+        installmentAlerts.push({
+          propertyId: p.id,
+          propertyName: p.name,
+          alertType: "balloon",
+          daysUntil: diffDays,
+          amount: p.balloon_amount ? Number(p.balloon_amount) : null,
+          dateLabel: diffDays === 0 ? "vence hoje" : `vence em ${diffDays} ${diffDays === 1 ? "dia" : "dias"}`,
+        });
+      }
+    }
+  }
+
   return (
     <main className="min-h-screen bg-surface">
       {/* ── HEADER ───────────────────────────────────────── */}
@@ -232,6 +279,37 @@ export default async function DashboardPage() {
                   </form>
                   <Link href={`/dashboard/properties/${alert.propertyId}`} className="text-xs text-ink-2 hover:text-forest transition-colors uppercase tracking-wider">Ver →</Link>
                 </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Alertas de parcela e balão */}
+        {installmentAlerts.length > 0 && (
+          <div className="space-y-2">
+            {installmentAlerts.map((alert, i) => (
+              <div key={i} className={`flex items-center justify-between px-5 py-4 rounded-card border ${alert.daysUntil < 0 ? "border-red-200 bg-red-50" : alert.alertType === "balloon" ? "border-blue-200 bg-blue-50" : "border-amber-200 bg-amber-50"}`}>
+                <div className="flex items-center gap-4 flex-1 min-w-0">
+                  <span className="text-lg select-none shrink-0">
+                    {alert.daysUntil < 0 ? "🔴" : alert.alertType === "balloon" ? "🏗️" : "🟡"}
+                  </span>
+                  <div className="min-w-0">
+                    <p className={`text-xs font-bold uppercase tracking-wider ${alert.daysUntil < 0 ? "text-red-700" : alert.alertType === "balloon" ? "text-blue-700" : "text-amber-700"}`}>
+                      {alert.alertType === "balloon" ? "Balão / parcela especial" : "Parcela a pagar"} — {alert.dateLabel}
+                    </p>
+                    <p className="text-sm text-ink mt-0.5 truncate">
+                      <strong>{alert.propertyName}</strong>
+                      {alert.amount ? ` · ${formatCurrency(alert.amount)}` : ""}
+                    </p>
+                  </div>
+                </div>
+                <a
+                  href={`/dashboard/properties/${alert.propertyId}/transactions/new?type=expense`}
+                  className="text-xs font-bold uppercase tracking-wider px-3 py-2 rounded transition-colors shrink-0 ml-4 text-white"
+                  style={{ backgroundColor: alert.daysUntil < 0 ? "#DC2626" : alert.alertType === "balloon" ? "#3B82F6" : "#2D4A3E" }}
+                >
+                  Registrar
+                </a>
               </div>
             ))}
           </div>
