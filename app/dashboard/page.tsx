@@ -70,7 +70,17 @@ export default async function DashboardPage() {
   const txs = monthlyTransactions ?? [];
 
   const totalMonthlyIncome = txs.filter(t => t.transaction_type === "income").reduce((acc, t) => acc + Number(t.amount), 0);
-  const totalMonthlyExpense = txs.filter(t => t.transaction_type === "expense").reduce((acc, t) => acc + Number(t.amount), 0);
+  // Despesas operacionais (manutenção, IPTU, condomínio, seguro, etc.)
+  const totalMonthlyExpense = txs
+    .filter(t => t.transaction_type === "expense" && t.category !== "investment")
+    .reduce((acc, t) => acc + Number(t.amount), 0);
+
+  // Aportes de investimento (parcelas de imóveis na planta)
+  const totalMonthlyInvestment = txs
+    .filter(t => t.transaction_type === "expense" && t.category === "investment")
+    .reduce((acc, t) => acc + Number(t.amount), 0);
+
+  // Saldo operacional (não inclui aportes)
   const totalMonthlySaldo = totalMonthlyIncome - totalMonthlyExpense;
 
   const annualLeaseProps = props.filter(p => p.modality === "annual_lease" && p.monthly_rent);
@@ -99,7 +109,7 @@ export default async function DashboardPage() {
     return {
       month: label.charAt(0).toUpperCase() + label.slice(1),
       receitas: mt.filter(t => t.transaction_type === "income").reduce((acc, t) => acc + Number(t.amount), 0),
-      despesas: mt.filter(t => t.transaction_type === "expense").reduce((acc, t) => acc + Number(t.amount), 0),
+      despesas: mt.filter(t => t.transaction_type === "expense" && t.category !== "investment").reduce((acc, t) => acc + Number(t.amount), 0),
     };
   });
 
@@ -230,12 +240,11 @@ export default async function DashboardPage() {
         <PortfolioCharts modalityData={modalityData} monthlyData={monthlyData} totalCurrentValue={totalCurrentValue} totalProperties={totalProperties} />
 
         {/* KPIs */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        {/* KPIs portfólio */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="card"><p className="kpi-label">Imóveis</p><p className="kpi-value-lg">{totalProperties}</p></div>
           <div className="card"><p className="kpi-label">Valorização</p><p className={`kpi-value ${appreciation >= 0 ? "text-positive" : "text-negative"}`}>{totalAcquisitionValue > 0 ? formatPercent(appreciation) : "—"}</p></div>
-          <div className="card"><p className="kpi-label">Receitas — {monthName}</p><p className="kpi-value text-positive">{formatCurrencyShort(totalMonthlyIncome)}</p></div>
-          <div className="card"><p className="kpi-label">Despesas — {monthName}</p><p className="kpi-value">{formatCurrencyShort(totalMonthlyExpense)}</p></div>
-          <div className="card"><p className="kpi-label">Saldo — {monthName}</p><p className={`kpi-value ${totalMonthlySaldo >= 0 ? "text-positive" : "text-negative"}`}>{formatCurrencyShort(totalMonthlySaldo)}</p></div>
+          <div className="card"><p className="kpi-label">Yield médio</p><p className="kpi-value">{avgYield !== null ? formatPercent(avgYield) : "—"}</p><p className="text-xs text-ink-3 mt-1">ao ano</p></div>
           <div className="card">
             <p className="kpi-label">Eficiência</p>
             <p className={`kpi-value ${collectionEfficiency === null ? "text-ink" : collectionEfficiency >= 1 ? "text-positive" : collectionEfficiency >= 0.8 ? "text-warning" : "text-negative"}`}>
@@ -243,6 +252,14 @@ export default async function DashboardPage() {
             </p>
             {collectionEfficiency !== null && <p className="text-xs text-ink-3 mt-1">recebido / esperado</p>}
           </div>
+        </div>
+
+        {/* KPIs do mês */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="card"><p className="kpi-label">Receitas — {monthName}</p><p className="kpi-value text-positive">{formatCurrencyShort(totalMonthlyIncome)}</p></div>
+          <div className="card"><p className="kpi-label">Despesas — {monthName}</p><p className="kpi-value">{formatCurrencyShort(totalMonthlyExpense)}</p><p className="text-xs text-ink-3 mt-1">operacional</p></div>
+          <div className="card"><p className="kpi-label">Aportes — {monthName}</p><p className="kpi-value" style={{ color: "#3B82F6" }}>{formatCurrencyShort(totalMonthlyInvestment)}</p><p className="text-xs text-ink-3 mt-1">parcelas planta</p></div>
+          <div className="card"><p className="kpi-label">Saldo — {monthName}</p><p className={`kpi-value ${totalMonthlySaldo >= 0 ? "text-positive" : "text-negative"}`}>{formatCurrencyShort(totalMonthlySaldo)}</p></div>
         </div>
 
         {/* Portfólio */}
