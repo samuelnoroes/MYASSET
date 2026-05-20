@@ -27,6 +27,11 @@ type PropertyInput = {
   target_occupancy: number | null;
   delivery_date: string | null;
   total_investment: number | null;
+  next_installment_date: string | null;
+  installment_amount: number | null;
+  balloon_date: string | null;
+  balloon_amount: number | null;
+  payment_notes: string | null;
 };
 
 function parsePropertyForm(formData: FormData): PropertyInput {
@@ -74,6 +79,11 @@ function parsePropertyForm(formData: FormData): PropertyInput {
     target_occupancy: n("target_occupancy"),
     delivery_date: d("delivery_date"),
     total_investment: n("total_investment"),
+    next_installment_date: d("next_installment_date"),
+    installment_amount: n("installment_amount"),
+    balloon_date: d("balloon_date"),
+    balloon_amount: n("balloon_amount"),
+    payment_notes: t("payment_notes"),
   };
 }
 
