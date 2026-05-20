@@ -65,7 +65,7 @@ export default async function DashboardPage() {
   const endOfMonth = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, "0")}-01`;
 
   const { data: monthlyTransactions } = await supabase
-    .from("transactions").select("transaction_type, amount, property_id")
+    .from("transactions").select("transaction_type, amount, property_id, category")
     .eq("user_id", user.id).gte("transaction_date", startOfMonth).lt("transaction_date", endOfMonth);
   const txs = monthlyTransactions ?? [];
 
@@ -93,7 +93,7 @@ export default async function DashboardPage() {
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
   const historyStart = `${sixMonthsAgo.getFullYear()}-${String(sixMonthsAgo.getMonth() + 1).padStart(2, "0")}-01`;
   const { data: allTransactions } = await supabase
-    .from("transactions").select("transaction_type, amount, transaction_date")
+    .from("transactions").select("transaction_type, amount, transaction_date, category")
     .eq("user_id", user.id).gte("transaction_date", historyStart).order("transaction_date", { ascending: true });
 
   const months = [];
