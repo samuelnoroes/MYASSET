@@ -5,6 +5,7 @@ import { markAsPaid } from "./alertActions";
 import PortfolioCharts from "./_components/PortfolioCharts";
 import KpiCard from "./_components/KpiCard";
 import AlertsPanel from "./_components/AlertsPanel";
+import DashboardSections from "./_components/DashboardSections";
 import A5Logo from "@/app/components/A5Logo";
 
 function formatCurrency(value: number): string {
@@ -112,10 +113,16 @@ export default async function DashboardPage() {
   }
   const monthlyData = months.map(({ key, label }) => {
     const mt = allTransactions?.filter(t => t.transaction_date.startsWith(key)) ?? [];
+    const receitas = mt.filter(t => t.transaction_type === "income").reduce((acc, t) => acc + Number(t.amount), 0);
+    const despesas = mt.filter(t => t.transaction_type === "expense" && t.category !== "investment").reduce((acc, t) => acc + Number(t.amount), 0);
+    const aportes  = mt.filter(t => t.transaction_type === "expense" && t.category === "investment").reduce((acc, t) => acc + Number(t.amount), 0);
     return {
       month: label.charAt(0).toUpperCase() + label.slice(1),
-      receitas: mt.filter(t => t.transaction_type === "income").reduce((acc, t) => acc + Number(t.amount), 0),
-      despesas: mt.filter(t => t.transaction_type === "expense" && t.category !== "investment").reduce((acc, t) => acc + Number(t.amount), 0),
+      key,
+      receitas,
+      despesas,
+      aportes,
+      saldo: receitas - despesas,
     };
   });
 
@@ -269,11 +276,12 @@ export default async function DashboardPage() {
           </div>
         )}
 
-        <PortfolioCharts modalityData={modalityData} monthlyData={monthlyData} totalCurrentValue={totalCurrentValue} totalProperties={totalProperties} />
+        {/* ═══ SEÇÃO 1 — VISÃO GERAL ═══════════════════ */}
+        <section id="visao-geral" className="scroll-mt-6 space-y-4">
+          <PortfolioCharts modalityData={modalityData} monthlyData={monthlyData} totalCurrentValue={totalCurrentValue} totalProperties={totalProperties} />
 
-        {/* KPIs */}
-        {/* KPIs portfólio */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {/* KPIs portfólio */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <KpiCard label="Imóveis" tooltip="Total de imóveis cadastrados no seu portfólio.">
               <p className="kpi-value-lg">{totalProperties}</p>
             </KpiCard>
@@ -292,7 +300,9 @@ export default async function DashboardPage() {
             </KpiCard>
         </div>
 
-        {/* KPIs do mês */}
+        </section>
+
+        {/* KPIs do mês — integrados ao DashboardSections abaixo */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <KpiCard label={`Receitas — ${monthName}`} tooltip="Soma de todas as entradas registradas neste mês — aluguéis, diárias e outras receitas de todos os imóveis.">
               <p className="kpi-value text-positive">{formatCurrency(totalMonthlyIncome)}</p>
@@ -310,7 +320,14 @@ export default async function DashboardPage() {
             </KpiCard>
         </div>
 
-        {/* Portfólio */}
+        {/* ═══ SEÇÕES 2, 3, 4 — MÊS, HISTÓRICO, GRÁFICOS ═ */}
+        <DashboardSections
+          monthlyData={monthlyData}
+          currentMonthName={monthName}
+        />
+
+        {/* ═══ SEÇÃO IMÓVEIS ══════════════════════════ */}
+        <section id="imoveis" className="scroll-mt-6">
         <div className="card">
           <div className="flex items-center justify-between mb-5">
             <p className="section-title" style={{ marginBottom: 0 }}>Seus imóveis</p>
@@ -390,6 +407,8 @@ export default async function DashboardPage() {
             </div>
           )}
         </div>
+
+        </section>
 
         {/* Footer A5 */}
         <div className="flex items-center justify-center gap-3 py-4 opacity-50">
