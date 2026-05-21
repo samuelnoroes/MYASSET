@@ -31,10 +31,11 @@ const TYPE_CONFIG: Record<
 };
 
 const NAV_ITEMS = [
-  { href: "/dashboard",             label: "Dashboard",  icon: "⊞" },
-  { href: "/dashboard/properties",  label: "Portfólio",  icon: "🏢" },
-  { href: "/dashboard/tax",         label: "IR",         icon: "📊" },
-  { href: "/dashboard/profile",     label: "Perfil",     icon: "⚙️" },
+  { href: "/dashboard",              label: "Dashboard",     icon: "⊞",  badge: null },
+  { href: "/dashboard/properties",   label: "Portfólio",     icon: "🏢", badge: null },
+  { href: "/dashboard/tax",          label: "IR",            icon: "📊", badge: null },
+  { href: "/dashboard/open-finance", label: "Open Finance",  icon: "🔗", badge: "EM BREVE" },
+  { href: "/dashboard/profile",      label: "Perfil",        icon: "⚙️", badge: null },
 ];
 
 function formatDate(dateStr: string): string {
@@ -207,8 +208,20 @@ export default function DashboardShell({ children }: { children: React.ReactNode
               >
                 <span style={{ fontSize: 18, flexShrink: 0, width: 24, textAlign: "center" }}>{item.icon}</span>
                 {sidebarOpen && (
-                  <span style={{ fontSize: 14, fontWeight: isActive ? 700 : 500, color: isActive ? "#fff" : "#9CA3AF", letterSpacing: "0.01em" }}>
-                    {item.label}
+                  <span style={{ display: "flex", alignItems: "center", gap: 8, flex: 1 }}>
+                    <span style={{ fontSize: 14, fontWeight: isActive ? 700 : 500, color: isActive ? "#fff" : "#9CA3AF", letterSpacing: "0.01em" }}>
+                      {item.label}
+                    </span>
+                    {item.badge && (
+                      <span style={{
+                        fontSize: 9, fontWeight: 800, letterSpacing: "0.06em",
+                        textTransform: "uppercase", padding: "2px 6px",
+                        backgroundColor: "#D97706", color: "#fff",
+                        borderRadius: 999, flexShrink: 0,
+                      }}>
+                        {item.badge}
+                      </span>
+                    )}
                   </span>
                 )}
               </Link>
