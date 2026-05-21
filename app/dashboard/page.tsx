@@ -334,10 +334,10 @@ export default async function DashboardPage() {
 
         {/* KPIs do mês */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="card"><p className="kpi-label">Receitas — {monthName}</p><p className="kpi-value text-positive">{formatCurrencyShort(totalMonthlyIncome)}</p></div>
-          <div className="card"><p className="kpi-label">Despesas — {monthName}</p><p className="kpi-value">{formatCurrencyShort(totalMonthlyExpense)}</p><p className="text-xs text-ink-3 mt-1">operacional</p></div>
-          <div className="card"><p className="kpi-label">Aportes — {monthName}</p><p className="kpi-value" style={{ color: "#3B82F6" }}>{formatCurrencyShort(totalMonthlyInvestment)}</p><p className="text-xs text-ink-3 mt-1">parcelas planta</p></div>
-          <div className="card"><p className="kpi-label">Saldo — {monthName}</p><p className={`kpi-value ${totalMonthlySaldo >= 0 ? "text-positive" : "text-negative"}`}>{formatCurrencyShort(totalMonthlySaldo)}</p></div>
+          <div className="card"><p className="kpi-label">Receitas — {monthName}</p><p className="kpi-value text-positive">{formatCurrency(totalMonthlyIncome)}</p></div>
+          <div className="card"><p className="kpi-label">Despesas — {monthName}</p><p className="kpi-value">{formatCurrency(totalMonthlyExpense)}</p><p className="text-xs text-ink-3 mt-1">operacional</p></div>
+          <div className="card"><p className="kpi-label">Aportes — {monthName}</p><p className="kpi-value" style={{ color: "#3B82F6" }}>{formatCurrency(totalMonthlyInvestment)}</p><p className="text-xs text-ink-3 mt-1">parcelas planta</p></div>
+          <div className="card"><p className="kpi-label">Saldo — {monthName}</p><p className={`kpi-value ${totalMonthlySaldo >= 0 ? "text-positive" : "text-negative"}`}>{formatCurrency(totalMonthlySaldo)}</p></div>
         </div>
 
         {/* Portfólio */}
