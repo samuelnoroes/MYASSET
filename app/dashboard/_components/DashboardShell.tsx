@@ -65,13 +65,22 @@ export default function DashboardShell({
   children: React.ReactNode;
 }) {
   const [mounted, setMounted] = useState(false);
-  const [panelOpen, setPanelOpen] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(true);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [dismissed, setDismissed] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const saved = localStorage.getItem("notif-panel-open");
-    setPanelOpen(saved === null ? true : saved === "true");
+    // sessionStorage: estado dura só a sessão atual — no próximo login tudo volta
+    const savedPanel = sessionStorage.getItem("notif-panel-open");
+    setPanelOpen(savedPanel === null ? true : savedPanel === "true");
+
+    // IDs de notificações descartadas nesta sessão
+    const savedDismissed = sessionStorage.getItem("notif-dismissed");
+    if (savedDismissed) {
+      try { setDismissed(new Set(JSON.parse(savedDismissed))); } catch {}
+    }
+
     setMounted(true);
 
     const supabase = createClient();
@@ -89,7 +98,14 @@ export default function DashboardShell({
 
   function toggle(open: boolean) {
     setPanelOpen(open);
-    localStorage.setItem("notif-panel-open", String(open));
+    sessionStorage.setItem("notif-panel-open", String(open));
+  }
+
+  function dismissNotification(id: number) {
+    const next = new Set(dismissed);
+    next.add(id);
+    setDismissed(next);
+    sessionStorage.setItem("notif-dismissed", JSON.stringify([...next]));
   }
 
   if (!mounted) return <>{children}</>;
@@ -192,7 +208,7 @@ export default function DashboardShell({
             >
               Carregando...
             </p>
-          ) : notifications.length === 0 ? (
+          ) : notifications.filter(n => !dismissed.has(n.id)).length === 0 ? (
             <div style={{ textAlign: "center", padding: "40px 16px" }}>
               <p style={{ fontSize: 32, marginBottom: 10 }}>📭</p>
               <p
@@ -208,7 +224,9 @@ export default function DashboardShell({
               </p>
             </div>
           ) : (
-            notifications.map((n) => {
+            notifications
+              .filter((n) => !dismissed.has(n.id))
+              .map((n) => {
               const cfg = TYPE_CONFIG[n.type] || TYPE_CONFIG.news;
               return (
                 <div
@@ -218,8 +236,29 @@ export default function DashboardShell({
                     borderLeft: `3px solid ${cfg.color}`,
                     borderRadius: "0 6px 6px 0",
                     padding: "10px 12px",
+                    position: "relative",
                   }}
                 >
+                  {/* Botão fechar individual */}
+                  <button
+                    onClick={() => dismissNotification(n.id)}
+                    title="Fechar este informativo"
+                    style={{
+                      position: "absolute",
+                      top: 6,
+                      right: 8,
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      color: "#9CA3AF",
+                      fontSize: 14,
+                      lineHeight: 1,
+                      padding: "2px 4px",
+                    }}
+                  >
+                    ×
+                  </button>
+
                   {/* Tipo + data */}
                   <div
                     style={{
@@ -227,6 +266,7 @@ export default function DashboardShell({
                       alignItems: "center",
                       justifyContent: "space-between",
                       marginBottom: 5,
+                      paddingRight: 16,
                     }}
                   >
                     <div
