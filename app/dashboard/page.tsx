@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
-import { logout } from "./actions";
 import { markAsPaid } from "./alertActions";
 import PortfolioCharts from "./_components/PortfolioCharts";
 import A5Logo from "@/app/components/A5Logo";
@@ -204,54 +203,7 @@ export default async function DashboardPage() {
   return (
     <main className="min-h-screen bg-surface">
       {/* ── HEADER ───────────────────────────────────────── */}
-      <header className="bg-header text-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-6">
-          <div className="flex items-center gap-4 shrink-0">
-            <h1 className="font-display text-xl italic">
-              My<span style={{ color: "#6BA68A" }}>Asset</span>
-            </h1>
-            <div className="w-px h-5 bg-white/20" />
-            <div className="flex items-center gap-1.5">
-              <span className="text-[10px] text-gray-500 uppercase tracking-wider">by</span>
-              <A5Logo light height={20} />
-            </div>
-          </div>
-
-          <div className="hidden md:flex items-center gap-6 flex-1 justify-center">
-            <div className="text-center">
-              <p className="text-[10px] uppercase tracking-widest text-gray-400">Patrimônio</p>
-              <p className="text-sm font-bold text-white">{formatCurrencyShort(totalCurrentValue)}</p>
-            </div>
-            <div className="w-px h-8 bg-gray-600" />
-            <div className="text-center">
-              <p className="text-[10px] uppercase tracking-widest text-gray-400">Receitas de {monthName}</p>
-              <p className="text-sm font-bold text-green-400">{formatCurrency(totalMonthlyIncome)}</p>
-            </div>
-            <div className="w-px h-8 bg-gray-600" />
-            <div className="text-center">
-              <p className="text-[10px] uppercase tracking-widest text-gray-400">Yield médio</p>
-              <p className="text-sm font-bold text-white">{avgYield !== null ? formatPercent(avgYield) : "—"}</p>
-            </div>
-            {alerts.length > 0 && (
-              <>
-                <div className="w-px h-8 bg-gray-600" />
-                <div className="text-center">
-                  <p className="text-[10px] uppercase tracking-widest text-gray-400">Alertas</p>
-                  <p className="text-sm font-bold text-red-400">{alerts.length}</p>
-                </div>
-              </>
-            )}
-          </div>
-
-          <div className="flex items-center gap-4 shrink-0">
-            <Link href="/dashboard/tax" className="text-xs text-gray-400 hover:text-white transition-colors uppercase tracking-wider">IR</Link>
-            <Link href="/dashboard/profile" className="text-xs text-gray-400 hover:text-white transition-colors uppercase tracking-wider">Perfil</Link>
-            <form action={logout}>
-              <button type="submit" className="text-xs text-gray-400 hover:text-white transition-colors uppercase tracking-wider">Sair</button>
-            </form>
-          </div>
-        </div>
-      </header>
+      
 
       {/* Tabs */}
       <div className="bg-white border-b border-border">
