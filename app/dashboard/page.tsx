@@ -4,6 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 import { markAsPaid } from "./alertActions";
 import PortfolioCharts from "./_components/PortfolioCharts";
 import KpiCard from "./_components/KpiCard";
+import AlertsPanel from "./_components/AlertsPanel";
 import A5Logo from "@/app/components/A5Logo";
 
 function formatCurrency(value: number): string {
@@ -154,6 +155,20 @@ export default async function DashboardPage() {
     return b.daysOverdue - a.daysOverdue;
   });
 
+  // Array unificado para o AlertsPanel (aluguel + parcelas)
+  const allAlerts = [
+    ...alerts.map(a => ({
+      id: `rent-${a.propertyId}`,
+      propertyId: a.propertyId,
+      propertyName: a.propertyName,
+      type: a.type as "warning" | "danger",
+      message: a.message,
+      detail: a.detail,
+      amount: a.amount,
+      actionType: "markPaid" as const,
+    })),
+  ];
+
   // Alertas de parcela (imóveis na planta)
   type InstallmentAlert = {
     propertyId: string;
@@ -218,29 +233,9 @@ export default async function DashboardPage() {
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
-        {/* Alertas */}
-        {alerts.length > 0 && (
-          <div className="space-y-2">
-            {alerts.map((alert) => (
-              <div key={alert.propertyId} className={`flex items-center justify-between px-5 py-4 rounded-card border ${alert.type === "danger" ? "border-red-200 bg-red-50" : "border-amber-200 bg-amber-50"}`}>
-                <div className="flex items-center gap-4 flex-1 min-w-0">
-                  <span className="text-lg select-none shrink-0">{alert.type === "danger" ? "🔴" : "🟡"}</span>
-                  <div className="min-w-0">
-                    <p className={`text-xs font-bold uppercase tracking-wider ${alert.type === "danger" ? "text-red-700" : "text-amber-700"}`}>{alert.message}</p>
-                    <p className="text-sm text-ink mt-0.5 truncate"><strong>{alert.propertyName}</strong> · {alert.detail}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 shrink-0 ml-4">
-                  <form action={markAsPaid}>
-                    <input type="hidden" name="property_id" value={alert.propertyId} />
-                    <input type="hidden" name="amount" value={alert.amount} />
-                    <button type="submit" className="px-4 py-2 bg-forest text-white text-xs font-bold uppercase tracking-wider rounded hover:bg-forest-light transition-colors">Quitado ✓</button>
-                  </form>
-                  <Link href={`/dashboard/properties/${alert.propertyId}`} className="text-xs text-ink-2 hover:text-forest transition-colors uppercase tracking-wider">Ver →</Link>
-                </div>
-              </div>
-            ))}
-          </div>
+        {/* Alertas unificados — aluguel + parcelas */}
+        {allAlerts.length > 0 && (
+          <AlertsPanel alerts={allAlerts} onMarkPaid={markAsPaid} />
         )}
 
         {/* Alertas de parcela e balão */}
