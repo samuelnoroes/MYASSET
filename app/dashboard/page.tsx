@@ -239,6 +239,7 @@ export default async function DashboardPage() {
           </div>
 
           <div className="flex items-center gap-4 shrink-0">
+            <Link href="/dashboard/tax" className="text-xs text-gray-400 hover:text-white transition-colors uppercase tracking-wider">IR</Link>
             <Link href="/dashboard/profile" className="text-xs text-gray-400 hover:text-white transition-colors uppercase tracking-wider">Perfil</Link>
             <form action={logout}>
               <button type="submit" className="text-xs text-gray-400 hover:text-white transition-colors uppercase tracking-wider">Sair</button>
