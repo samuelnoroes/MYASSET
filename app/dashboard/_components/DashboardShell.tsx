@@ -38,6 +38,14 @@ const NAV_ITEMS = [
   { href: "/dashboard/profile",      label: "Perfil",        icon: "⚙️", badge: null },
 ];
 
+const DASHBOARD_ANCHORS = [
+  { href: "#visao-geral", label: "Visão geral"  },
+  { href: "#mes-atual",   label: "Mês atual"    },
+  { href: "#historico",   label: "Histórico"    },
+  { href: "#graficos",    label: "Gráficos"     },
+  { href: "#imoveis",     label: "Imóveis"      },
+];
+
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr);
   const now = new Date();
@@ -228,6 +236,40 @@ export default function DashboardShell({ children }: { children: React.ReactNode
             );
           })}
         </nav>
+
+        {/* Âncoras do dashboard */}
+        {sidebarOpen && pathname === "/dashboard" && (
+          <div style={{
+            margin: "4px 12px 8px",
+            padding: "8px",
+            backgroundColor: "rgba(255,255,255,0.04)",
+            borderRadius: 6,
+            borderLeft: "2px solid rgba(109,166,138,0.4)",
+          }}>
+            <p style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "#6B7280", marginBottom: 6, paddingLeft: 4 }}>
+              Ir para
+            </p>
+            {DASHBOARD_ANCHORS.map(a => (
+              <a
+                key={a.href}
+                href={a.href}
+                style={{
+                  display: "block",
+                  padding: "4px 4px",
+                  fontSize: 12,
+                  color: "#9CA3AF",
+                  textDecoration: "none",
+                  borderRadius: 4,
+                  transition: "color 0.15s",
+                }}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = "#fff"}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = "#9CA3AF"}
+              >
+                · {a.label}
+              </a>
+            ))}
+          </div>
+        )}
 
         {/* Painel de informativos — toggle */}
         <div style={{ padding: sidebarOpen ? "0 12px 8px" : "0 0 8px", borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 12 }}>
