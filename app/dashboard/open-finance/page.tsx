@@ -29,11 +29,7 @@ const FEATURES = [
     title: "Despesas automáticas",
     desc: "IPTU, condomínio e manutenção são identificados e categorizados direto do seu extrato. Você só confirma as exceções.",
   },
-  {
-    icon: "💡",
-    title: "Oportunidades inteligentes",
-    desc: "Detectamos dinheiro parado que poderia virar entrada de um imóvel, ou transações de imóveis que você ainda não cadastrou.",
-  },
+
   {
     icon: "📊",
     title: "Visão patrimonial completa",
