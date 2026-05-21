@@ -129,23 +129,55 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           overflow: "hidden",
         }}
       >
-        {/* Logo */}
+        {/* Logo + botão colapsar */}
         <div
           style={{
-            padding: sidebarOpen ? "24px 20px 20px" : "24px 0 20px",
+            padding: sidebarOpen ? "20px 12px 16px 20px" : "20px 0 16px",
             borderBottom: "1px solid rgba(255,255,255,0.08)",
             display: "flex",
             alignItems: "center",
-            justifyContent: sidebarOpen ? "flex-start" : "center",
+            justifyContent: sidebarOpen ? "space-between" : "center",
             whiteSpace: "nowrap",
             overflow: "hidden",
           }}
         >
-          <Link href="/dashboard" style={{ textDecoration: "none" }}>
-            <span style={{ fontFamily: "var(--font-display, serif)", fontSize: 22, fontStyle: "italic", fontWeight: 700, color: "#fff", letterSpacing: "-0.5px" }}>
-              My<span style={{ color: "#6BA68A" }}>Asset</span>
-            </span>
-          </Link>
+          {sidebarOpen && (
+            <Link href="/dashboard" style={{ textDecoration: "none" }}>
+              <span style={{ fontFamily: "var(--font-display, serif)", fontSize: 22, fontStyle: "italic", fontWeight: 700, color: "#fff", letterSpacing: "-0.5px" }}>
+                My<span style={{ color: "#6BA68A" }}>Asset</span>
+              </span>
+            </Link>
+          )}
+          <button
+            onClick={toggleSidebar}
+            title={sidebarOpen ? "Recolher menu" : "Expandir menu"}
+            style={{
+              background: "rgba(255,255,255,0.08)",
+              border: "none",
+              borderRadius: 6,
+              cursor: "pointer",
+              color: "#9CA3AF",
+              fontSize: 18,
+              fontWeight: 700,
+              width: 32,
+              height: 32,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+              transition: "background 0.15s, color 0.15s",
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLElement).style.backgroundColor = "rgba(255,255,255,0.15)";
+              (e.currentTarget as HTMLElement).style.color = "#fff";
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLElement).style.backgroundColor = "rgba(255,255,255,0.08)";
+              (e.currentTarget as HTMLElement).style.color = "#9CA3AF";
+            }}
+          >
+            {sidebarOpen ? "‹" : "›"}
+          </button>
         </div>
 
         {/* Nav items */}
@@ -253,35 +285,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           </form>
         </div>
 
-        {/* Botão colapsar */}
-        <button
-          onClick={toggleSidebar}
-          title={sidebarOpen ? "Recolher menu" : "Expandir menu"}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "12px",
-            borderTop: "1px solid rgba(255,255,255,0.08)",
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            color: "#6B7280",
-            fontSize: 16,
-            transition: "color 0.15s",
-          }}
-          onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = "#fff"}
-          onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = "#6B7280"}
-        >
-          <span style={{
-            display: "inline-block",
-            transition: "transform 0.25s",
-            transform: sidebarOpen ? "rotate(0deg)" : "rotate(180deg)",
-          }}>
-            ‹
-          </span>
-          {sidebarOpen && <span style={{ fontSize: 12, marginLeft: 8, color: "#6B7280" }}>Recolher</span>}
-        </button>
+
       </aside>
 
       {/* ── CONTEÚDO PRINCIPAL ───────────────────────────── */}
