@@ -84,6 +84,11 @@ export default async function DashboardPage() {
   const totalMonthlySaldo = totalMonthlyIncome - totalMonthlyExpense;
 
   const annualLeaseProps = props.filter(p => p.modality === "annual_lease" && p.monthly_rent);
+
+  // IDs de imóveis que já receberam receita no mês atual
+  const paidThisMonth = new Set(
+    txs.filter(t => t.transaction_type === "income").map(t => t.property_id)
+  );
   const totalExpectedThisMonth = annualLeaseProps.reduce((acc, p) => acc + Number(p.monthly_rent), 0);
   const collectionEfficiency = totalExpectedThisMonth > 0
     ? Math.min(totalMonthlyIncome / totalExpectedThisMonth, 1) : null;
@@ -321,11 +326,11 @@ export default async function DashboardPage() {
         {/* KPIs */}
         {/* KPIs portfólio */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="card"><p className="kpi-label">Imóveis</p><p className="kpi-value-lg">{totalProperties}</p></div>
-          <div className="card"><p className="kpi-label">Valorização</p><p className={`kpi-value ${appreciation >= 0 ? "text-positive" : "text-negative"}`}>{totalAcquisitionValue > 0 ? formatPercent(appreciation) : "—"}</p></div>
-          <div className="card"><p className="kpi-label">Yield médio</p><p className="kpi-value">{avgYield !== null ? formatPercent(avgYield) : "—"}</p><p className="text-xs text-ink-3 mt-1">ao ano</p></div>
+          <div className="card relative group"><p className="kpi-label flex items-center gap-1">Imóveis <span className="text-ink-3 text-xs cursor-help" title="Total de imóveis cadastrados no seu portfólio.">?</span></p><p className="kpi-value-lg">{totalProperties}</p></div>
+          <div className="card"><p className="kpi-label flex items-center gap-1">Valorização <span className="text-ink-3 text-xs cursor-help" title="Diferença percentual entre o valor atual e o valor de compra de todos os imóveis. Positivo = portfólio valorizou.">?</span></p><p className={`kpi-value ${appreciation >= 0 ? "text-positive" : "text-negative"}`}>{totalAcquisitionValue > 0 ? formatPercent(appreciation) : "—"}</p></div>
+          <div className="card"><p className="kpi-label flex items-center gap-1">Yield médio <span className="text-ink-3 text-xs cursor-help" title="Média do yield anual de todos os imóveis. Yield = aluguel mensal ÷ valor atual × 12. Indica a rentabilidade bruta do portfólio.">?</span></p><p className="kpi-value">{avgYield !== null ? formatPercent(avgYield) : "—"}</p><p className="text-xs text-ink-3 mt-1">ao ano</p></div>
           <div className="card">
-            <p className="kpi-label">Eficiência</p>
+            <p className="kpi-label flex items-center gap-1">Eficiência <span className="text-ink-3 text-xs cursor-help" title="Percentual do aluguel esperado que foi efetivamente recebido neste mês. 100% = todos os aluguéis de locação anual foram quitados.">?</span></p>
             <p className={`kpi-value ${collectionEfficiency === null ? "text-ink" : collectionEfficiency >= 1 ? "text-positive" : collectionEfficiency >= 0.8 ? "text-warning" : "text-negative"}`}>
               {collectionEfficiency !== null ? formatPercent(collectionEfficiency) : "—"}
             </p>
@@ -335,10 +340,10 @@ export default async function DashboardPage() {
 
         {/* KPIs do mês */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="card"><p className="kpi-label">Receitas — {monthName}</p><p className="kpi-value text-positive">{formatCurrency(totalMonthlyIncome)}</p></div>
-          <div className="card"><p className="kpi-label">Despesas — {monthName}</p><p className="kpi-value">{formatCurrency(totalMonthlyExpense)}</p><p className="text-xs text-ink-3 mt-1">operacional</p></div>
-          <div className="card"><p className="kpi-label">Aportes — {monthName}</p><p className="kpi-value" style={{ color: "#3B82F6" }}>{formatCurrency(totalMonthlyInvestment)}</p><p className="text-xs text-ink-3 mt-1">parcelas planta</p></div>
-          <div className="card"><p className="kpi-label">Saldo — {monthName}</p><p className={`kpi-value ${totalMonthlySaldo >= 0 ? "text-positive" : "text-negative"}`}>{formatCurrency(totalMonthlySaldo)}</p></div>
+          <div className="card"><p className="kpi-label flex items-center gap-1">Receitas — {monthName} <span className="text-ink-3 text-xs cursor-help" title="Soma de todas as entradas registradas neste mês — aluguéis, diárias e outras receitas de todos os imóveis.">?</span></p><p className="kpi-value text-positive">{formatCurrency(totalMonthlyIncome)}</p></div>
+          <div className="card"><p className="kpi-label flex items-center gap-1">Despesas — {monthName} <span className="text-ink-3 text-xs cursor-help" title="Soma das despesas operacionais do mês: IPTU, condomínio, manutenção e seguro. Não inclui aportes em imóveis na planta.">?</span></p><p className="kpi-value">{formatCurrency(totalMonthlyExpense)}</p><p className="text-xs text-ink-3 mt-1">operacional</p></div>
+          <div className="card"><p className="kpi-label flex items-center gap-1">Aportes — {monthName} <span className="text-ink-3 text-xs cursor-help" title="Soma dos aportes de capital em imóveis na planta: parcelas mensais e balões registrados neste mês. Contabilizado separadamente das despesas operacionais.">?</span></p><p className="kpi-value" style={{ color: "#3B82F6" }}>{formatCurrency(totalMonthlyInvestment)}</p><p className="text-xs text-ink-3 mt-1">parcelas planta</p></div>
+          <div className="card"><p className="kpi-label flex items-center gap-1">Saldo — {monthName} <span className="text-ink-3 text-xs cursor-help" title="Receitas menos despesas operacionais do mês. Não desconta aportes em plantas — esses são investimentos, não custos.">?</span></p><p className={`kpi-value ${totalMonthlySaldo >= 0 ? "text-positive" : "text-negative"}`}>{formatCurrency(totalMonthlySaldo)}</p></div>
         </div>
 
         {/* Portfólio */}
@@ -393,7 +398,17 @@ export default async function DashboardPage() {
                           <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full border border-blue-200">Disponível</span>
                         )}
                       </div>
-                      <Link href={`/dashboard/properties/${p.id}`} className="text-base font-semibold text-ink hover:text-forest transition-colors truncate block">{p.name}</Link>
+                      <div className="flex items-center gap-2">
+                        <Link href={`/dashboard/properties/${p.id}`} className="text-base font-semibold text-ink hover:text-forest transition-colors truncate">{p.name}</Link>
+                        {modality === "annual_lease" && (
+                          <span
+                            title={paidThisMonth.has(p.id) ? "Aluguel recebido este mês" : "Aluguel pendente este mês"}
+                            className={`shrink-0 text-xs font-bold px-1.5 py-0.5 rounded-full border ${paidThisMonth.has(p.id) ? "bg-green-50 text-green-700 border-green-200" : "bg-amber-50 text-amber-700 border-amber-200"}`}
+                          >
+                            {paidThisMonth.has(p.id) ? "✓" : "○"}
+                          </span>
+                        )}
+                      </div>
                       {(p.city || p.state) && <p className="text-sm text-ink-3">{[p.city, p.state].filter(Boolean).join(" · ")}</p>}
                     </div>
                     <div className="hidden md:block text-right shrink-0">
