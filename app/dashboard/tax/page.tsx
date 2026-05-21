@@ -89,7 +89,7 @@ export default async function TaxPage({
 
   // Ano fiscal
   const currentYear = new Date().getFullYear();
-  const selectedYear = parseInt(searchParams.year || String(currentYear - 1));
+  const selectedYear = parseInt(searchParams.year || String(currentYear));
 
   // Busca imóveis
   const { data: properties } = await supabase
