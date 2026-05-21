@@ -54,12 +54,20 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label
-                htmlFor="password"
-                className="block text-xs font-semibold uppercase tracking-wider text-ink-2 mb-2"
-              >
-                Senha
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label
+                  htmlFor="password"
+                  className="text-xs font-semibold uppercase tracking-wider text-ink-2"
+                >
+                  Senha
+                </label>
+                <Link
+                  href="/forgot-password"
+                  className="text-xs text-ink-3 hover:text-forest transition-colors"
+                >
+                  Esqueci minha senha
+                </Link>
+              </div>
               <input
                 id="password"
                 name="password"
@@ -69,7 +77,6 @@ export default function LoginPage() {
                 autoComplete="current-password"
                 className="w-full px-4 py-3 bg-surface border border-border rounded focus:border-forest focus:outline-none transition-colors text-ink text-sm"
               />
-              <p className="text-xs text-ink-3 mt-1">Mínimo 6 caracteres</p>
             </div>
 
             <div className="flex flex-col gap-3 pt-2">
