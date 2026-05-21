@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { markAsPaid } from "./alertActions";
 import PortfolioCharts from "./_components/PortfolioCharts";
+import KpiCard from "./_components/KpiCard";
 import A5Logo from "@/app/components/A5Logo";
 
 function formatCurrency(value: number): string {
@@ -278,24 +279,40 @@ export default async function DashboardPage() {
         {/* KPIs */}
         {/* KPIs portfólio */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="card relative group"><p className="kpi-label flex items-center gap-1">Imóveis <span className="text-ink-3 text-xs cursor-help" title="Total de imóveis cadastrados no seu portfólio.">?</span></p><p className="kpi-value-lg">{totalProperties}</p></div>
-          <div className="card"><p className="kpi-label flex items-center gap-1">Valorização <span className="text-ink-3 text-xs cursor-help" title="Diferença percentual entre o valor atual e o valor de compra de todos os imóveis. Positivo = portfólio valorizou.">?</span></p><p className={`kpi-value ${appreciation >= 0 ? "text-positive" : "text-negative"}`}>{totalAcquisitionValue > 0 ? formatPercent(appreciation) : "—"}</p></div>
-          <div className="card"><p className="kpi-label flex items-center gap-1">Yield médio <span className="text-ink-3 text-xs cursor-help" title="Média do yield anual de todos os imóveis. Yield = aluguel mensal ÷ valor atual × 12. Indica a rentabilidade bruta do portfólio.">?</span></p><p className="kpi-value">{avgYield !== null ? formatPercent(avgYield) : "—"}</p><p className="text-xs text-ink-3 mt-1">ao ano</p></div>
-          <div className="card">
-            <p className="kpi-label flex items-center gap-1">Eficiência <span className="text-ink-3 text-xs cursor-help" title="Percentual do aluguel esperado que foi efetivamente recebido neste mês. 100% = todos os aluguéis de locação anual foram quitados.">?</span></p>
-            <p className={`kpi-value ${collectionEfficiency === null ? "text-ink" : collectionEfficiency >= 1 ? "text-positive" : collectionEfficiency >= 0.8 ? "text-warning" : "text-negative"}`}>
-              {collectionEfficiency !== null ? formatPercent(collectionEfficiency) : "—"}
-            </p>
-            {collectionEfficiency !== null && <p className="text-xs text-ink-3 mt-1">recebido / esperado</p>}
-          </div>
+          <KpiCard label="Imóveis" tooltip="Total de imóveis cadastrados no seu portfólio.">
+              <p className="kpi-value-lg">{totalProperties}</p>
+            </KpiCard>
+          <KpiCard label="Valorização" tooltip="Diferença percentual entre o valor atual e o valor de compra de todos os imóveis. Positivo = portfólio valorizou.">
+              <p className={`kpi-value ${appreciation >= 0 ? "text-positive" : "text-negative"}`}>{totalAcquisitionValue > 0 ? formatPercent(appreciation) : "—"}</p>
+            </KpiCard>
+          <KpiCard label="Yield médio" tooltip="Média do yield anual dos imóveis. Yield = aluguel mensal ÷ valor atual × 12. Indica a rentabilidade bruta do portfólio.">
+              <p className="kpi-value">{avgYield !== null ? formatPercent(avgYield) : "—"}</p>
+              <p className="text-xs text-ink-3 mt-1">ao ano</p>
+            </KpiCard>
+          <KpiCard label="Eficiência" tooltip="Percentual do aluguel esperado que foi efetivamente recebido neste mês. 100% = todos os aluguéis de locação anual foram quitados.">
+              <p className={`kpi-value ${collectionEfficiency === null ? "text-ink" : collectionEfficiency >= 1 ? "text-positive" : collectionEfficiency >= 0.8 ? "text-warning" : "text-negative"}`}>
+                {collectionEfficiency !== null ? formatPercent(collectionEfficiency) : "—"}
+              </p>
+              {collectionEfficiency !== null && <p className="text-xs text-ink-3 mt-1">recebido / esperado</p>}
+            </KpiCard>
         </div>
 
         {/* KPIs do mês */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="card"><p className="kpi-label flex items-center gap-1">Receitas — {monthName} <span className="text-ink-3 text-xs cursor-help" title="Soma de todas as entradas registradas neste mês — aluguéis, diárias e outras receitas de todos os imóveis.">?</span></p><p className="kpi-value text-positive">{formatCurrency(totalMonthlyIncome)}</p></div>
-          <div className="card"><p className="kpi-label flex items-center gap-1">Despesas — {monthName} <span className="text-ink-3 text-xs cursor-help" title="Soma das despesas operacionais do mês: IPTU, condomínio, manutenção e seguro. Não inclui aportes em imóveis na planta.">?</span></p><p className="kpi-value">{formatCurrency(totalMonthlyExpense)}</p><p className="text-xs text-ink-3 mt-1">operacional</p></div>
-          <div className="card"><p className="kpi-label flex items-center gap-1">Aportes — {monthName} <span className="text-ink-3 text-xs cursor-help" title="Soma dos aportes de capital em imóveis na planta: parcelas mensais e balões registrados neste mês. Contabilizado separadamente das despesas operacionais.">?</span></p><p className="kpi-value" style={{ color: "#3B82F6" }}>{formatCurrency(totalMonthlyInvestment)}</p><p className="text-xs text-ink-3 mt-1">parcelas planta</p></div>
-          <div className="card"><p className="kpi-label flex items-center gap-1">Saldo — {monthName} <span className="text-ink-3 text-xs cursor-help" title="Receitas menos despesas operacionais do mês. Não desconta aportes em plantas — esses são investimentos, não custos.">?</span></p><p className={`kpi-value ${totalMonthlySaldo >= 0 ? "text-positive" : "text-negative"}`}>{formatCurrency(totalMonthlySaldo)}</p></div>
+          <KpiCard label={`Receitas — ${monthName}`} tooltip="Soma de todas as entradas registradas neste mês — aluguéis, diárias e outras receitas de todos os imóveis.">
+              <p className="kpi-value text-positive">{formatCurrency(totalMonthlyIncome)}</p>
+            </KpiCard>
+          <KpiCard label={`Despesas — ${monthName}`} tooltip="Soma das despesas operacionais do mês: IPTU, condomínio, manutenção e seguro. Não inclui aportes em imóveis na planta.">
+              <p className="kpi-value">{formatCurrency(totalMonthlyExpense)}</p>
+              <p className="text-xs text-ink-3 mt-1">operacional</p>
+            </KpiCard>
+          <KpiCard label={`Aportes — ${monthName}`} tooltip="Soma dos aportes de capital em imóveis na planta: parcelas mensais e balões registrados neste mês. Contabilizado separadamente das despesas operacionais.">
+              <p className="kpi-value" style={{ color: "#3B82F6" }}>{formatCurrency(totalMonthlyInvestment)}</p>
+              <p className="text-xs text-ink-3 mt-1">parcelas planta</p>
+            </KpiCard>
+          <KpiCard label={`Saldo — ${monthName}`} tooltip="Receitas menos despesas operacionais do mês. Não desconta aportes em plantas — esses são investimentos, não custos.">
+              <p className={`kpi-value ${totalMonthlySaldo >= 0 ? "text-positive" : "text-negative"}`}>{formatCurrency(totalMonthlySaldo)}</p>
+            </KpiCard>
         </div>
 
         {/* Portfólio */}
