@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
-import { createClient } from "@/utils/supabase/client";
 import { logout } from "@/app/dashboard/actions";
 
 const SIDEBAR_EXPANDED = 220;
