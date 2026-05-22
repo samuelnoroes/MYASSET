@@ -225,9 +225,15 @@ export default function DashboardSections({ monthlyData, currentMonthName }: Pro
                 <td className="py-3 px-3 text-right font-bold text-positive">{fmtFull(monthlyData.reduce((a, m) => a + m.receitas, 0))}</td>
                 <td className="py-3 px-3 text-right font-bold text-ink">{fmtFull(monthlyData.reduce((a, m) => a + m.despesas, 0))}</td>
                 <td className="py-3 px-3 text-right font-bold" style={{ color: "#3B82F6" }}>{fmtFull(monthlyData.reduce((a, m) => a + m.aportes, 0))}</td>
-                <td className="py-3 px-3 text-right font-bold" style={{ color: monthlyData.reduce((a, m) => a + m.saldo, 0) >= 0 ? "#16A34A" : "#DC2626" }}>
-                  {fmtFull(monthlyData.reduce((a, m) => a + m.saldo, 0))}
-                </td>
+                {(() => {
+                  const totalCaixa = monthlyData.reduce((a, m) => a + m.saldo - m.aportes, 0);
+                  return (
+                    <td className="py-3 px-3 text-right font-bold" style={{ color: totalCaixa >= 0 ? "#16A34A" : "#DC2626" }}>
+                      {fmtFull(totalCaixa)}
+                      <p style={{ fontSize: 10, color: "#9CA3AF", fontWeight: 500, marginTop: 2 }}>c/ aportes</p>
+                    </td>
+                  );
+                })()}
                 <td />
               </tr>
             </tfoot>
