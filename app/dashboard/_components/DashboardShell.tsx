@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
+import { createClient } from "@/utils/supabase/client";
+import { logout } from "@/app/dashboard/actions";
 
 const SIDEBAR_EXPANDED = 220;
 const SIDEBAR_COLLAPSED = 64;
@@ -353,7 +355,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
         {/* Sair */}
         <div style={{ padding: sidebarOpen ? "0 12px 12px" : "0 0 12px" }}>
-          <form action="/dashboard/logout" method="post">
+          <form action={logout}>
             <button
               type="submit"
               title={!sidebarOpen ? "Sair" : undefined}
