@@ -52,7 +52,6 @@ export default async function AdminClientDetailPage({ params }: Props) {
   const { data: me } = await supabase.from("user_profiles").select("is_admin").eq("id", user.id).single();
   if (!me?.is_admin) redirect("/dashboard");
 
-  // Dados do cliente
   const { data: client } = await supabase
     .from("user_profiles")
     .select("id, full_name, phone, last_login_at, tax_person_type, tax_has_planning")
@@ -61,7 +60,6 @@ export default async function AdminClientDetailPage({ params }: Props) {
 
   if (!client) notFound();
 
-  // Imóveis do cliente
   const { data: properties } = await supabase
     .from("properties")
     .select("*")
@@ -69,7 +67,6 @@ export default async function AdminClientDetailPage({ params }: Props) {
 
   const props = properties ?? [];
 
-  // Transações dos últimos 90 dias
   const ninetyDaysAgo = new Date();
   ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
   const { data: recentTxs } = await supabase
@@ -82,14 +79,12 @@ export default async function AdminClientDetailPage({ params }: Props) {
   const txs = recentTxs ?? [];
   const recentTxPropertyIds = new Set(txs.map(t => t.property_id));
 
-  // Open Finance interest
   const { data: ofInterest } = await supabase
     .from("open_finance_interest")
     .select("interested")
     .eq("user_id", params.id)
     .single();
 
-  // Calcular health por propriedade
   const propsWithHealth = props.map(p => {
     const modality = p.modality || "annual_lease";
     const required = REQUIRED_FIELDS[modality] || REQUIRED_FIELDS.annual_lease;
@@ -127,7 +122,6 @@ export default async function AdminClientDetailPage({ params }: Props) {
 
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
 
-        {/* ── CABEÇALHO DO CLIENTE ─────────────────────── */}
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           <div>
             <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: scoreColor(avgScore) }}>
@@ -157,7 +151,6 @@ export default async function AdminClientDetailPage({ params }: Props) {
           )}
         </div>
 
-        {/* ── IMÓVEIS COM HEALTH SCORE ───────────────────── */}
         <div className="space-y-4">
           <p className="section-title">Imóveis do cliente</p>
 
@@ -197,7 +190,6 @@ export default async function AdminClientDetailPage({ params }: Props) {
                   </div>
                 </div>
 
-                {/* Campos faltantes */}
                 {p.missing.length > 0 && (
                   <div className="bg-red-50 border border-red-200 rounded px-4 py-3">
                     <p className="text-xs font-bold uppercase tracking-wider text-red-700 mb-2">
@@ -231,7 +223,6 @@ export default async function AdminClientDetailPage({ params }: Props) {
           )}
         </div>
 
-        {/* ── TRANSAÇÕES RECENTES ────────────────────────── */}
         {txs.length > 0 && (
           <div className="card">
             <p className="section-title" style={{ marginBottom: 12 }}>
