@@ -65,10 +65,21 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   const [dismissed, setDismissed]     = useState<Set<string>>(new Set());
   const [loading, setLoading]         = useState(true);
 
+  const [isAdmin, setIsAdmin] = useState(false);
+
   useEffect(() => {
     // Sidebar — localStorage (persiste entre sessões)
     const savedSidebar = localStorage.getItem("sidebar-open");
     setSidebarOpen(savedSidebar === null ? true : savedSidebar === "true");
+
+    // Verificar se é admin e atualizar last_login
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      supabase.from("user_profiles").select("is_admin").eq("id", user.id).single()
+        .then(({ data }) => { if (data?.is_admin) setIsAdmin(true); });
+      supabase.from("user_profiles").update({ last_login_at: new Date().toISOString() }).eq("id", user.id);
+    });
 
     // Painel — sessionStorage (retorna a cada login)
     const savedPanel = sessionStorage.getItem("notif-panel-open");
@@ -310,6 +321,35 @@ export default function DashboardShell({ children }: { children: React.ReactNode
             )}
           </button>
         </div>
+
+        {/* Link admin */}
+        {isAdmin && (
+          <div style={{ padding: sidebarOpen ? "0 12px 8px" : "0 0 8px" }}>
+            <Link
+              href="/admin"
+              title={!sidebarOpen ? "Admin" : undefined}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                width: "100%",
+                padding: sidebarOpen ? "8px 8px" : "8px 0",
+                justifyContent: sidebarOpen ? "flex-start" : "center",
+                background: pathname.startsWith("/admin") ? "rgba(27,53,100,0.2)" : "transparent",
+                border: "none",
+                borderRadius: 6,
+                textDecoration: "none",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+              }}
+            >
+              <span style={{ fontSize: 18, flexShrink: 0, width: 24, textAlign: "center" }}>🛡️</span>
+              {sidebarOpen && (
+                <span style={{ fontSize: 14, fontWeight: 700, color: "#6BA68A" }}>Admin</span>
+              )}
+            </Link>
+          </div>
+        )}
 
         {/* Sair */}
         <div style={{ padding: sidebarOpen ? "0 12px 12px" : "0 0 12px" }}>
