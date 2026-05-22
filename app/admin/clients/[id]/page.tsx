@@ -2,11 +2,17 @@ import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 
+interface MissingField {
+  field: string;
+  label: string;
+  impact: string;
+}
+
 const MODALITY_LABELS: Record<string, string> = {
   annual_lease: "Locação anual", short_stay: "Temporada", under_construction: "Na planta",
 };
 
-const REQUIRED_FIELDS: Record<string, { field: string; label: string; impact: string }[]> = {
+const REQUIRED_FIELDS: Record<string, MissingField[]> = {
   annual_lease: [
     { field: "monthly_rent", label: "Valor do aluguel", impact: "Yield não calcula, alerta de cobrança não dispara" },
     { field: "lease_due_day", label: "Dia de vencimento", impact: "Alerta de cobrança não dispara" },
@@ -138,7 +144,7 @@ export default async function AdminClientDetailPage({ params }: Props) {
           </div>
 
           {WA_BASE && (
-            <a
+            
               href={`${WA_BASE}?text=${encodeURIComponent(`Olá ${(client.full_name || "").split(" ")[0]}! Queria trocar uma ideia rápida sobre seus imóveis no MyAsset. 😊`)}`}
               target="_blank"
               rel="noopener noreferrer"
@@ -198,7 +204,7 @@ export default async function AdminClientDetailPage({ params }: Props) {
                       {p.missing.length} {p.missing.length === 1 ? "campo faltando" : "campos faltando"}
                     </p>
                     <div className="space-y-1">
-                      {p.missing.map((m: { field: string; label: string; impact: string }) => (
+                      {p.missing.map((m: MissingField) => (
                         <div key={m.field} className="flex items-start gap-2">
                           <span className="text-red-400 text-xs mt-0.5">✕</span>
                           <div>
@@ -209,7 +215,7 @@ export default async function AdminClientDetailPage({ params }: Props) {
                       ))}
                     </div>
                     {WA_BASE && (
-                      <a
+                      
                         href={`${WA_BASE}?text=${encodeURIComponent(`Olá! Vi que seu imóvel "${p.name}" no MyAsset está sem ${p.missing[0].label.toLowerCase()}. Sem essa informação, ${p.missing[0].impact.toLowerCase()}. Me manda o dado que eu atualizo pra você! 😊`)}`}
                         target="_blank" rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 mt-3 px-3 py-2 text-xs font-bold uppercase tracking-wider rounded text-white"
