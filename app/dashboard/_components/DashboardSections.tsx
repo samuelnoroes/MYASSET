@@ -88,11 +88,12 @@ export default function DashboardSections({ monthlyData, currentMonthName }: Pro
   const current = monthlyData[monthlyData.length - 1];
   const prev    = monthlyData[monthlyData.length - 2];
 
-  // Saldo acumulado para o gráfico 2
+  // Saldo acumulado — caixa real (receitas - despesas operacionais - aportes)
   let accumulated = 0;
   const saldoAcumulado = monthlyData.map(m => {
-    accumulated += m.saldo;
-    return { month: m.month, "Saldo acumulado": accumulated, "Saldo mensal": m.saldo };
+    const saldoCaixa = m.saldo - m.aportes; // saldo operacional menos aportes de capital
+    accumulated += saldoCaixa;
+    return { month: m.month, "Saldo acumulado": accumulated, "Saldo mensal": saldoCaixa };
   });
 
   // Melhor e pior mês
