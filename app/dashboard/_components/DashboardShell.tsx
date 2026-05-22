@@ -93,8 +93,8 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
     setMounted(true);
 
-    const supabase = createClient();
-    supabase
+    const supabaseNotif = createClient();
+    supabaseNotif
       .from("notifications")
       .select("id, title, body, type, created_at, contact_label, contact_url")
       .eq("active", true)
