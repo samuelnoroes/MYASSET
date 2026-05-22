@@ -198,7 +198,7 @@ export default async function AdminClientDetailPage({ params }: Props) {
                       {p.missing.length} {p.missing.length === 1 ? "campo faltando" : "campos faltando"}
                     </p>
                     <div className="space-y-1">
-                      {p.missing.map(m => (
+                      {p.missing.map((m: { field: string; label: string; impact: string }) => (
                         <div key={m.field} className="flex items-start gap-2">
                           <span className="text-red-400 text-xs mt-0.5">✕</span>
                           <div>
