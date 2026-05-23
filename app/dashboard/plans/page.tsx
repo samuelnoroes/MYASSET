@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
+import { selectPlan } from "./actions";
 
 export default async function PlansPage() {
   const supabase = createClient();
@@ -100,7 +101,7 @@ export default async function PlansPage() {
                 Plano atual
               </div>
             ) : (
-              <form action="/dashboard/plans/select" method="POST">
+              <form action={selectPlan}>
                 <input type="hidden" name="plan" value="essencial" />
                 <button 
                   type="submit"
@@ -161,7 +162,7 @@ export default async function PlansPage() {
                 Plano atual
               </div>
             ) : (
-              <form action="/dashboard/plans/select" method="POST">
+              <form action={selectPlan}>
                 <input type="hidden" name="plan" value="pro" />
                 <button 
                   type="submit"
@@ -176,7 +177,7 @@ export default async function PlansPage() {
         </div>
 
         {/* Voltar pro dashboard (se não estiver com trial expirado) */}
-        {!isTrialExpired && profile?.plan !== 'trial' && (
+        {!isTrialExpired && (
           <div className="text-center mt-6">
             <Link href="/dashboard" className="text-sm text-ink-3 hover:text-ink underline">
               ← Voltar para o dashboard
