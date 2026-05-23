@@ -23,29 +23,25 @@ async function asaasFetch(path: string, method: string, body?: object) {
   });
 
   const text = await res.text();
-
-  if (!res.ok) {
-    throw new Error(`Asaas error ${res.status}: ${text}`);
-  }
+  if (!res.ok) throw new Error(`Asaas error ${res.status}: ${text}`);
 
   try {
     return JSON.parse(text);
   } catch {
-    throw new Error(`Asaas response parse error: ${text}`);
+    throw new Error(`Asaas parse error: ${text}`);
   }
 }
 
-export async function selectPlan(formData: FormData) {
+// Retorna { url } ou { error } em vez de redirect()
+// Assim o redirect fica no componente cliente, sem conflito com NEXT_REDIRECT
+export async function createCheckout(formData: FormData): Promise<{ url?: string; error?: string }> {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user) redirect("/login");
+  if (!user) return { error: "Usuário não autenticado" };
 
   const plan = formData.get("plan") as string;
-
-  if (!["essencial", "pro"].includes(plan)) {
-    redirect("/error?message=" + encodeURIComponent("Plano inválido"));
-  }
+  if (!["essencial", "pro"].includes(plan)) return { error: "Plano inválido" };
 
   const { data: profile } = await supabase
     .from("user_profiles")
@@ -53,18 +49,11 @@ export async function selectPlan(formData: FormData) {
     .eq("id", user.id)
     .single();
 
-  if (!profile) {
-    redirect("/error?message=" + encodeURIComponent("Perfil não encontrado"));
-  }
-
-  // Resultado final — preenchido dentro do bloco de lógica
-  let checkoutUrl: string | null = null;
-  let errorMessage: string | null = null;
-
-  // ── Lógica Asaas (sem redirect aqui dentro) ──────────────
-  let asaasCustomerId = profile.asaas_customer_id;
+  if (!profile) return { error: "Perfil não encontrado" };
 
   try {
+    let asaasCustomerId = profile.asaas_customer_id;
+
     // 1. Criar customer se não existir
     if (!asaasCustomerId) {
       const customer = await asaasFetch("/customers", "POST", {
@@ -76,7 +65,6 @@ export async function selectPlan(formData: FormData) {
       });
 
       asaasCustomerId = customer.id;
-
       await supabase
         .from("user_profiles")
         .update({ asaas_customer_id: asaasCustomerId })
@@ -101,13 +89,10 @@ export async function selectPlan(formData: FormData) {
 
     await supabase
       .from("user_profiles")
-      .update({
-        asaas_subscription_id: subscription.id,
-        plan_pending: plan,
-      })
+      .update({ asaas_subscription_id: subscription.id, plan_pending: plan })
       .eq("id", user.id);
 
-    // 3. Aguardar e buscar cobrança gerada pela assinatura
+    // 3. Buscar primeira cobrança da assinatura
     await new Promise(resolve => setTimeout(resolve, 2000));
 
     const paymentsResponse = await asaasFetch(
@@ -117,35 +102,25 @@ export async function selectPlan(formData: FormData) {
 
     const firstPayment = paymentsResponse?.data?.[0];
 
-    console.log("Subscription:", JSON.stringify(subscription));
-    console.log("First payment:", JSON.stringify(firstPayment));
-
-    checkoutUrl =
+    const checkoutUrl =
       firstPayment?.invoiceUrl ||
       firstPayment?.bankSlipUrl ||
       subscription.invoiceUrl ||
       subscription.url ||
       null;
 
-    if (!checkoutUrl) {
-      errorMessage = "Link de pagamento não disponível. Tente novamente em instantes.";
-    }
+    console.log("checkoutUrl:", checkoutUrl);
+    console.log("subscription:", JSON.stringify(subscription));
+    console.log("firstPayment:", JSON.stringify(firstPayment));
 
-  } catch (error) {
-    console.error("selectPlan error:", error);
-    errorMessage = error instanceof Error ? error.message : "Erro ao processar pagamento";
+    if (!checkoutUrl) return { error: "Link de pagamento não gerado. Tente novamente." };
+
+    return { url: checkoutUrl };
+
+  } catch (err) {
+    console.error("createCheckout error:", err);
+    return { error: err instanceof Error ? err.message : "Erro inesperado" };
   }
-
-  // ── Redirects FORA do try/catch ───────────────────────────
-  if (errorMessage) {
-    redirect("/error?message=" + encodeURIComponent(errorMessage));
-  }
-
-  if (checkoutUrl) {
-    redirect(checkoutUrl);
-  }
-
-  redirect("/error?message=" + encodeURIComponent("Erro inesperado. Tente novamente."));
 }
 
 export async function cancelPlan() {
@@ -163,8 +138,8 @@ export async function cancelPlan() {
   if (profile?.asaas_subscription_id) {
     try {
       await asaasFetch(`/subscriptions/${profile.asaas_subscription_id}`, "DELETE");
-    } catch (error) {
-      console.error("cancelPlan error:", error);
+    } catch (err) {
+      console.error("cancelPlan error:", err);
     }
   }
 
