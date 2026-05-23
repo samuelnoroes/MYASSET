@@ -23,13 +23,11 @@ export default async function OnboardingPage() {
             Complete seu perfil
           </p>
         </div>
-
         <div className="bg-card rounded-card shadow-card-md p-8">
           <p className="text-sm text-ink-2 mb-6">
             Precisamos de mais algumas informações para personalizar sua
             experiência e enviar alertas importantes.
           </p>
-
           <form action={saveProfile} className="space-y-5">
             <div>
               <label
@@ -47,7 +45,6 @@ export default async function OnboardingPage() {
                 className="w-full px-4 py-3 bg-surface border border-border rounded focus:border-forest focus:outline-none transition-colors text-ink text-sm"
               />
             </div>
-
             <div>
               <label
                 htmlFor="phone"
@@ -67,7 +64,6 @@ export default async function OnboardingPage() {
                 Para alertas de aluguel e oportunidades do portfólio.
               </p>
             </div>
-
             <div>
               <label
                 htmlFor="buying_intent"
@@ -86,6 +82,33 @@ export default async function OnboardingPage() {
                 <option value="maybe">Talvez</option>
                 <option value="no">Não por enquanto</option>
               </select>
+            </div>
+
+            {/* Aceite dos Termos */}
+            <div className="border border-border rounded p-4 bg-surface">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="terms_accepted"
+                  required
+                  className="mt-0.5 h-4 w-4 accent-forest flex-shrink-0"
+                />
+                <span className="text-xs text-ink-2 leading-relaxed">
+                  Li e concordo com os{" "}
+                  <a
+                    href="/termos"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-forest font-semibold underline hover:opacity-80"
+                  >
+                    Termos de Uso, Política de Privacidade e Termo de Adesão
+                  </a>{" "}
+                  do MyAsset.
+                </span>
+              </label>
+              <p className="text-xs text-ink-3 mt-2 pl-7">
+                Seus dados são protegidos conforme a LGPD (Lei 13.709/2018).
+              </p>
             </div>
 
             <button
