@@ -1,29 +1,78 @@
+"use client";
+
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { createClient } from "@/utils/supabase/server";
-import { selectPlan, cancelPlan } from "./actions";
+import { useState, useEffect } from "react";
+import { createClient } from "@/utils/supabase/client";
+import { createCheckout, cancelPlan } from "./actions";
 
-export default async function PlansPage({
-  searchParams,
-}: {
-  searchParams: { upgraded?: string; canceled?: string };
-}) {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+type Profile = {
+  plan: string;
+  trial_started_at: string | null;
+  plan_started_at: string | null;
+  plan_pending: string | null;
+};
 
-  if (!user) redirect("/login");
+export default function PlansPage() {
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [processingPlan, setProcessingPlan] = useState<string | null>(null);
+  const [canceling, setCanceling] = useState(false);
 
-  const { data: profile } = await supabase
-    .from("user_profiles")
-    .select("plan, trial_started_at, plan_started_at, plan_pending")
-    .eq("id", user.id)
-    .single();
+  const searchParams = typeof window !== "undefined"
+    ? new URLSearchParams(window.location.search)
+    : new URLSearchParams();
+  const upgraded = searchParams.get("upgraded");
+  const canceled = searchParams.get("canceled");
 
-  // Calcular dias restantes de trial
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) { window.location.href = "/login"; return; }
+      supabase
+        .from("user_profiles")
+        .select("plan, trial_started_at, plan_started_at, plan_pending")
+        .eq("id", user.id)
+        .single()
+        .then(({ data }) => {
+          setProfile(data);
+          setLoading(false);
+        });
+    });
+  }, []);
+
+  async function handleSelectPlan(plan: string) {
+    setProcessingPlan(plan);
+    const formData = new FormData();
+    formData.set("plan", plan);
+    const result = await createCheckout(formData);
+
+    if (result.url) {
+      window.location.href = result.url;
+    } else {
+      alert(result.error || "Erro ao gerar link de pagamento. Tente novamente.");
+      setProcessingPlan(null);
+    }
+  }
+
+  async function handleCancel() {
+    if (!confirm("Tem certeza que deseja cancelar sua assinatura?")) return;
+    setCanceling(true);
+    const formData = new FormData();
+    await cancelPlan(formData);
+    window.location.href = "/dashboard/plans?canceled=true";
+  }
+
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-surface flex items-center justify-center">
+        <p className="text-ink-3 text-sm">Carregando...</p>
+      </main>
+    );
+  }
+
   const trialStarted = profile?.trial_started_at ? new Date(profile.trial_started_at) : null;
-  const now = new Date();
   const daysSinceStart = trialStarted
-    ? Math.floor((now.getTime() - trialStarted.getTime()) / (1000 * 60 * 60 * 24))
+    ? Math.floor((Date.now() - trialStarted.getTime()) / (1000 * 60 * 60 * 24))
     : 0;
   const daysLeft = Math.max(0, 30 - daysSinceStart);
   const isTrialExpired = daysLeft === 0;
@@ -36,97 +85,60 @@ export default async function PlansPage({
 
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="font-display text-3xl font-bold text-ink mb-2">
-            Meu Plano
-          </h1>
+          <h1 className="font-display text-3xl font-bold text-ink mb-2">Meu Plano</h1>
 
-          {/* Mensagem de sucesso */}
-          {searchParams.upgraded === "true" && (
+          {upgraded === "true" && (
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-200 rounded-full text-green-700 text-sm font-semibold mb-4">
               ✅ Plano ativado com sucesso! Bem-vindo.
             </div>
           )}
-
-          {/* Mensagem de cancelamento */}
-          {searchParams.canceled === "true" && (
+          {canceled === "true" && (
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-50 border border-yellow-200 rounded-full text-yellow-700 text-sm font-semibold mb-4">
               ✓ Assinatura cancelada. Você voltou ao plano Trial.
             </div>
           )}
-
-          {/* Pagamento pendente */}
           {hasPendingPayment && (
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-full text-blue-700 text-sm font-semibold mb-4">
               ⏳ Aguardando confirmação do pagamento...
             </div>
           )}
-
-          {/* Trial ativo */}
           {plan === "trial" && !isTrialExpired && !hasPendingPayment && (
             <p className="text-ink-2">
-              Você ainda tem{" "}
-              <span className="font-bold text-ink">{daysLeft} dias</span> de trial gratuito.
-              Escolha um plano para garantir acesso contínuo.
+              Você ainda tem <span className="font-bold text-ink">{daysLeft} dias</span> de trial gratuito.
             </p>
           )}
-
-          {/* Trial expirado */}
           {isTrialExpired && plan === "trial" && (
             <p className="text-red-600 font-semibold">
-              Seu trial de 30 dias expirou. Escolha um plano para continuar usando o MyAsset.
+              Seu trial de 30 dias expirou. Escolha um plano para continuar.
             </p>
           )}
-
-          {/* Plano ativo */}
           {plan === "essencial" && (
-            <p className="text-ink-2">
-              Você está no plano <span className="font-bold">Essencial</span>.
-              Faça upgrade para Pro e libere o WhatsApp.
-            </p>
+            <p className="text-ink-2">Você está no plano <span className="font-bold">Essencial</span>. Faça upgrade para Pro e libere o WhatsApp.</p>
           )}
           {plan === "pro" && (
-            <p className="text-ink-2">
-              Você está no plano <span className="font-bold text-green-600">Pro</span>. 
-              Aproveite todos os recursos! 🚀
-            </p>
+            <p className="text-ink-2">Você está no plano <span className="font-bold text-green-600">Pro</span>. Aproveite todos os recursos! 🚀</p>
           )}
         </div>
 
-        {/* Cards de planos */}
+        {/* Cards */}
         <div className="grid md:grid-cols-2 gap-6">
 
-          {/* Plano Essencial */}
-          <div className={`card border-2 transition-all ${
-            plan === "essencial"
-              ? "border-blue-500"
-              : "border-border hover:border-blue-300"
-          }`}>
+          {/* Essencial */}
+          <div className={`card border-2 transition-all ${plan === "essencial" ? "border-blue-500" : "border-border hover:border-blue-300"}`}>
             {plan === "essencial" && (
               <div className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full uppercase tracking-wider mb-3">
                 ✓ Plano atual
               </div>
             )}
-
             <div className="mb-4">
               <h2 className="text-xl font-bold text-ink mb-1">Essencial</h2>
               <p className="text-sm text-ink-3">Gestão completa do seu portfólio</p>
             </div>
-
             <div className="mb-6">
-              <p className="text-4xl font-bold text-ink">
-                R$ 27,90
-                <span className="text-base font-normal text-ink-3">/mês</span>
-              </p>
+              <p className="text-4xl font-bold text-ink">R$ 27,90<span className="text-base font-normal text-ink-3">/mês</span></p>
             </div>
-
             <ul className="space-y-3 mb-6">
-              {[
-                "Imóveis ilimitados",
-                "Dashboard completo com gráficos",
-                "Controle de transações",
-                "Relatório IR (Carnê-Leão)",
-                "Alertas de vencimento",
-              ].map((item) => (
+              {["Imóveis ilimitados", "Dashboard completo com gráficos", "Controle de transações", "Relatório IR (Carnê-Leão)", "Alertas de vencimento"].map(item => (
                 <li key={item} className="flex items-start gap-2 text-sm">
                   <span className="text-positive text-lg">✓</span>
                   <span className="text-ink-2">{item}</span>
@@ -143,38 +155,29 @@ export default async function PlansPage({
                 <div className="text-center py-3 px-4 bg-blue-50 rounded text-sm text-blue-700 font-semibold">
                   Plano atual — renovação automática mensal
                 </div>
-                <form action={cancelPlan}>
-                  <button
-                    type="submit"
-                    className="w-full py-2 px-4 border border-red-200 text-red-500 hover:bg-red-50 text-xs font-semibold rounded transition-colors"
-                  >
-                    Cancelar assinatura
-                  </button>
-                </form>
+                <button
+                  onClick={handleCancel}
+                  disabled={canceling}
+                  className="w-full py-2 px-4 border border-red-200 text-red-500 hover:bg-red-50 text-xs font-semibold rounded transition-colors disabled:opacity-50"
+                >
+                  {canceling ? "Cancelando..." : "Cancelar assinatura"}
+                </button>
               </div>
             ) : plan === "pro" ? (
-              <div className="text-center py-3 px-4 bg-gray-50 rounded text-sm text-ink-3">
-                Você já tem o Pro 🚀
-              </div>
+              <div className="text-center py-3 px-4 bg-gray-50 rounded text-sm text-ink-3">Você já tem o Pro 🚀</div>
             ) : (
-              <form action={selectPlan}>
-                <input type="hidden" name="plan" value="essencial" />
-                <button
-                  type="submit"
-                  className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded transition-colors"
-                >
-                  Assinar Essencial — R$ 27,90/mês
-                </button>
-              </form>
+              <button
+                onClick={() => handleSelectPlan("essencial")}
+                disabled={!!processingPlan}
+                className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded transition-colors disabled:opacity-50"
+              >
+                {processingPlan === "essencial" ? "Aguarde..." : "Assinar Essencial — R$ 27,90/mês"}
+              </button>
             )}
           </div>
 
-          {/* Plano Pro */}
-          <div className={`card border-2 relative transition-all ${
-            plan === "pro"
-              ? "border-green-500"
-              : "border-blue-500 hover:border-blue-600"
-          }`}>
+          {/* Pro */}
+          <div className={`card border-2 relative transition-all ${plan === "pro" ? "border-green-500" : "border-blue-500 hover:border-blue-600"}`}>
             {plan !== "pro" && (
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
                 Recomendado
@@ -185,33 +188,20 @@ export default async function PlansPage({
                 ✓ Plano atual
               </div>
             )}
-
             <div className="mb-4">
               <h2 className="text-xl font-bold text-ink mb-1">Pro</h2>
               <p className="text-sm text-ink-3">Tudo do Essencial + WhatsApp</p>
             </div>
-
             <div className="mb-6">
-              <p className="text-4xl font-bold text-ink">
-                R$ 37,90
-                <span className="text-base font-normal text-ink-3">/mês</span>
-              </p>
-              {plan !== "pro" && (
-                <p className="text-xs text-blue-600 mt-1">+R$ 10,00/mês vs Essencial</p>
-              )}
+              <p className="text-4xl font-bold text-ink">R$ 37,90<span className="text-base font-normal text-ink-3">/mês</span></p>
+              {plan !== "pro" && <p className="text-xs text-blue-600 mt-1">+R$ 10,00/mês vs Essencial</p>}
             </div>
-
             <ul className="space-y-3 mb-6">
               <li className="flex items-start gap-2 text-sm">
                 <span className="text-positive text-lg">✓</span>
                 <span className="text-ink-2 font-semibold">Tudo do Essencial, mais:</span>
               </li>
-              {[
-                "Assistente WhatsApp inteligente",
-                "Resumo semanal automático",
-                "Registrar receitas/despesas por texto",
-                "Consultar rentabilidade via WhatsApp",
-              ].map((item) => (
+              {["Assistente WhatsApp inteligente", "Resumo semanal automático", "Registrar receitas/despesas por texto", "Consultar rentabilidade via WhatsApp"].map(item => (
                 <li key={item} className="flex items-start gap-2 text-sm">
                   <span className="text-positive text-lg">✓</span>
                   <span className="text-ink-2">{item}</span>
@@ -224,41 +214,33 @@ export default async function PlansPage({
                 <div className="text-center py-3 px-4 bg-green-50 rounded text-sm text-green-700 font-semibold">
                   Plano atual — renovação automática mensal
                 </div>
-                <form action={cancelPlan}>
-                  <button
-                    type="submit"
-                    className="w-full py-2 px-4 border border-red-200 text-red-500 hover:bg-red-50 text-xs font-semibold rounded transition-colors"
-                  >
-                    Cancelar assinatura
-                  </button>
-                </form>
+                <button
+                  onClick={handleCancel}
+                  disabled={canceling}
+                  className="w-full py-2 px-4 border border-red-200 text-red-500 hover:bg-red-50 text-xs font-semibold rounded transition-colors disabled:opacity-50"
+                >
+                  {canceling ? "Cancelando..." : "Cancelar assinatura"}
+                </button>
               </div>
             ) : (
-              <form action={selectPlan}>
-                <input type="hidden" name="plan" value="pro" />
-                <button
-                  type="submit"
-                  className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded transition-colors"
-                >
-                  Assinar Pro — R$ 37,90/mês
-                </button>
-              </form>
+              <button
+                onClick={() => handleSelectPlan("pro")}
+                disabled={!!processingPlan}
+                className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded transition-colors disabled:opacity-50"
+              >
+                {processingPlan === "pro" ? "Aguarde..." : "Assinar Pro — R$ 37,90/mês"}
+              </button>
             )}
           </div>
 
         </div>
 
-        {/* Info de pagamento */}
+        {/* Info */}
         <div className="text-center mt-6 space-y-1">
-          <p className="text-xs text-ink-3">
-            💳 Pagamento seguro via cartão de crédito · Cancele quando quiser
-          </p>
-          <p className="text-xs text-ink-3">
-            Processado por <span className="font-semibold">Asaas</span> — instituição de pagamento regulada pelo Banco Central
-          </p>
+          <p className="text-xs text-ink-3">💳 Pagamento seguro via cartão de crédito · Cancele quando quiser</p>
+          <p className="text-xs text-ink-3">Processado por <span className="font-semibold">Asaas</span> — instituição de pagamento regulada pelo Banco Central</p>
         </div>
 
-        {/* Voltar pro dashboard */}
         {!isTrialExpired && (
           <div className="text-center mt-4">
             <Link href="/dashboard" className="text-sm text-ink-3 hover:text-ink underline">
