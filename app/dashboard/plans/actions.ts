@@ -22,12 +22,17 @@ async function asaasFetch(path: string, method: string, body?: object) {
     body: body ? JSON.stringify(body) : undefined,
   });
 
+  const text = await res.text();
+
   if (!res.ok) {
-    const error = await res.text();
-    throw new Error(`Asaas error ${res.status}: ${error}`);
+    throw new Error(`Asaas error ${res.status}: ${text}`);
   }
 
-  return res.json();
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(`Asaas response parse error: ${text}`);
+  }
 }
 
 export async function selectPlan(formData: FormData) {
@@ -55,55 +60,84 @@ export async function selectPlan(formData: FormData) {
 
   let asaasCustomerId = profile.asaas_customer_id;
 
-  // 1. Criar customer no Asaas se ainda não existir
-  if (!asaasCustomerId) {
-    const customer = await asaasFetch("/customers", "POST", {
-      name: profile.full_name || user.email,
-      email: user.email,
-      mobilePhone: profile.phone?.replace(/\D/g, "") || "",
-      externalReference: user.id, // UUID do usuário no Supabase
-      notificationDisabled: false,
+  try {
+    // 1. Criar customer no Asaas se ainda não existir
+    if (!asaasCustomerId) {
+      const customer = await asaasFetch("/customers", "POST", {
+        name: profile.full_name || user.email,
+        email: user.email,
+        mobilePhone: profile.phone?.replace(/\D/g, "") || "",
+        externalReference: user.id,
+        notificationDisabled: false,
+      });
+
+      asaasCustomerId = customer.id;
+
+      await supabase
+        .from("user_profiles")
+        .update({ asaas_customer_id: asaasCustomerId })
+        .eq("id", user.id);
+    }
+
+    // 2. Criar assinatura recorrente mensal
+    const value = PLAN_VALUES[plan];
+    const nextDueDate = new Date();
+    nextDueDate.setDate(nextDueDate.getDate() + 1);
+    const dueDateStr = nextDueDate.toISOString().split("T")[0];
+
+    const subscription = await asaasFetch("/subscriptions", "POST", {
+      customer: asaasCustomerId,
+      billingType: "CREDIT_CARD",
+      value,
+      nextDueDate: dueDateStr,
+      cycle: "MONTHLY",
+      description: `MyAsset ${plan === "pro" ? "Pro" : "Essencial"} — assinatura mensal`,
+      externalReference: `${user.id}:${plan}`,
     });
 
-    asaasCustomerId = customer.id;
-
-    // Salvar customer ID no banco
+    // Salvar subscription ID no banco
     await supabase
       .from("user_profiles")
-      .update({ asaas_customer_id: asaasCustomerId })
+      .update({
+        asaas_subscription_id: subscription.id,
+        plan_pending: plan,
+      })
       .eq("id", user.id);
+
+    // 3. Buscar a primeira cobrança gerada pela assinatura
+    // O Asaas cria automaticamente a primeira cobrança ao criar a assinatura
+    // Precisamos aguardar um momento e buscar essa cobrança
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    const paymentsResponse = await asaasFetch(
+      `/subscriptions/${subscription.id}/payments`,
+      "GET"
+    );
+
+    const firstPayment = paymentsResponse?.data?.[0];
+
+    // 4. Tentar obter o link de pagamento em múltiplas fontes
+    const checkoutUrl =
+      firstPayment?.invoiceUrl ||
+      firstPayment?.bankSlipUrl ||
+      subscription.invoiceUrl ||
+      subscription.url ||
+      null;
+
+    if (!checkoutUrl) {
+      // Log pra debug
+      console.error("Asaas subscription:", JSON.stringify(subscription));
+      console.error("Asaas payments:", JSON.stringify(paymentsResponse));
+      redirect("/error?message=" + encodeURIComponent("Link de pagamento não disponível. Tente novamente em instantes."));
+    }
+
+    redirect(checkoutUrl);
+
+  } catch (error) {
+    console.error("selectPlan error:", error);
+    const message = error instanceof Error ? error.message : "Erro desconhecido";
+    redirect("/error?message=" + encodeURIComponent(message));
   }
-
-  // 2. Criar assinatura recorrente mensal
-  const value = PLAN_VALUES[plan];
-  const nextDueDate = new Date();
-  nextDueDate.setDate(nextDueDate.getDate() + 1); // vence amanhã (1 dia de carência)
-  const dueDateStr = nextDueDate.toISOString().split("T")[0];
-
-  const subscription = await asaasFetch("/subscriptions", "POST", {
-    customer: asaasCustomerId,
-    billingType: "CREDIT_CARD",
-    value,
-    nextDueDate: dueDateStr,
-    cycle: "MONTHLY",
-    description: `MyAsset ${plan === "pro" ? "Pro" : "Essencial"} — assinatura mensal`,
-    externalReference: `${user.id}:${plan}`, // pra identificar no webhook
-  });
-
-  // 3. Salvar assinatura no banco (status pendente até webhook confirmar)
-  await supabase.from("user_profiles").update({
-    asaas_subscription_id: subscription.id,
-    plan_pending: plan, // campo temporário — vira plan_started_at quando pagar
-  }).eq("id", user.id);
-
-  // 4. Redirecionar pro link de pagamento do Asaas
-  const checkoutUrl = subscription.invoiceUrl || subscription.url;
-
-  if (!checkoutUrl) {
-    redirect("/error?message=" + encodeURIComponent("Erro ao gerar link de pagamento"));
-  }
-
-  redirect(checkoutUrl);
 }
 
 export async function cancelPlan() {
@@ -122,14 +156,17 @@ export async function cancelPlan() {
     redirect("/dashboard/plans");
   }
 
-  // Cancelar assinatura no Asaas
-  await asaasFetch(`/subscriptions/${profile.asaas_subscription_id}`, "DELETE");
+  try {
+    await asaasFetch(`/subscriptions/${profile.asaas_subscription_id}`, "DELETE");
+  } catch (error) {
+    console.error("cancelPlan error:", error);
+  }
 
-  // Atualizar banco — volta pra trial (acesso até fim do período)
   await supabase.from("user_profiles").update({
     plan: "trial",
     asaas_subscription_id: null,
     plan_started_at: null,
+    plan_pending: null,
   }).eq("id", user.id);
 
   revalidatePath("/dashboard/plans");
