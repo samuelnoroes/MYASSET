@@ -6,7 +6,6 @@ import { createClient } from "@/utils/supabase/server";
 
 export async function saveProfile(formData: FormData) {
   const supabase = createClient();
-
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -31,15 +30,14 @@ export async function saveProfile(formData: FormData) {
     );
   }
 
-  const { error: profileError } = await supabase
-  .from('user_profiles')
-  .update({
-    full_name: formData.get('full_name'),
-    phone: formData.get('phone'),
-    trial_started_at: new Date().toISOString(), // ← ADICIONAR ESTA LINHA
-    // ... resto dos campos
-  })
-  .eq('id', user.id);
+  const { error } = await supabase
+    .from('user_profiles')
+    .update({
+      full_name: fullName,
+      phone: phone,
+      trial_started_at: new Date().toISOString(),
+    })
+    .eq('id', user.id);
 
   if (error) {
     redirect("/error?message=" + encodeURIComponent(error.message));
