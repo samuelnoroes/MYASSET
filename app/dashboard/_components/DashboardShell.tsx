@@ -31,6 +31,12 @@ const TYPE_CONFIG: Record<
   news:         { label: "Mercado",     color: "#3B82F6", bg: "#EFF6FF", icon: "📰", btnBg: "#3B82F6" },
 };
 
+const PLAN_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
+  trial:    { label: "Trial",    color: "#D97706", bg: "#FFFBEB" },
+  essencial: { label: "Essencial", color: "#3B82F6", bg: "#EFF6FF" },
+  pro:      { label: "Pro",      color: "#16A34A", bg: "#F0FDF4" },
+};
+
 const NAV_ITEMS = [
   { href: "/dashboard",              label: "Dashboard",     icon: "⊞",  badge: null },
   { href: "/dashboard/properties",   label: "Portfólio",     icon: "🏢", badge: null },
@@ -65,28 +71,34 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [dismissed, setDismissed]     = useState<Set<string>>(new Set());
   const [loading, setLoading]         = useState(true);
-
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdmin, setIsAdmin]         = useState(false);
+  const [userPlan, setUserPlan]       = useState<string>("trial");
 
   useEffect(() => {
-    // Sidebar — localStorage (persiste entre sessões)
     const savedSidebar = localStorage.getItem("sidebar-open");
     setSidebarOpen(savedSidebar === null ? true : savedSidebar === "true");
 
-    // Verificar se é admin e atualizar last_login
     const supabase = createClient();
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return;
-      supabase.from("user_profiles").select("is_admin").eq("id", user.id).single()
-        .then(({ data }) => { if (data?.is_admin) setIsAdmin(true); });
-      supabase.from("user_profiles").update({ last_login_at: new Date().toISOString() }).eq("id", user.id);
+      supabase
+        .from("user_profiles")
+        .select("is_admin, plan")
+        .eq("id", user.id)
+        .single()
+        .then(({ data }) => {
+          if (data?.is_admin) setIsAdmin(true);
+          if (data?.plan) setUserPlan(data.plan);
+        });
+      supabase
+        .from("user_profiles")
+        .update({ last_login_at: new Date().toISOString() })
+        .eq("id", user.id);
     });
 
-    // Painel — sessionStorage (retorna a cada login)
     const savedPanel = sessionStorage.getItem("notif-panel-open");
     setPanelOpen(savedPanel === null ? true : savedPanel === "true");
 
-    // Notificações descartadas — sessionStorage (retorna a cada login)
     const savedDismissed = sessionStorage.getItem("notif-dismissed");
     if (savedDismissed) {
       try { setDismissed(new Set(JSON.parse(savedDismissed))); } catch {}
@@ -129,6 +141,8 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
   const sidebarWidth = sidebarOpen ? SIDEBAR_EXPANDED : SIDEBAR_COLLAPSED;
   const visibleNotifs = notifications.filter(n => !dismissed.has(n.id));
+  const planCfg = PLAN_CONFIG[userPlan] ?? PLAN_CONFIG.trial;
+  const isPlanActive = pathname === "/dashboard/plans";
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "#F2F2F0" }}>
@@ -247,6 +261,44 @@ export default function DashboardShell({ children }: { children: React.ReactNode
               </Link>
             );
           })}
+
+          {/* ── MEU PLANO ── */}
+          <Link
+            href="/dashboard/plans"
+            title={!sidebarOpen ? "Meu Plano" : undefined}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              padding: sidebarOpen ? "10px 20px" : "10px 0",
+              justifyContent: sidebarOpen ? "flex-start" : "center",
+              backgroundColor: isPlanActive ? "rgba(109,166,138,0.15)" : "transparent",
+              borderLeft: isPlanActive ? "3px solid #6BA68A" : "3px solid transparent",
+              textDecoration: "none",
+              transition: "background 0.15s",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+            }}
+            onMouseEnter={e => { if (!isPlanActive) (e.currentTarget as HTMLElement).style.backgroundColor = "rgba(255,255,255,0.05)"; }}
+            onMouseLeave={e => { if (!isPlanActive) (e.currentTarget as HTMLElement).style.backgroundColor = "transparent"; }}
+          >
+            <span style={{ fontSize: 18, flexShrink: 0, width: 24, textAlign: "center" }}>💎</span>
+            {sidebarOpen && (
+              <span style={{ display: "flex", alignItems: "center", gap: 8, flex: 1 }}>
+                <span style={{ fontSize: 14, fontWeight: isPlanActive ? 700 : 500, color: isPlanActive ? "#fff" : "#9CA3AF" }}>
+                  Meu Plano
+                </span>
+                <span style={{
+                  fontSize: 9, fontWeight: 800, letterSpacing: "0.06em",
+                  textTransform: "uppercase", padding: "2px 6px",
+                  backgroundColor: planCfg.color, color: "#fff",
+                  borderRadius: 999, flexShrink: 0,
+                }}>
+                  {planCfg.label}
+                </span>
+              </span>
+            )}
+          </Link>
         </nav>
 
         {/* Âncoras do dashboard */}
@@ -381,7 +433,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           </form>
         </div>
 
-
       </aside>
 
       {/* ── CONTEÚDO PRINCIPAL ───────────────────────────── */}
@@ -465,7 +516,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                     position: "relative",
                   }}
                 >
-                  {/* Botão fechar individual */}
                   <button
                     onClick={() => dismissNotification(n.id)}
                     title="Fechar este informativo"
@@ -478,7 +528,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                     ×
                   </button>
 
-                  {/* Tipo + data */}
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 5, paddingRight: 16 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
                       <span style={{ fontSize: 12 }}>{cfg.icon}</span>
@@ -489,17 +538,14 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                     <span style={{ fontSize: 10, color: "#9CA3AF" }}>{formatDate(n.created_at)}</span>
                   </div>
 
-                  {/* Título */}
                   <p style={{ fontSize: 13, fontWeight: 600, color: "#1A1A1A", lineHeight: 1.4, marginBottom: 4 }}>
                     {n.title}
                   </p>
 
-                  {/* Corpo */}
                   <p style={{ fontSize: 12, color: "#6B7280", lineHeight: 1.6, marginBottom: n.contact_label ? 10 : 0 }}>
                     {n.body}
                   </p>
 
-                  {/* CTA WhatsApp */}
                   {n.contact_label && n.contact_url && (
                     <a
                       href={n.contact_url}
@@ -525,7 +571,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           )}
         </div>
 
-        {/* Footer do painel — WhatsApp suporte */}
+        {/* Footer do painel */}
         <div style={{ padding: "12px 16px", borderTop: "1px solid #F3F4F6", flexShrink: 0 }}>
           <a
             href={`https://wa.me/${WA_PHONE}?text=${WA_MESSAGE}`}
@@ -549,35 +595,24 @@ export default function DashboardShell({ children }: { children: React.ReactNode
         </div>
       </aside>
 
-      {/* Botão reabrir painel quando fechado */}
+      {/* Botão reabrir painel */}
       {!panelOpen && (
         <button
           onClick={() => togglePanel(true)}
           title="Abrir informativos"
           style={{
-            position: "fixed",
-            right: 0,
-            top: "50%",
-            transform: "translateY(-50%)",
-            backgroundColor: "#1F2937",
-            color: "#fff",
-            border: "none",
-            borderRadius: "6px 0 0 6px",
-            padding: "12px 8px",
-            cursor: "pointer",
-            zIndex: 41,
-            writingMode: "vertical-rl",
-            fontSize: 11,
-            fontWeight: 700,
-            letterSpacing: "0.1em",
-            textTransform: "uppercase",
+            position: "fixed", right: 0, top: "50%", transform: "translateY(-50%)",
+            backgroundColor: "#1F2937", color: "#fff", border: "none",
+            borderRadius: "6px 0 0 6px", padding: "12px 8px", cursor: "pointer",
+            zIndex: 41, writingMode: "vertical-rl", fontSize: 11, fontWeight: 700,
+            letterSpacing: "0.1em", textTransform: "uppercase",
           }}
         >
           {visibleNotifs.length > 0 ? `${visibleNotifs.length} informativos` : "Informativos"}
         </button>
       )}
 
-      {/* WhatsApp flutuante (quando painel fechado) */}
+      {/* WhatsApp flutuante */}
       {!panelOpen && (
         <a
           href={`https://wa.me/${WA_PHONE}?text=${WA_MESSAGE}`}
@@ -585,19 +620,10 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           rel="noopener noreferrer"
           title="Suporte A5"
           style={{
-            position: "fixed",
-            bottom: 24,
-            right: 24,
-            width: 52,
-            height: 52,
-            borderRadius: "50%",
-            backgroundColor: "#25D366",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            boxShadow: "0 4px 16px rgba(37,211,102,0.4)",
-            zIndex: 50,
-            textDecoration: "none",
+            position: "fixed", bottom: 24, right: 24, width: 52, height: 52,
+            borderRadius: "50%", backgroundColor: "#25D366",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "0 4px 16px rgba(37,211,102,0.4)", zIndex: 50, textDecoration: "none",
           }}
         >
           <svg width="26" height="26" viewBox="0 0 32 32" fill="white">
