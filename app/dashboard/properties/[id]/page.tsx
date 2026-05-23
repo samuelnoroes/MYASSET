@@ -80,6 +80,31 @@ export default async function PropertyDetailPage({ params }: Props) {
     .from("transactions").select("*").eq("property_id", params.id).eq("user_id", user.id)
     .order("transaction_date", { ascending: false });
 
+  // Buscar inquilino e cobranças (só pra annual_lease)
+  const { data: tenant } = await supabase
+    .from("tenants")
+    .select("*")
+    .eq("property_id", params.id)
+    .eq("user_id", user.id)
+    .single();
+
+  const { data: recentCharges } = await supabase
+    .from("rent_charges")
+    .select("*")
+    .eq("property_id", params.id)
+    .order("due_date", { ascending: false })
+    .limit(6);
+
+  // Verificar se proprietário tem conta bancária configurada
+  const { data: profile } = await supabase
+    .from("user_profiles")
+    .select("asaas_account_id")
+    .eq("id", user.id)
+    .single();
+
+  const hasBankAccount = !!profile?.asaas_account_id;
+  const charges = recentCharges ?? [];
+
   const allTxs = transactions ?? [];
   const now = new Date();
   const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -102,7 +127,6 @@ export default async function PropertyDetailPage({ params }: Props) {
 
   const proposalUrl = buildProposalWhatsAppUrl(property);
 
-  // Alertas de parcela
   const nextInstallmentDays = property.next_installment_date
     ? Math.ceil((new Date(property.next_installment_date).getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
     : null;
@@ -112,6 +136,13 @@ export default async function PropertyDetailPage({ params }: Props) {
 
   const showInstallmentAlert = nextInstallmentDays !== null && nextInstallmentDays <= 5;
   const showBalloonAlert = balloonDays !== null && balloonDays >= 0 && balloonDays <= 30;
+
+  const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
+    pending:  { label: "Pendente",  color: "#D97706", bg: "#FFFBEB" },
+    paid:     { label: "Pago",      color: "#16A34A", bg: "#F0FDF4" },
+    overdue:  { label: "Atrasado",  color: "#DC2626", bg: "#FEF2F2" },
+    canceled: { label: "Cancelado", color: "#6B7280", bg: "#F9FAFB" },
+  };
 
   return (
     <main className="min-h-screen bg-surface">
@@ -180,99 +211,44 @@ export default async function PropertyDetailPage({ params }: Props) {
           </div>
         </div>
 
-        {/* ── KPIs PRINCIPAIS ──────────────────────────── */}
+        {/* ── KPIs ──────────────────────────────────────── */}
         {isPlanta ? (
           <>
-            {/* Alerta de parcela mensal */}
             {showInstallmentAlert && (
               <div className={`flex items-center gap-4 px-5 py-4 rounded-card border ${nextInstallmentDays! < 0 ? "border-red-200 bg-red-50" : "border-amber-200 bg-amber-50"}`}>
                 <span className="text-lg">{nextInstallmentDays! < 0 ? "🔴" : "🟡"}</span>
                 <div>
                   <p className={`text-xs font-bold uppercase tracking-wider ${nextInstallmentDays! < 0 ? "text-red-700" : "text-amber-700"}`}>
-                    {nextInstallmentDays! < 0
-                      ? `Parcela em atraso — ${Math.abs(nextInstallmentDays!)} ${Math.abs(nextInstallmentDays!) === 1 ? "dia" : "dias"}`
-                      : nextInstallmentDays === 0
-                      ? "Parcela vence hoje"
-                      : `Parcela vence em ${nextInstallmentDays} ${nextInstallmentDays === 1 ? "dia" : "dias"}`}
+                    {nextInstallmentDays! < 0 ? `Parcela em atraso — ${Math.abs(nextInstallmentDays!)} ${Math.abs(nextInstallmentDays!) === 1 ? "dia" : "dias"}` : nextInstallmentDays === 0 ? "Parcela vence hoje" : `Parcela vence em ${nextInstallmentDays} ${nextInstallmentDays === 1 ? "dia" : "dias"}`}
                   </p>
-                  <p className="text-sm text-ink mt-0.5">
-                    {formatCurrency(property.installment_amount)} · {formatDate(property.next_installment_date)}
-                  </p>
+                  <p className="text-sm text-ink mt-0.5">{formatCurrency(property.installment_amount)} · {formatDate(property.next_installment_date)}</p>
                 </div>
-                <a
-                  href={`/dashboard/properties/${params.id}/transactions/new?type=expense`}
-                  className="ml-auto text-xs font-bold uppercase tracking-wider px-3 py-2 rounded text-white"
-                  style={{ backgroundColor: nextInstallmentDays! < 0 ? "#DC2626" : "#2D4A3E" }}
-                >
-                  Registrar
-                </a>
+                <a href={`/dashboard/properties/${params.id}/transactions/new?type=expense`} className="ml-auto text-xs font-bold uppercase tracking-wider px-3 py-2 rounded text-white" style={{ backgroundColor: nextInstallmentDays! < 0 ? "#DC2626" : "#2D4A3E" }}>Registrar</a>
               </div>
             )}
-
-            {/* Alerta de balão */}
             {showBalloonAlert && (
               <div className="flex items-center gap-4 px-5 py-4 rounded-card border border-blue-200 bg-blue-50">
                 <span className="text-lg">🏗️</span>
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-wider text-blue-700">
-                    Balão / parcela especial — {balloonDays === 0 ? "vence hoje" : `vence em ${balloonDays} ${balloonDays === 1 ? "dia" : "dias"}`}
-                  </p>
-                  <p className="text-sm text-ink mt-0.5">
-                    {formatCurrency(property.balloon_amount)} · {formatDate(property.balloon_date)}
-                  </p>
+                  <p className="text-xs font-bold uppercase tracking-wider text-blue-700">Balão / parcela especial — {balloonDays === 0 ? "vence hoje" : `vence em ${balloonDays} ${balloonDays === 1 ? "dia" : "dias"}`}</p>
+                  <p className="text-sm text-ink mt-0.5">{formatCurrency(property.balloon_amount)} · {formatDate(property.balloon_date)}</p>
                 </div>
-                <a
-                  href={`/dashboard/properties/${params.id}/transactions/new?type=expense`}
-                  className="ml-auto text-xs font-bold uppercase tracking-wider px-3 py-2 rounded text-white bg-blue-600"
-                >
-                  Registrar
-                </a>
+                <a href={`/dashboard/properties/${params.id}/transactions/new?type=expense`} className="ml-auto text-xs font-bold uppercase tracking-wider px-3 py-2 rounded text-white bg-blue-600">Registrar</a>
               </div>
             )}
-
-            {/* KPIs planta */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="card"><p className="kpi-label">Já pago</p><p className="kpi-value">{formatCurrency(property.acquisition_value)}</p></div>
               <div className="card"><p className="kpi-label">VGV total</p><p className="kpi-value">{formatCurrency(property.total_investment)}</p></div>
               <div className="card"><p className="kpi-label">% Pago</p><p className="kpi-value text-positive">{progressPago !== null ? formatPercent(progressPago) : "—"}</p></div>
-              <div className="card">
-                <p className="kpi-label">Próxima parcela</p>
-                {property.next_installment_date ? (
-                  <>
-                    <p className="kpi-value" style={{ color: "#3B82F6" }}>
-                      {formatCurrency(property.installment_amount)}
-                    </p>
-                    <p className="text-xs text-ink-3 mt-1">{formatDate(property.next_installment_date)}</p>
-                  </>
-                ) : (
-                  <p className="kpi-value text-ink-3">—</p>
-                )}
-              </div>
+              <div className="card"><p className="kpi-label">Próxima parcela</p>{property.next_installment_date ? (<><p className="kpi-value" style={{ color: "#3B82F6" }}>{formatCurrency(property.installment_amount)}</p><p className="text-xs text-ink-3 mt-1">{formatDate(property.next_installment_date)}</p></>) : (<p className="kpi-value text-ink-3">—</p>)}</div>
             </div>
-
-            {/* KPIs secundários planta */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="card"><p className="kpi-label">Previsão de entrega</p><p className="text-base font-semibold text-ink">{property.delivery_date ? formatDate(property.delivery_date) : "—"}</p></div>
               <div className="card"><p className="kpi-label">Assinatura</p><p className="text-base font-semibold text-ink">{property.acquisition_date ? formatDate(property.acquisition_date) : "—"}</p></div>
               <div className="card"><p className="kpi-label">Aluguel projetado</p><p className="text-base font-semibold text-positive">{formatCurrency(property.monthly_rent)}/mês</p></div>
-              {property.balloon_date ? (
-                <div className="card">
-                  <p className="kpi-label">Balão / parcela especial</p>
-                  <p className="text-base font-semibold" style={{ color: "#3B82F6" }}>{formatCurrency(property.balloon_amount)}</p>
-                  <p className="text-xs text-ink-3 mt-1">{formatDate(property.balloon_date)}</p>
-                </div>
-              ) : (
-                <div className="card"><p className="kpi-label">Modelo de pagamento</p><p className="text-sm text-ink mt-1">{property.payment_notes || "—"}</p></div>
-              )}
+              {property.balloon_date ? (<div className="card"><p className="kpi-label">Balão / parcela especial</p><p className="text-base font-semibold" style={{ color: "#3B82F6" }}>{formatCurrency(property.balloon_amount)}</p><p className="text-xs text-ink-3 mt-1">{formatDate(property.balloon_date)}</p></div>) : (<div className="card"><p className="kpi-label">Modelo de pagamento</p><p className="text-sm text-ink mt-1">{property.payment_notes || "—"}</p></div>)}
             </div>
-
-            {/* Modelo de pagamento quando há balão */}
-            {property.balloon_date && property.payment_notes && (
-              <div className="card">
-                <p className="kpi-label">Modelo de pagamento</p>
-                <p className="text-sm text-ink mt-1">{property.payment_notes}</p>
-              </div>
-            )}
+            {property.balloon_date && property.payment_notes && (<div className="card"><p className="kpi-label">Modelo de pagamento</p><p className="text-sm text-ink mt-1">{property.payment_notes}</p></div>)}
           </>
         ) : isShortStay ? (
           <>
@@ -300,16 +276,161 @@ export default async function PropertyDetailPage({ params }: Props) {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="card"><p className="kpi-label">Valor de compra</p><p className="text-base font-semibold text-ink">{formatCurrency(property.acquisition_value)}</p></div>
               <div className="card"><p className="kpi-label">Valor atual</p><p className="text-base font-semibold text-ink">{formatCurrency(property.current_value)}</p></div>
-              <div className="card">
-                <p className="kpi-label">Aluguel contratual{property.lease_due_day ? ` · vence dia ${property.lease_due_day}` : ""}</p>
-                <p className="text-base font-semibold text-positive">{formatCurrency(property.monthly_rent)}/mês</p>
-              </div>
-              <div className="card">
-                <p className="kpi-label">Renovação{property.adjustment_index ? ` · ${ADJUSTMENT_LABELS[property.adjustment_index] || property.adjustment_index}` : ""}</p>
-                <p className="text-base font-semibold text-ink">{property.lease_renewal_date ? formatDate(property.lease_renewal_date) : "—"}</p>
-              </div>
+              <div className="card"><p className="kpi-label">Aluguel contratual{property.lease_due_day ? ` · vence dia ${property.lease_due_day}` : ""}</p><p className="text-base font-semibold text-positive">{formatCurrency(property.monthly_rent)}/mês</p></div>
+              <div className="card"><p className="kpi-label">Renovação{property.adjustment_index ? ` · ${ADJUSTMENT_LABELS[property.adjustment_index] || property.adjustment_index}` : ""}</p><p className="text-base font-semibold text-ink">{property.lease_renewal_date ? formatDate(property.lease_renewal_date) : "—"}</p></div>
             </div>
           </>
+        )}
+
+        {/* ── COBRANÇA AUTOMÁTICA (só annual_lease) ────── */}
+        {isAnnual && (
+          <div className="card">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="section-title" style={{ marginBottom: 0 }}>Cobrança automática</p>
+                <p className="text-xs text-ink-3 mt-1">
+                  O MyAsset cobra o aluguel do inquilino todo mês e deposita 95% direto na sua conta.
+                </p>
+              </div>
+              {property.rent_collection_enabled && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-700 text-xs font-bold rounded-full border border-green-200">
+                  ✓ Ativa
+                </span>
+              )}
+            </div>
+
+            {/* Sem conta bancária */}
+            {!hasBankAccount && (
+              <div className="flex items-start gap-3 px-4 py-4 bg-amber-50 border border-amber-200 rounded">
+                <span className="text-amber-600 text-lg mt-0.5">⚠️</span>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-amber-800">Configure sua conta bancária primeiro</p>
+                  <p className="text-xs text-amber-700 mt-1">Para receber os aluguéis automaticamente, você precisa informar seus dados bancários.</p>
+                </div>
+                <Link
+                  href="/dashboard/billing/bank-account"
+                  className="shrink-0 px-3 py-2 bg-amber-600 text-white text-xs font-bold uppercase tracking-wider rounded hover:bg-amber-700 transition-colors"
+                >
+                  Configurar
+                </Link>
+              </div>
+            )}
+
+            {/* Sem inquilino cadastrado */}
+            {hasBankAccount && !tenant && (
+              <div className="flex items-start gap-3 px-4 py-4 bg-surface border border-border rounded">
+                <span className="text-ink-3 text-lg mt-0.5">👤</span>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-ink">Nenhum inquilino cadastrado</p>
+                  <p className="text-xs text-ink-3 mt-1">Cadastre o inquilino para ativar a cobrança automática.</p>
+                </div>
+                <Link
+                  href={`/dashboard/properties/${params.id}/tenant/new`}
+                  className="shrink-0 px-3 py-2 bg-forest text-white text-xs font-bold uppercase tracking-wider rounded hover:bg-forest-light transition-colors"
+                >
+                  + Inquilino
+                </Link>
+              </div>
+            )}
+
+            {/* Inquilino cadastrado */}
+            {hasBankAccount && tenant && (
+              <div className="space-y-4">
+                {/* Card do inquilino */}
+                <div className="flex items-center justify-between px-4 py-3 bg-surface border border-border rounded">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-forest/10 flex items-center justify-center">
+                      <span className="text-forest text-sm font-bold">
+                        {tenant.name.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-ink">{tenant.name}</p>
+                      <p className="text-xs text-ink-3">{tenant.email} · {tenant.phone || "Sem telefone"}</p>
+                    </div>
+                  </div>
+                  <Link
+                    href={`/dashboard/properties/${params.id}/tenant/new`}
+                    className="text-xs text-ink-3 hover:text-forest transition-colors"
+                  >
+                    Editar
+                  </Link>
+                </div>
+
+                {/* Botão ativar/desativar */}
+                {!property.rent_collection_enabled ? (
+                  <Link
+                    href={`/dashboard/properties/${params.id}/rent-collection/activate`}
+                    className="flex items-center justify-center gap-2 w-full py-3 bg-forest text-white text-sm font-bold uppercase tracking-wider rounded hover:bg-forest-light transition-colors"
+                  >
+                    ⚡ Ativar cobrança automática
+                  </Link>
+                ) : (
+                  <div className="flex items-center justify-between px-4 py-3 bg-green-50 border border-green-200 rounded">
+                    <div>
+                      <p className="text-sm font-semibold text-green-800">Cobrança ativa</p>
+                      <p className="text-xs text-green-600 mt-0.5">
+                        Próxima cobrança: dia {property.lease_due_day || 5} do mês · {formatCurrency(property.monthly_rent)}
+                      </p>
+                    </div>
+                    <Link
+                      href={`/dashboard/properties/${params.id}/rent-collection/deactivate`}
+                      className="text-xs text-red-500 hover:text-red-700 font-semibold transition-colors"
+                    >
+                      Desativar
+                    </Link>
+                  </div>
+                )}
+
+                {/* Histórico de cobranças */}
+                {charges.length > 0 && (
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wider text-ink-3 mb-2">Histórico de cobranças</p>
+                    <div className="divide-y divide-border">
+                      {charges.map(charge => {
+                        const cfg = STATUS_CONFIG[charge.status] || STATUS_CONFIG.pending;
+                        return (
+                          <div key={charge.id} className="flex items-center justify-between py-3">
+                            <div className="flex items-center gap-3">
+                              <span className="text-sm text-ink-3 w-20">
+                                {formatDateShort(charge.due_date)}
+                              </span>
+                              <span
+                                className="text-xs font-bold px-2 py-0.5 rounded-full"
+                                style={{ color: cfg.color, backgroundColor: cfg.bg }}
+                              >
+                                {cfg.label}
+                              </span>
+                              {charge.payment_method && (
+                                <span className="text-xs text-ink-3 uppercase">
+                                  {charge.payment_method === "PIX" ? "Pix" : "Cartão"}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className="text-sm font-bold text-positive">
+                                {formatCurrency(Number(charge.amount))}
+                              </span>
+                              {charge.invoice_url && charge.status === "pending" && (
+                                <a
+                                  href={charge.invoice_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-blue-600 hover:underline"
+                                >
+                                  Ver boleto
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         )}
 
         {/* ── TRANSAÇÕES ──────────────────────────────── */}
