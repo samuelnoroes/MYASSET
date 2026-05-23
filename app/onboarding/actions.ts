@@ -31,16 +31,15 @@ export async function saveProfile(formData: FormData) {
     );
   }
 
-  const { error } = await supabase
-    .from("user_profiles")
-    .update({
-      full_name: fullName,
-      phone,
-      // Salva intenção de compra como metadata no campo que já existe ou em campo novo
-      // Por ora salva em pairing_code temporariamente até termos campo dedicado
-      // TODO: criar coluna buying_intent quando houver próxima migração
-    })
-    .eq("id", user.id);
+  const { error: profileError } = await supabase
+  .from('user_profiles')
+  .update({
+    full_name: formData.get('full_name'),
+    phone: formData.get('phone'),
+    trial_started_at: new Date().toISOString(), // ← ADICIONAR ESTA LINHA
+    // ... resto dos campos
+  })
+  .eq('id', user.id);
 
   if (error) {
     redirect("/error?message=" + encodeURIComponent(error.message));
