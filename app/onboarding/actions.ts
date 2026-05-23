@@ -17,6 +17,7 @@ export async function saveProfile(formData: FormData) {
   const fullName = String(formData.get("full_name") || "").trim();
   const phone = String(formData.get("phone") || "").trim();
   const buyingIntent = String(formData.get("buying_intent") || "").trim() || null;
+  const termsAccepted = formData.get("terms_accepted") === "on";
 
   if (!fullName) {
     redirect(
@@ -30,14 +31,22 @@ export async function saveProfile(formData: FormData) {
     );
   }
 
+  if (!termsAccepted) {
+    redirect(
+      "/error?message=" + encodeURIComponent("Você precisa aceitar os Termos de Uso para continuar.")
+    );
+  }
+
   const { error } = await supabase
-    .from('user_profiles')
+    .from("user_profiles")
     .update({
       full_name: fullName,
       phone: phone,
       trial_started_at: new Date().toISOString(),
+      terms_accepted_at: new Date().toISOString(),
+      terms_version: "1.0",
     })
-    .eq('id', user.id);
+    .eq("id", user.id);
 
   if (error) {
     redirect("/error?message=" + encodeURIComponent(error.message));
