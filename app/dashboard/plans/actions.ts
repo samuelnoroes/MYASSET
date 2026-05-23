@@ -47,7 +47,6 @@ export async function selectPlan(formData: FormData) {
     redirect("/error?message=" + encodeURIComponent("Plano inválido"));
   }
 
-  // Buscar perfil do usuário
   const { data: profile } = await supabase
     .from("user_profiles")
     .select("full_name, phone, asaas_customer_id")
@@ -58,10 +57,15 @@ export async function selectPlan(formData: FormData) {
     redirect("/error?message=" + encodeURIComponent("Perfil não encontrado"));
   }
 
+  // Resultado final — preenchido dentro do bloco de lógica
+  let checkoutUrl: string | null = null;
+  let errorMessage: string | null = null;
+
+  // ── Lógica Asaas (sem redirect aqui dentro) ──────────────
   let asaasCustomerId = profile.asaas_customer_id;
 
   try {
-    // 1. Criar customer no Asaas se ainda não existir
+    // 1. Criar customer se não existir
     if (!asaasCustomerId) {
       const customer = await asaasFetch("/customers", "POST", {
         name: profile.full_name || user.email,
@@ -79,7 +83,7 @@ export async function selectPlan(formData: FormData) {
         .eq("id", user.id);
     }
 
-    // 2. Criar assinatura recorrente mensal
+    // 2. Criar assinatura
     const value = PLAN_VALUES[plan];
     const nextDueDate = new Date();
     nextDueDate.setDate(nextDueDate.getDate() + 1);
@@ -95,7 +99,6 @@ export async function selectPlan(formData: FormData) {
       externalReference: `${user.id}:${plan}`,
     });
 
-    // Salvar subscription ID no banco
     await supabase
       .from("user_profiles")
       .update({
@@ -104,9 +107,7 @@ export async function selectPlan(formData: FormData) {
       })
       .eq("id", user.id);
 
-    // 3. Buscar a primeira cobrança gerada pela assinatura
-    // O Asaas cria automaticamente a primeira cobrança ao criar a assinatura
-    // Precisamos aguardar um momento e buscar essa cobrança
+    // 3. Aguardar e buscar cobrança gerada pela assinatura
     await new Promise(resolve => setTimeout(resolve, 2000));
 
     const paymentsResponse = await asaasFetch(
@@ -116,8 +117,10 @@ export async function selectPlan(formData: FormData) {
 
     const firstPayment = paymentsResponse?.data?.[0];
 
-    // 4. Tentar obter o link de pagamento em múltiplas fontes
-    const checkoutUrl =
+    console.log("Subscription:", JSON.stringify(subscription));
+    console.log("First payment:", JSON.stringify(firstPayment));
+
+    checkoutUrl =
       firstPayment?.invoiceUrl ||
       firstPayment?.bankSlipUrl ||
       subscription.invoiceUrl ||
@@ -125,19 +128,24 @@ export async function selectPlan(formData: FormData) {
       null;
 
     if (!checkoutUrl) {
-      // Log pra debug
-      console.error("Asaas subscription:", JSON.stringify(subscription));
-      console.error("Asaas payments:", JSON.stringify(paymentsResponse));
-      redirect("/error?message=" + encodeURIComponent("Link de pagamento não disponível. Tente novamente em instantes."));
+      errorMessage = "Link de pagamento não disponível. Tente novamente em instantes.";
     }
-
-    redirect(checkoutUrl);
 
   } catch (error) {
     console.error("selectPlan error:", error);
-    const message = error instanceof Error ? error.message : "Erro desconhecido";
-    redirect("/error?message=" + encodeURIComponent(message));
+    errorMessage = error instanceof Error ? error.message : "Erro ao processar pagamento";
   }
+
+  // ── Redirects FORA do try/catch ───────────────────────────
+  if (errorMessage) {
+    redirect("/error?message=" + encodeURIComponent(errorMessage));
+  }
+
+  if (checkoutUrl) {
+    redirect(checkoutUrl);
+  }
+
+  redirect("/error?message=" + encodeURIComponent("Erro inesperado. Tente novamente."));
 }
 
 export async function cancelPlan() {
@@ -148,18 +156,16 @@ export async function cancelPlan() {
 
   const { data: profile } = await supabase
     .from("user_profiles")
-    .select("asaas_subscription_id, plan")
+    .select("asaas_subscription_id")
     .eq("id", user.id)
     .single();
 
-  if (!profile?.asaas_subscription_id) {
-    redirect("/dashboard/plans");
-  }
-
-  try {
-    await asaasFetch(`/subscriptions/${profile.asaas_subscription_id}`, "DELETE");
-  } catch (error) {
-    console.error("cancelPlan error:", error);
+  if (profile?.asaas_subscription_id) {
+    try {
+      await asaasFetch(`/subscriptions/${profile.asaas_subscription_id}`, "DELETE");
+    } catch (error) {
+      console.error("cancelPlan error:", error);
+    }
   }
 
   await supabase.from("user_profiles").update({
