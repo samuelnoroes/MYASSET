@@ -57,8 +57,7 @@ export default function PlansPage() {
   async function handleCancel() {
     if (!confirm("Tem certeza que deseja cancelar sua assinatura?")) return;
     setCanceling(true);
-    const formData = new FormData();
-    await cancelPlan(formData);
+    await cancelPlan();
     window.location.href = "/dashboard/plans?canceled=true";
   }
 
