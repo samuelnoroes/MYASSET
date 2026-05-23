@@ -45,6 +45,24 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  // Buscar plano e trial do usuário
+  const { data: profile } = await supabase
+    .from("user_profiles")
+    .select("plan, trial_started_at")
+    .eq("id", user.id)
+    .single();
+
+  // Calcular dias restantes de trial
+  const plan = profile?.plan ?? "trial";
+  const trialStarted = profile?.trial_started_at ? new Date(profile.trial_started_at) : null;
+  const now = new Date();
+  const daysSinceStart = trialStarted
+    ? Math.floor((now.getTime() - trialStarted.getTime()) / (1000 * 60 * 60 * 24))
+    : 0;
+  const daysLeft = Math.max(0, 30 - daysSinceStart);
+  const showTrialBanner = plan === "trial" && daysLeft <= 10 && daysLeft > 0;
+  const showUrgentBanner = plan === "trial" && daysLeft <= 3 && daysLeft > 0;
+
   const { data: properties } = await supabase
     .from("properties").select("*").eq("user_id", user.id);
   const props = properties ?? [];
@@ -60,7 +78,6 @@ export default async function DashboardPage() {
     ? propsWithYield.reduce((acc, p) => acc + (Number(p.monthly_rent) / Number(p.current_value)) * 12, 0) / propsWithYield.length
     : null;
 
-  const now = new Date();
   const monthName = new Intl.DateTimeFormat("pt-BR", { month: "long" }).format(now);
   const startOfMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
   const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
@@ -72,22 +89,15 @@ export default async function DashboardPage() {
   const txs = monthlyTransactions ?? [];
 
   const totalMonthlyIncome = txs.filter(t => t.transaction_type === "income").reduce((acc, t) => acc + Number(t.amount), 0);
-  // Despesas operacionais (manutenção, IPTU, condomínio, seguro, etc.)
   const totalMonthlyExpense = txs
     .filter(t => t.transaction_type === "expense" && t.category !== "investment")
     .reduce((acc, t) => acc + Number(t.amount), 0);
-
-  // Aportes de investimento (parcelas de imóveis na planta)
   const totalMonthlyInvestment = txs
     .filter(t => t.transaction_type === "expense" && t.category === "investment")
     .reduce((acc, t) => acc + Number(t.amount), 0);
-
-  // Saldo operacional (não inclui aportes)
   const totalMonthlySaldo = totalMonthlyIncome - totalMonthlyExpense;
 
   const annualLeaseProps = props.filter(p => p.modality === "annual_lease" && p.monthly_rent);
-
-  // IDs de imóveis que já receberam receita no mês atual
   const paidThisMonth = new Set(
     txs.filter(t => t.transaction_type === "income").map(t => t.property_id)
   );
@@ -95,7 +105,6 @@ export default async function DashboardPage() {
   const collectionEfficiency = totalExpectedThisMonth > 0
     ? Math.min(totalMonthlyIncome / totalExpectedThisMonth, 1) : null;
 
-  // Últimos 6 meses
   const sixMonthsAgo = new Date();
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
   const historyStart = `${sixMonthsAgo.getFullYear()}-${String(sixMonthsAgo.getMonth() + 1).padStart(2, "0")}-01`;
@@ -126,7 +135,6 @@ export default async function DashboardPage() {
     };
   });
 
-  // Donut
   const annualValue = props.filter(p => p.modality === "annual_lease").reduce((acc, p) => acc + Number(p.current_value || 0), 0);
   const shortStayValue = props.filter(p => p.modality === "short_stay").reduce((acc, p) => acc + Number(p.current_value || 0), 0);
   const constructionValue = props.filter(p => p.modality === "under_construction").reduce((acc, p) => acc + Number(p.total_investment || p.acquisition_value || 0), 0);
@@ -138,7 +146,6 @@ export default async function DashboardPage() {
     { name: "Na planta", value: constructionValue, color: "#F59E0B", percentage: pct(constructionValue) },
   ];
 
-  // Alertas
   const today = now.getDate();
   const alerts: PropertyAlert[] = [];
   for (const p of props) {
@@ -162,7 +169,6 @@ export default async function DashboardPage() {
     return b.daysOverdue - a.daysOverdue;
   });
 
-  // Array unificado para o AlertsPanel (aluguel + parcelas)
   const allAlerts = [
     ...alerts.map(a => ({
       id: `rent-${a.propertyId}`,
@@ -176,7 +182,6 @@ export default async function DashboardPage() {
     })),
   ];
 
-  // Alertas de parcela (imóveis na planta)
   type InstallmentAlert = {
     propertyId: string;
     propertyName: string;
@@ -189,33 +194,23 @@ export default async function DashboardPage() {
 
   for (const p of props) {
     if (p.modality !== "under_construction") continue;
-
-    // Parcela mensal
     if (p.next_installment_date) {
       const due = new Date(p.next_installment_date);
       const diffDays = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
       if (diffDays <= 5) {
         installmentAlerts.push({
-          propertyId: p.id,
-          propertyName: p.name,
-          alertType: "installment",
-          daysUntil: diffDays,
+          propertyId: p.id, propertyName: p.name, alertType: "installment", daysUntil: diffDays,
           amount: p.installment_amount ? Number(p.installment_amount) : null,
           dateLabel: diffDays < 0 ? `${Math.abs(diffDays)} dias em atraso` : diffDays === 0 ? "vence hoje" : `vence em ${diffDays} ${diffDays === 1 ? "dia" : "dias"}`,
         });
       }
     }
-
-    // Balão
     if (p.balloon_date) {
       const due = new Date(p.balloon_date);
       const diffDays = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
       if (diffDays >= 0 && diffDays <= 30) {
         installmentAlerts.push({
-          propertyId: p.id,
-          propertyName: p.name,
-          alertType: "balloon",
-          daysUntil: diffDays,
+          propertyId: p.id, propertyName: p.name, alertType: "balloon", daysUntil: diffDays,
           amount: p.balloon_amount ? Number(p.balloon_amount) : null,
           dateLabel: diffDays === 0 ? "vence hoje" : `vence em ${diffDays} ${diffDays === 1 ? "dia" : "dias"}`,
         });
@@ -225,8 +220,6 @@ export default async function DashboardPage() {
 
   return (
     <main className="min-h-screen bg-surface">
-      {/* ── HEADER ───────────────────────────────────────── */}
-      
 
       {/* Tabs */}
       <div className="bg-white border-b border-border">
@@ -238,14 +231,37 @@ export default async function DashboardPage() {
         </div>
       </div>
 
+      {/* ── BANNER DE TRIAL ───────────────────────────── */}
+      {showTrialBanner && (
+        <div className={`border-b px-6 py-3 ${showUrgentBanner ? "bg-red-50 border-red-200" : "bg-amber-50 border-amber-200"}`}>
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span className="text-lg">{showUrgentBanner ? "🔴" : "🟡"}</span>
+              <p className={`text-sm font-semibold ${showUrgentBanner ? "text-red-700" : "text-amber-700"}`}>
+                {showUrgentBanner
+                  ? `Seu trial expira em ${daysLeft} ${daysLeft === 1 ? "dia" : "dias"}! Escolha um plano para não perder o acesso.`
+                  : `Seu trial gratuito expira em ${daysLeft} dias. Escolha um plano para continuar usando o MyAsset.`
+                }
+              </p>
+            </div>
+            <Link
+              href="/dashboard/plans"
+              className="shrink-0 px-4 py-2 rounded text-white text-xs font-bold uppercase tracking-wider transition-colors"
+              style={{ backgroundColor: showUrgentBanner ? "#DC2626" : "#D97706" }}
+            >
+              Ver planos
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* Content */}
       <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
-        {/* Alertas unificados — aluguel + parcelas */}
+
         {allAlerts.length > 0 && (
           <AlertsPanel alerts={allAlerts} onMarkPaid={markAsPaid} />
         )}
 
-        {/* Alertas de parcela e balão */}
         {installmentAlerts.length > 0 && (
           <div className="space-y-2">
             {installmentAlerts.map((alert, i) => (
@@ -280,134 +296,126 @@ export default async function DashboardPage() {
         <section id="visao-geral" className="scroll-mt-6 space-y-4">
           <PortfolioCharts modalityData={modalityData} monthlyData={monthlyData} totalCurrentValue={totalCurrentValue} totalProperties={totalProperties} />
 
-          {/* KPIs portfólio */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <KpiCard label="Imóveis" tooltip="Total de imóveis cadastrados no seu portfólio.">
+            <KpiCard label="Imóveis" tooltip="Total de imóveis cadastrados no seu portfólio.">
               <p className="kpi-value-lg">{totalProperties}</p>
             </KpiCard>
-          <KpiCard label="Valorização" tooltip="Diferença percentual entre o valor atual e o valor de compra de todos os imóveis. Positivo = portfólio valorizou.">
+            <KpiCard label="Valorização" tooltip="Diferença percentual entre o valor atual e o valor de compra de todos os imóveis. Positivo = portfólio valorizou.">
               <p className={`kpi-value ${appreciation >= 0 ? "text-positive" : "text-negative"}`}>{totalAcquisitionValue > 0 ? formatPercent(appreciation) : "—"}</p>
             </KpiCard>
-          <KpiCard label="Yield médio" tooltip="Média do yield anual dos imóveis. Yield = aluguel mensal ÷ valor atual × 12. Indica a rentabilidade bruta do portfólio.">
+            <KpiCard label="Yield médio" tooltip="Média do yield anual dos imóveis. Yield = aluguel mensal ÷ valor atual × 12. Indica a rentabilidade bruta do portfólio.">
               <p className="kpi-value">{avgYield !== null ? formatPercent(avgYield) : "—"}</p>
               <p className="text-xs text-ink-3 mt-1">ao ano</p>
             </KpiCard>
-          <KpiCard label="Eficiência" tooltip="Percentual do aluguel esperado que foi efetivamente recebido neste mês. 100% = todos os aluguéis de locação anual foram quitados.">
+            <KpiCard label="Eficiência" tooltip="Percentual do aluguel esperado que foi efetivamente recebido neste mês. 100% = todos os aluguéis de locação anual foram quitados.">
               <p className={`kpi-value ${collectionEfficiency === null ? "text-ink" : collectionEfficiency >= 1 ? "text-positive" : collectionEfficiency >= 0.8 ? "text-warning" : "text-negative"}`}>
                 {collectionEfficiency !== null ? formatPercent(collectionEfficiency) : "—"}
               </p>
               {collectionEfficiency !== null && <p className="text-xs text-ink-3 mt-1">recebido / esperado</p>}
             </KpiCard>
-        </div>
-
+          </div>
         </section>
 
-        {/* KPIs do mês — integrados ao DashboardSections abaixo */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <KpiCard label={`Receitas — ${monthName}`} tooltip="Soma de todas as entradas registradas neste mês — aluguéis, diárias e outras receitas de todos os imóveis.">
-              <p className="kpi-value text-positive">{formatCurrency(totalMonthlyIncome)}</p>
-            </KpiCard>
+            <p className="kpi-value text-positive">{formatCurrency(totalMonthlyIncome)}</p>
+          </KpiCard>
           <KpiCard label={`Despesas — ${monthName}`} tooltip="Soma das despesas operacionais do mês: IPTU, condomínio, manutenção e seguro. Não inclui aportes em imóveis na planta.">
-              <p className="kpi-value">{formatCurrency(totalMonthlyExpense)}</p>
-              <p className="text-xs text-ink-3 mt-1">operacional</p>
-            </KpiCard>
+            <p className="kpi-value">{formatCurrency(totalMonthlyExpense)}</p>
+            <p className="text-xs text-ink-3 mt-1">operacional</p>
+          </KpiCard>
           <KpiCard label={`Aportes — ${monthName}`} tooltip="Soma dos aportes de capital em imóveis na planta: parcelas mensais e balões registrados neste mês. Contabilizado separadamente das despesas operacionais.">
-              <p className="kpi-value" style={{ color: "#3B82F6" }}>{formatCurrency(totalMonthlyInvestment)}</p>
-              <p className="text-xs text-ink-3 mt-1">parcelas planta</p>
-            </KpiCard>
+            <p className="kpi-value" style={{ color: "#3B82F6" }}>{formatCurrency(totalMonthlyInvestment)}</p>
+            <p className="text-xs text-ink-3 mt-1">parcelas planta</p>
+          </KpiCard>
           <KpiCard label={`Saldo — ${monthName}`} tooltip="Receitas menos despesas operacionais do mês. Não desconta aportes em plantas — esses são investimentos, não custos.">
-              <p className={`kpi-value ${totalMonthlySaldo >= 0 ? "text-positive" : "text-negative"}`}>{formatCurrency(totalMonthlySaldo)}</p>
-            </KpiCard>
+            <p className={`kpi-value ${totalMonthlySaldo >= 0 ? "text-positive" : "text-negative"}`}>{formatCurrency(totalMonthlySaldo)}</p>
+          </KpiCard>
         </div>
 
-        {/* ═══ SEÇÕES 2, 3, 4 — MÊS, HISTÓRICO, GRÁFICOS ═ */}
-        <DashboardSections
-          monthlyData={monthlyData}
-          currentMonthName={monthName}
-        />
+        <DashboardSections monthlyData={monthlyData} currentMonthName={monthName} />
 
         {/* ═══ SEÇÃO IMÓVEIS ══════════════════════════ */}
         <section id="imoveis" className="scroll-mt-6">
-        <div className="card">
-          <div className="flex items-center justify-between mb-5">
-            <p className="section-title" style={{ marginBottom: 0 }}>Seus imóveis</p>
-            <Link href="/dashboard/properties" className="text-xs text-forest font-semibold uppercase tracking-wider hover:text-forest-light transition-colors">Ver todos →</Link>
+          <div className="card">
+            <div className="flex items-center justify-between mb-5">
+              <p className="section-title" style={{ marginBottom: 0 }}>Seus imóveis</p>
+              <Link href="/dashboard/properties" className="text-xs text-forest font-semibold uppercase tracking-wider hover:text-forest-light transition-colors">Ver todos →</Link>
+            </div>
+            {totalProperties === 0 ? (
+              <div className="text-center py-10">
+                <p className="text-ink-2 mb-2">Nenhum imóvel cadastrado ainda.</p>
+                <Link href="/dashboard/properties/new" className="inline-block mt-3 px-6 py-3 bg-forest text-white text-xs font-bold uppercase tracking-wider rounded hover:bg-forest-light transition-colors">+ Cadastrar imóvel</Link>
+              </div>
+            ) : (
+              <div className="divide-y divide-border">
+                {props.slice(0, 5).map((p) => {
+                  const modality = p.modality || "annual_lease";
+                  const isPlanta = modality === "under_construction";
+                  const isAirbnb = modality === "short_stay";
+                  const modalityColors: Record<string, string> = { annual_lease: "#2D4A3E", short_stay: "#3B82F6", under_construction: "#F59E0B" };
+                  const modalityLabels: Record<string, string> = { annual_lease: "Locação anual", short_stay: "Temporada", under_construction: "Na planta" };
+                  const color = modalityColors[modality] || "#2D4A3E";
+
+                  let gaugeValue = 0, gaugeLabel = "";
+                  if (isPlanta && p.total_investment && p.acquisition_value) {
+                    gaugeValue = Math.min((p.acquisition_value / p.total_investment) * 100, 100);
+                    gaugeLabel = `${Math.round(gaugeValue)}%`;
+                  } else if (p.current_value && p.monthly_rent) {
+                    const y = (Number(p.monthly_rent) / Number(p.current_value)) * 12 * 100;
+                    gaugeValue = Math.min(y * 5, 100);
+                    gaugeLabel = `${y.toFixed(1)}%`;
+                  }
+
+                  const radius = 20, circumference = 2 * Math.PI * radius;
+                  const strokeDashoffset = circumference - (gaugeValue / 100) * circumference;
+
+                  return (
+                    <div key={p.id} className="flex items-center gap-5 py-4">
+                      <div className="shrink-0 relative" style={{ width: 52, height: 52 }}>
+                        <svg width="52" height="52" viewBox="0 0 52 52">
+                          <circle cx="26" cy="26" r={radius} fill="none" stroke="#E5E7EB" strokeWidth="5" />
+                          {gaugeValue > 0 && <circle cx="26" cy="26" r={radius} fill="none" stroke={color} strokeWidth="5" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} strokeLinecap="round" transform="rotate(-90 26 26)" />}
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span style={{ fontSize: 9, fontWeight: 700, color, lineHeight: 1 }}>{gaugeLabel || "—"}</span>
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color }}>{modalityLabels[modality]}</span>
+                          {p.available_for_sale && (
+                            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full border border-blue-200">Disponível</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Link href={`/dashboard/properties/${p.id}`} className="text-base font-semibold text-ink hover:text-forest transition-colors truncate">{p.name}</Link>
+                          {modality === "annual_lease" && (
+                            <span
+                              title={paidThisMonth.has(p.id) ? "Aluguel recebido este mês" : "Aluguel pendente este mês"}
+                              className={`shrink-0 text-xs font-bold px-1.5 py-0.5 rounded-full border ${paidThisMonth.has(p.id) ? "bg-green-50 text-green-700 border-green-200" : "bg-amber-50 text-amber-700 border-amber-200"}`}
+                            >
+                              {paidThisMonth.has(p.id) ? "✓" : "○"}
+                            </span>
+                          )}
+                        </div>
+                        {(p.city || p.state) && <p className="text-sm text-ink-3">{[p.city, p.state].filter(Boolean).join(" · ")}</p>}
+                      </div>
+                      <div className="hidden md:block text-right shrink-0">
+                        <p className="text-xs text-ink-3 uppercase tracking-wider">{isPlanta ? "Já pago" : "Valor atual"}</p>
+                        <p className="text-base font-bold text-ink">{formatCurrencyShort(Number(isPlanta ? p.acquisition_value : p.current_value || 0))}</p>
+                      </div>
+                      <div className="hidden lg:block text-right shrink-0 ml-6">
+                        <p className="text-xs text-ink-3 uppercase tracking-wider">{isPlanta ? "VGV" : isAirbnb ? "Receita est." : "Aluguel"}</p>
+                        <p className="text-base font-bold text-positive">{formatCurrencyShort(Number(p.monthly_rent || 0))}</p>
+                      </div>
+                      <Link href={`/dashboard/properties/${p.id}`} className="shrink-0 ml-4 text-xs text-ink-3 hover:text-forest transition-colors">→</Link>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
-          {totalProperties === 0 ? (
-            <div className="text-center py-10">
-              <p className="text-ink-2 mb-2">Nenhum imóvel cadastrado ainda.</p>
-              <Link href="/dashboard/properties/new" className="inline-block mt-3 px-6 py-3 bg-forest text-white text-xs font-bold uppercase tracking-wider rounded hover:bg-forest-light transition-colors">+ Cadastrar imóvel</Link>
-            </div>
-          ) : (
-            <div className="divide-y divide-border">
-              {props.slice(0, 5).map((p) => {
-                const modality = p.modality || "annual_lease";
-                const isPlanta = modality === "under_construction";
-                const isAirbnb = modality === "short_stay";
-                const modalityColors: Record<string, string> = { annual_lease: "#2D4A3E", short_stay: "#3B82F6", under_construction: "#F59E0B" };
-                const modalityLabels: Record<string, string> = { annual_lease: "Locação anual", short_stay: "Temporada", under_construction: "Na planta" };
-                const color = modalityColors[modality] || "#2D4A3E";
-
-                let gaugeValue = 0, gaugeLabel = "";
-                if (isPlanta && p.total_investment && p.acquisition_value) {
-                  gaugeValue = Math.min((p.acquisition_value / p.total_investment) * 100, 100);
-                  gaugeLabel = `${Math.round(gaugeValue)}%`;
-                } else if (p.current_value && p.monthly_rent) {
-                  const y = (Number(p.monthly_rent) / Number(p.current_value)) * 12 * 100;
-                  gaugeValue = Math.min(y * 5, 100);
-                  gaugeLabel = `${y.toFixed(1)}%`;
-                }
-
-                const radius = 20, circumference = 2 * Math.PI * radius;
-                const strokeDashoffset = circumference - (gaugeValue / 100) * circumference;
-
-                return (
-                  <div key={p.id} className="flex items-center gap-5 py-4">
-                    <div className="shrink-0 relative" style={{ width: 52, height: 52 }}>
-                      <svg width="52" height="52" viewBox="0 0 52 52">
-                        <circle cx="26" cy="26" r={radius} fill="none" stroke="#E5E7EB" strokeWidth="5" />
-                        {gaugeValue > 0 && <circle cx="26" cy="26" r={radius} fill="none" stroke={color} strokeWidth="5" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} strokeLinecap="round" transform="rotate(-90 26 26)" />}
-                      </svg>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span style={{ fontSize: 9, fontWeight: 700, color, lineHeight: 1 }}>{gaugeLabel || "—"}</span>
-                      </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color }}>{modalityLabels[modality]}</span>
-                        {p.available_for_sale && (
-                          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full border border-blue-200">Disponível</span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Link href={`/dashboard/properties/${p.id}`} className="text-base font-semibold text-ink hover:text-forest transition-colors truncate">{p.name}</Link>
-                        {modality === "annual_lease" && (
-                          <span
-                            title={paidThisMonth.has(p.id) ? "Aluguel recebido este mês" : "Aluguel pendente este mês"}
-                            className={`shrink-0 text-xs font-bold px-1.5 py-0.5 rounded-full border ${paidThisMonth.has(p.id) ? "bg-green-50 text-green-700 border-green-200" : "bg-amber-50 text-amber-700 border-amber-200"}`}
-                          >
-                            {paidThisMonth.has(p.id) ? "✓" : "○"}
-                          </span>
-                        )}
-                      </div>
-                      {(p.city || p.state) && <p className="text-sm text-ink-3">{[p.city, p.state].filter(Boolean).join(" · ")}</p>}
-                    </div>
-                    <div className="hidden md:block text-right shrink-0">
-                      <p className="text-xs text-ink-3 uppercase tracking-wider">{isPlanta ? "Já pago" : "Valor atual"}</p>
-                      <p className="text-base font-bold text-ink">{formatCurrencyShort(Number(isPlanta ? p.acquisition_value : p.current_value || 0))}</p>
-                    </div>
-                    <div className="hidden lg:block text-right shrink-0 ml-6">
-                      <p className="text-xs text-ink-3 uppercase tracking-wider">{isPlanta ? "VGV" : isAirbnb ? "Receita est." : "Aluguel"}</p>
-                      <p className="text-base font-bold text-positive">{formatCurrencyShort(Number(p.monthly_rent || 0))}</p>
-                    </div>
-                    <Link href={`/dashboard/properties/${p.id}`} className="shrink-0 ml-4 text-xs text-ink-3 hover:text-forest transition-colors">→</Link>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
         </section>
 
         {/* Footer A5 */}
