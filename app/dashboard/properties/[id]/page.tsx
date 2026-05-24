@@ -282,9 +282,33 @@ export default async function PropertyDetailPage({ params }: Props) {
           </>
         )}
 
+        {/* ── BANNER CTA COBRANÇA (annual_lease sem cobrança ativa) ── */}
+        {isAnnual && !property.rent_collection_enabled && (
+          <div className="flex items-center justify-between gap-4 px-5 py-4 rounded-card border border-blue-200 bg-blue-50">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🏦</span>
+              <div>
+                <p className="text-sm font-bold text-blue-800">
+                  Ative a cobrança automática
+                </p>
+                <p className="text-xs text-blue-600 mt-0.5">
+                  O MyAsset cobra o aluguel do inquilino todo mês e deposita 95% direto na sua conta em D+1.
+                </p>
+              </div>
+            </div>
+            <a
+              href="#cobranca-automatica"
+              className="shrink-0 px-4 py-2 rounded text-white text-xs font-bold uppercase tracking-wider transition-colors"
+              style={{ backgroundColor: "#1B3564" }}
+            >
+              Configurar
+            </a>
+          </div>
+        )}
+
         {/* ── COBRANÇA AUTOMÁTICA (só annual_lease) ────── */}
         {isAnnual && (
-          <div className="card">
+          <div id="cobranca-automatica" className="card">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <p className="section-title" style={{ marginBottom: 0 }}>Cobrança automática</p>
