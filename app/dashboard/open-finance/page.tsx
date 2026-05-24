@@ -3,33 +3,37 @@ import { createClient } from "@/utils/supabase/server";
 import { registerInterest } from "./actions";
 
 const BANKS = [
-  { name: "Itaú",     color: "#EC7000" },
-  { name: "Nubank",   color: "#820AD1" },
-  { name: "Bradesco", color: "#CC0000" },
-  { name: "Santander",color: "#EC0000" },
-  { name: "Caixa",    color: "#005CA9" },
-  { name: "BB",       color: "#F9C400" },
-  { name: "Inter",    color: "#FF7A00" },
-  { name: "XP",       color: "#000000" },
+  { name: "Itaú",      color: "#EC7000" },
+  { name: "Nubank",    color: "#820AD1" },
+  { name: "Bradesco",  color: "#CC0000" },
+  { name: "Santander", color: "#EC0000" },
+  { name: "Caixa",     color: "#005CA9" },
+  { name: "BB",        color: "#F9C400" },
+  { name: "Inter",     color: "#FF7A00" },
+  { name: "XP",        color: "#000000" },
 ];
 
-const FEATURES = [
+// ── JÁ DISPONÍVEL (via cobrança automática) ──────────────────
+const FEATURES_AVAILABLE = [
   {
     icon: "⚡",
     title: "Lançamento automático",
-    desc: "O PIX do aluguel que cai na sua conta é identificado automaticamente e lançado no imóvel correto — sem digitar nada.",
+    desc: "O PIX do aluguel cobrado via MyAsset é identificado automaticamente e lançado no imóvel correto — sem digitar nada.",
   },
   {
     icon: "✅",
     title: "Conciliação real",
-    desc: "Saiba exatamente quando cada aluguel foi pago, com quanto atraso e se foi parcial. Dados do banco, não declarados.",
+    desc: "Saiba exatamente quando cada aluguel foi pago, com quanto atraso e via qual método. Dados reais, não declarados.",
   },
+];
+
+// ── EM BREVE (via Open Banking) ───────────────────────────────
+const FEATURES_COMING = [
   {
     icon: "📂",
     title: "Despesas automáticas",
-    desc: "IPTU, condomínio e manutenção são identificados e categorizados direto do seu extrato. Você só confirma as exceções.",
+    desc: "IPTU, condomínio e manutenção são identificados e categorizados direto do seu extrato bancário. Você só confirma as exceções.",
   },
-
   {
     icon: "📊",
     title: "Visão patrimonial completa",
@@ -47,7 +51,6 @@ export default async function OpenFinancePage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // Verificar se já respondeu
   const { data: existing } = await supabase
     .from("open_finance_interest")
     .select("interested, updated_at")
@@ -66,18 +69,13 @@ export default async function OpenFinancePage() {
           <div>
             <div className="flex items-center gap-3 mb-3">
               <p className="text-xs font-bold uppercase tracking-widest text-forest/70">
-                Próxima funcionalidade
+                Inteligência financeira
               </p>
-              <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 border border-amber-200">
-                Em breve
-              </span>
             </div>
-            <h1 className="text-4xl font-bold text-ink mb-3">
-              Open Finance
-            </h1>
+            <h1 className="text-4xl font-bold text-ink mb-3">Open Finance</h1>
             <p className="text-lg text-ink-2 leading-relaxed max-w-xl">
               Conecte suas contas bancárias ao MyAsset e deixe o app trabalhar por você.
-              Lançamentos automáticos, conciliação real e oportunidades que você nunca viu.
+              Parte dessa promessa já está disponível hoje.
             </p>
           </div>
           <div className="hidden md:flex items-center justify-center w-20 h-20 rounded-2xl shrink-0"
@@ -86,36 +84,23 @@ export default async function OpenFinancePage() {
           </div>
         </div>
 
-        {/* ── BANCOS SUPORTADOS ───────────────────────────── */}
-        <div className="card">
-          <p className="text-xs font-bold uppercase tracking-widest text-ink-3 mb-4">
-            Bancos compatíveis na primeira versão
-          </p>
-          <div className="flex flex-wrap gap-3">
-            {BANKS.map((b) => (
-              <div
-                key={b.name}
-                className="flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-surface text-sm font-semibold"
-              >
-                <span
-                  className="w-2.5 h-2.5 rounded-full shrink-0"
-                  style={{ backgroundColor: b.color }}
-                />
-                {b.name}
-              </div>
-            ))}
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-dashed border-border text-sm text-ink-3">
-              + outros
-            </div>
-          </div>
-        </div>
-
-        {/* ── FUNCIONALIDADES ─────────────────────────────── */}
+        {/* ── JÁ DISPONÍVEL ───────────────────────────────── */}
         <div>
-          <p className="section-title">O que muda no seu dia a dia</p>
+          <div className="flex items-center gap-3 mb-4">
+            <p className="section-title" style={{ marginBottom: 0 }}>
+              Já disponível
+            </p>
+            <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-green-100 text-green-700 border border-green-200">
+              Ativo agora
+            </span>
+          </div>
+          <p className="text-sm text-ink-2 mb-4">
+            Com a <strong>cobrança automática de aluguel</strong>, o MyAsset já entrega
+            automaticamente as funcionalidades abaixo — sem precisar conectar sua conta bancária.
+          </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {FEATURES.map((f) => (
-              <div key={f.title} className="card flex gap-4">
+            {FEATURES_AVAILABLE.map((f) => (
+              <div key={f.title} className="card flex gap-4 border border-green-200 bg-green-50/50">
                 <span className="text-2xl shrink-0 mt-0.5">{f.icon}</span>
                 <div>
                   <p className="font-bold text-ink mb-1">{f.title}</p>
@@ -123,6 +108,73 @@ export default async function OpenFinancePage() {
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* CTA pra cobrança automática */}
+          <div className="mt-4 flex items-center justify-between gap-4 px-5 py-4 rounded-card border border-green-200 bg-green-50">
+            <div>
+              <p className="text-sm font-semibold text-green-800">
+                Ainda não ativou a cobrança automática?
+              </p>
+              <p className="text-xs text-green-700 mt-0.5">
+                Configure em qualquer imóvel de locação anual e comece a receber 95% do aluguel direto na sua conta.
+              </p>
+            </div>
+            <a
+              href="/dashboard/properties"
+              className="shrink-0 px-4 py-2 rounded text-white text-xs font-bold uppercase tracking-wider transition-colors"
+              style={{ backgroundColor: "#2D4A3E" }}
+            >
+              Ver imóveis
+            </a>
+          </div>
+        </div>
+
+        {/* ── EM BREVE ────────────────────────────────────── */}
+        <div>
+          <div className="flex items-center gap-3 mb-4">
+            <p className="section-title" style={{ marginBottom: 0 }}>
+              Próxima fase — Open Banking
+            </p>
+            <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 border border-amber-200">
+              Em breve
+            </span>
+          </div>
+          <p className="text-sm text-ink-2 mb-4">
+            Conectando diretamente ao seu banco (via Open Finance do Banco Central),
+            o MyAsset vai além dos aluguéis cobrados pela plataforma.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {FEATURES_COMING.map((f) => (
+              <div key={f.title} className="card flex gap-4 opacity-75">
+                <span className="text-2xl shrink-0 mt-0.5">{f.icon}</span>
+                <div>
+                  <p className="font-bold text-ink mb-1">{f.title}</p>
+                  <p className="text-sm text-ink-2 leading-relaxed">{f.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── BANCOS SUPORTADOS ───────────────────────────── */}
+        <div className="card">
+          <p className="text-xs font-bold uppercase tracking-widest text-ink-3 mb-4">
+            Bancos compatíveis na primeira versão do Open Banking
+          </p>
+          <div className="flex flex-wrap gap-3">
+            {BANKS.map((b) => (
+              <div
+                key={b.name}
+                className="flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-surface text-sm font-semibold opacity-60"
+              >
+                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: b.color }} />
+                {b.name}
+              </div>
+            ))}
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-dashed border-border text-sm text-ink-3 opacity-60">
+              + outros
+            </div>
           </div>
         </div>
 
@@ -148,11 +200,10 @@ export default async function OpenFinancePage() {
           {!alreadyAnswered ? (
             <>
               <p className="font-bold text-ink text-lg mb-2">
-                Faz sentido para você?
+                Quer ser avisado quando o Open Banking estiver disponível?
               </p>
               <p className="text-sm text-ink-2 mb-6 leading-relaxed">
-                Nos diga se quer ser avisado quando o Open Finance estiver disponível.
-                Sua resposta nos ajuda a priorizar o lançamento.
+                Sua resposta nos ajuda a priorizar o lançamento da próxima fase.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <form action={registerInterest} className="flex-1">
