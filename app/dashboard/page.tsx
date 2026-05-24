@@ -398,6 +398,23 @@ export default async function DashboardPage() {
                               {paidThisMonth.has(p.id) ? "✓" : "○"}
                             </span>
                           )}
+                          {modality === "annual_lease" && !p.rent_collection_enabled && (
+                            <Link
+                              href={`/dashboard/properties/${p.id}`}
+                              title="Ativar cobrança automática"
+                              className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full border border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
+                            >
+                              ⚡ Ativar cobrança
+                            </Link>
+                          )}
+                          {modality === "annual_lease" && p.rent_collection_enabled && (
+                            <span
+                              title="Cobrança automática ativa"
+                              className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full border border-green-200 bg-green-50 text-green-700"
+                            >
+                              🏦 Cobrança ativa
+                            </span>
+                          )}
                         </div>
                         {(p.city || p.state) && <p className="text-sm text-ink-3">{[p.city, p.state].filter(Boolean).join(" · ")}</p>}
                       </div>
