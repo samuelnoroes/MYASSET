@@ -2,7 +2,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 
-// ── HEALTH SCORE ─────────────────────────────────────────────
 type PropertyRow = {
   id: string;
   user_id: string;
@@ -35,7 +34,6 @@ function calcPropertyHealth(p: PropertyRow, recentTxPropertyIds: Set<string>): {
   const missing: string[] = [];
   const checks: { field: string; label: string; ok: boolean }[] = [];
 
-  // Universais
   checks.push({ field: "acquisition_value", label: "Valor de compra", ok: !!p.acquisition_value });
   checks.push({ field: "current_value", label: "Valor atual", ok: !!p.current_value });
   checks.push({ field: "city", label: "Localização", ok: !!(p.city || p.state) });
@@ -73,13 +71,6 @@ function scoreColor(score: number): string {
   return "#DC2626";
 }
 
-function scoreLabel(score: number): string {
-  if (score >= 90) return "Saudável";
-  if (score >= 70) return "Atenção";
-  if (score >= 50) return "Risco";
-  return "Crítico";
-}
-
 function scoreEmoji(score: number): string {
   if (score >= 90) return "🟢";
   if (score >= 70) return "🟡";
@@ -104,12 +95,17 @@ function daysAgoNum(dateStr: string | null): number {
   return Math.floor((Date.now() - new Date(dateStr).getTime()) / (1000 * 60 * 60 * 24));
 }
 
+function formatDate(dateStr: string): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "short", year: "numeric" })
+    .format(new Date(y, m - 1, d));
+}
+
 export default async function AdminPage() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // Verificar admin
   const { data: me } = await supabase
     .from("user_profiles")
     .select("is_admin")
@@ -118,7 +114,6 @@ export default async function AdminPage() {
 
   if (!me?.is_admin) redirect("/dashboard");
 
-  // Buscar todos os clientes (exceto admins)
   const { data: allProfiles } = await supabase
     .from("user_profiles")
     .select("id, full_name, phone, last_login_at, is_admin")
@@ -126,14 +121,12 @@ export default async function AdminPage() {
 
   const profiles = allProfiles ?? [];
 
-  // Buscar todos os imóveis
   const { data: allProperties } = await supabase
     .from("properties")
     .select("id, user_id, name, modality, monthly_rent, current_value, acquisition_value, lease_due_day, lease_renewal_date, adjustment_index, daily_rate, target_occupancy, total_investment, delivery_date, next_installment_date, installment_amount, city, state");
 
   const properties = (allProperties ?? []) as PropertyRow[];
 
-  // Buscar transações dos últimos 90 dias para atividade
   const ninetyDaysAgo = new Date();
   ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
   const { data: recentTxs } = await supabase
@@ -144,7 +137,38 @@ export default async function AdminPage() {
   const txs = (recentTxs ?? []) as TransactionRow[];
   const recentTxPropertyIds = new Set(txs.map(t => t.property_id));
 
-  // Montar dados por cliente
+  // ── COMISSÕES (platform_fees) ───────────────────────────
+  const now = new Date();
+  const startOfMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+
+  const { data: allFees } = await supabase
+    .from("platform_fees")
+    .select(`
+      id, gross_amount, asaas_fee, platform_fee, net_to_owner, created_at,
+      user_id,
+      rent_charges (
+        due_date, payment_method,
+        properties ( name )
+      )
+    `)
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  const fees = allFees ?? [];
+
+  const totalPlatformFeeAllTime = fees.reduce((a, f) => a + Number(f.platform_fee), 0);
+  const totalPlatformFeeMonth = fees
+    .filter(f => f.created_at >= startOfMonth)
+    .reduce((a, f) => a + Number(f.platform_fee), 0);
+  const totalGrossMonth = fees
+    .filter(f => f.created_at >= startOfMonth)
+    .reduce((a, f) => a + Number(f.gross_amount), 0);
+  const totalTransactions = fees.length;
+
+  // Perfis para lookup de nome
+  const profileMap = Object.fromEntries(profiles.map(p => [p.id, p.full_name || "Sem nome"]));
+
+  // ── CLIENTES ────────────────────────────────────────────
   type ClientData = {
     id: string;
     name: string;
@@ -166,7 +190,6 @@ export default async function AdminPage() {
       return { ...pr, healthScore: score, missing };
     });
 
-    // Score médio ponderado por valor
     const totalValue = propsWithHealth.reduce((acc, pr) => acc + Number(pr.current_value || pr.acquisition_value || 0), 0);
     let avgScore = 0;
     if (totalValue > 0) {
@@ -181,7 +204,6 @@ export default async function AdminPage() {
     }
 
     const clientTxs = txs.filter(t => t.user_id === p.id);
-    const propsWithoutRecentTx = clientProps.filter(pr => !recentTxPropertyIds.has(pr.id)).length;
 
     return {
       id: p.id,
@@ -198,20 +220,17 @@ export default async function AdminPage() {
     };
   });
 
-  // Ordenar por score (pior primeiro)
   clients.sort((a, b) => a.avgScore - b.avgScore);
 
-  // Métricas gerais
   const totalClients = clients.length;
   const totalProps = properties.length;
   const avgHealthScore = totalClients > 0 ? Math.round(clients.reduce((a, c) => a + c.avgScore, 0) / totalClients) : 0;
   const clientsAtRisk = clients.filter(c => c.avgScore < 70).length;
   const clientsInactive = clients.filter(c => c.lastLoginDays > 10).length;
-  const totalAUM = clients.reduce((a, c) => a + c.totalValue, 0); // Assets Under Management
+  const totalAUM = clients.reduce((a, c) => a + c.totalValue, 0);
 
   return (
     <main className="min-h-screen bg-surface">
-      {/* Header admin */}
       <header style={{ backgroundColor: "#1B3564" }} className="text-white shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -266,6 +285,117 @@ export default async function AdminPage() {
           </div>
         </div>
 
+        {/* ── COMISSÕES MYASSET ─────────────────────────── */}
+        <div className="space-y-4">
+          <p className="section-title">Comissões MyAsset — Cobrança de aluguel</p>
+
+          {/* KPIs de comissão */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="card bg-green-50 border border-green-200">
+              <p className="kpi-label text-green-700">Comissão este mês</p>
+              <p className="kpi-value text-positive">{formatCurrency(totalPlatformFeeMonth)}</p>
+              <p className="text-xs text-green-600 mt-1">
+                de {formatCurrency(totalGrossMonth)} em aluguéis
+              </p>
+            </div>
+            <div className="card">
+              <p className="kpi-label">Comissão total</p>
+              <p className="kpi-value text-positive">{formatCurrency(totalPlatformFeeAllTime)}</p>
+              <p className="text-xs text-ink-3 mt-1">histórico completo</p>
+            </div>
+            <div className="card">
+              <p className="kpi-label">Transações</p>
+              <p className="kpi-value-lg">{totalTransactions}</p>
+              <p className="text-xs text-ink-3 mt-1">cobranças processadas</p>
+            </div>
+            <div className="card">
+              <p className="kpi-label">Taxa média</p>
+              <p className="kpi-value">5%</p>
+              <p className="text-xs text-ink-3 mt-1">por transação</p>
+            </div>
+          </div>
+
+          {/* Tabela de comissões */}
+          {fees.length === 0 ? (
+            <div className="card text-center py-10">
+              <p className="text-2xl mb-2">🏦</p>
+              <p className="text-sm text-ink-3">Nenhuma cobrança de aluguel processada ainda.</p>
+              <p className="text-xs text-ink-3 mt-1">As comissões aparecerão aqui quando os inquilinos pagarem.</p>
+            </div>
+          ) : (
+            <div className="card">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border">
+                      {["Data", "Proprietário", "Imóvel", "Aluguel bruto", "Taxa Asaas", "Comissão MyAsset", "Proprietário recebeu", "Método"].map(h => (
+                        <th key={h} className="text-left py-3 px-3 text-xs font-bold uppercase tracking-wider text-ink-3 whitespace-nowrap">
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {fees.map((fee: any) => (
+                      <tr key={fee.id} className="hover:bg-surface transition-colors">
+                        <td className="py-3 px-3 text-ink-3 whitespace-nowrap text-xs">
+                          {fee.created_at ? formatDate(fee.created_at.split("T")[0]) : "—"}
+                        </td>
+                        <td className="py-3 px-3 font-medium text-ink">
+                          {profileMap[fee.user_id] || "—"}
+                        </td>
+                        <td className="py-3 px-3 text-ink-2">
+                          {fee.rent_charges?.properties?.name || "—"}
+                        </td>
+                        <td className="py-3 px-3 font-semibold text-ink">
+                          {formatCurrency(Number(fee.gross_amount))}
+                        </td>
+                        <td className="py-3 px-3 text-negative">
+                          -{formatCurrency(Number(fee.asaas_fee))}
+                        </td>
+                        <td className="py-3 px-3">
+                          <span className="font-bold text-positive">
+                            +{formatCurrency(Number(fee.platform_fee))}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 text-ink-2">
+                          {formatCurrency(Number(fee.net_to_owner))}
+                        </td>
+                        <td className="py-3 px-3">
+                          <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                            {fee.rent_charges?.payment_method === "PIX" ? "Pix"
+                              : fee.rent_charges?.payment_method === "CREDIT_CARD" ? "Cartão"
+                              : fee.rent_charges?.payment_method || "—"}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="border-t-2 border-border bg-surface">
+                      <td colSpan={3} className="py-3 px-3 text-xs font-bold uppercase tracking-wider text-ink-3">
+                        Total ({fees.length} transações)
+                      </td>
+                      <td className="py-3 px-3 font-bold text-ink">
+                        {formatCurrency(fees.reduce((a, f: any) => a + Number(f.gross_amount), 0))}
+                      </td>
+                      <td className="py-3 px-3 font-bold text-negative">
+                        -{formatCurrency(fees.reduce((a, f: any) => a + Number(f.asaas_fee), 0))}
+                      </td>
+                      <td className="py-3 px-3 font-bold text-positive">
+                        +{formatCurrency(fees.reduce((a, f: any) => a + Number(f.platform_fee), 0))}
+                      </td>
+                      <td colSpan={2} className="py-3 px-3 font-bold text-ink-2">
+                        {formatCurrency(fees.reduce((a, f: any) => a + Number(f.net_to_owner), 0))}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* ── ALERTAS ESTRATÉGICOS ───────────────────────── */}
         {(() => {
           const adminAlerts: { icon: string; text: string; color: string; clientId: string; phone: string | null }[] = [];
@@ -312,8 +442,7 @@ export default async function AdminPage() {
                       {a.phone && (
                         <a
                           href={`https://wa.me/55${a.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Olá ${a.text.split(" ")[0]}! Tudo bem? Vi que você tem algumas pendências no MyAsset — posso te ajudar a resolver em 5 minutos. 😊`)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                          target="_blank" rel="noopener noreferrer"
                           className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded text-white"
                           style={{ backgroundColor: "#25D366" }}
                         >
