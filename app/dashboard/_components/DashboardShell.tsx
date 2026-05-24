@@ -38,11 +38,12 @@ const PLAN_CONFIG: Record<string, { label: string; color: string; bg: string }> 
 };
 
 const NAV_ITEMS = [
-  { href: "/dashboard",              label: "Dashboard",     icon: "⊞",  badge: null },
-  { href: "/dashboard/properties",   label: "Portfólio",     icon: "🏢", badge: null },
-  { href: "/dashboard/tax",          label: "IR",            icon: "📊", badge: null },
-  { href: "/dashboard/open-finance", label: "Open Finance",  icon: "🔗", badge: "EM BREVE" },
-  { href: "/dashboard/profile",      label: "Perfil",        icon: "⚙️", badge: null },
+  { href: "/dashboard",                      label: "Dashboard",    icon: "⊞",  badge: null },
+  { href: "/dashboard/properties",           label: "Portfólio",    icon: "🏢", badge: null },
+  { href: "/dashboard/tax",                  label: "IR",           icon: "📊", badge: null },
+  { href: "/dashboard/open-finance",         label: "Open Finance", icon: "🔗", badge: "EM BREVE" },
+  { href: "/dashboard/billing/bank-account", label: "Financeiro",   icon: "🏦", badge: null },
+  { href: "/dashboard/profile",              label: "Perfil",       icon: "⚙️", badge: null },
 ];
 
 const DASHBOARD_ANCHORS = [
@@ -147,7 +148,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   return (
     <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "#F2F2F0" }}>
 
-      {/* ── SIDEBAR ──────────────────────────────────────── */}
       <aside
         style={{
           width: sidebarWidth,
@@ -164,7 +164,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           overflow: "hidden",
         }}
       >
-        {/* Logo + botão colapsar */}
         <div
           style={{
             padding: sidebarOpen ? "20px 12px 16px 20px" : "20px 0 16px",
@@ -215,7 +214,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           </button>
         </div>
 
-        {/* Nav items */}
         <nav style={{ flex: 1, padding: "16px 0", overflowY: "auto" }}>
           {NAV_ITEMS.map((item) => {
             const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
@@ -262,7 +260,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
             );
           })}
 
-          {/* ── MEU PLANO ── */}
+          {/* Meu Plano */}
           <Link
             href="/dashboard/plans"
             title={!sidebarOpen ? "Meu Plano" : undefined}
@@ -301,7 +299,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           </Link>
         </nav>
 
-        {/* Âncoras do dashboard */}
         {sidebarOpen && pathname === "/dashboard" && (
           <div style={{
             margin: "4px 12px 8px",
@@ -335,7 +332,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           </div>
         )}
 
-        {/* Painel de informativos — toggle */}
         <div style={{ padding: sidebarOpen ? "0 12px 8px" : "0 0 8px", borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 12 }}>
           <button
             onClick={() => togglePanel(!panelOpen)}
@@ -375,7 +371,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           </button>
         </div>
 
-        {/* Link admin */}
         {isAdmin && (
           <div style={{ padding: sidebarOpen ? "0 12px 8px" : "0 0 8px" }}>
             <Link
@@ -404,7 +399,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           </div>
         )}
 
-        {/* Sair */}
         <div style={{ padding: sidebarOpen ? "0 12px 12px" : "0 0 12px" }}>
           <form action={logout}>
             <button
@@ -435,7 +429,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
       </aside>
 
-      {/* ── CONTEÚDO PRINCIPAL ───────────────────────────── */}
       <div
         style={{
           marginLeft: sidebarWidth,
@@ -448,7 +441,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
         {children}
       </div>
 
-      {/* ── PAINEL DE INFORMATIVOS ───────────────────────── */}
       <aside
         style={{
           width: PANEL_WIDTH,
@@ -467,7 +459,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           boxShadow: panelOpen ? "-4px 0 16px rgba(0,0,0,0.06)" : "none",
         }}
       >
-        {/* Header do painel */}
         <div style={{
           padding: "20px 16px 14px",
           borderBottom: "1px solid #F3F4F6",
@@ -491,7 +482,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           </button>
         </div>
 
-        {/* Lista de notificações */}
         <div style={{ flex: 1, overflowY: "auto", padding: "12px", display: "flex", flexDirection: "column", gap: 10 }}>
           {loading ? (
             <p style={{ fontSize: 13, color: "#9CA3AF", textAlign: "center", marginTop: 32 }}>Carregando...</p>
@@ -527,7 +517,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                   >
                     ×
                   </button>
-
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 5, paddingRight: 16 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
                       <span style={{ fontSize: 12 }}>{cfg.icon}</span>
@@ -537,15 +526,12 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                     </div>
                     <span style={{ fontSize: 10, color: "#9CA3AF" }}>{formatDate(n.created_at)}</span>
                   </div>
-
                   <p style={{ fontSize: 13, fontWeight: 600, color: "#1A1A1A", lineHeight: 1.4, marginBottom: 4 }}>
                     {n.title}
                   </p>
-
                   <p style={{ fontSize: 12, color: "#6B7280", lineHeight: 1.6, marginBottom: n.contact_label ? 10 : 0 }}>
                     {n.body}
                   </p>
-
                   {n.contact_label && n.contact_url && (
                     <a
                       href={n.contact_url}
@@ -571,7 +557,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           )}
         </div>
 
-        {/* Footer do painel */}
         <div style={{ padding: "12px 16px", borderTop: "1px solid #F3F4F6", flexShrink: 0 }}>
           <a
             href={`https://wa.me/${WA_PHONE}?text=${WA_MESSAGE}`}
@@ -595,7 +580,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
         </div>
       </aside>
 
-      {/* Botão reabrir painel */}
       {!panelOpen && (
         <button
           onClick={() => togglePanel(true)}
@@ -612,7 +596,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
         </button>
       )}
 
-      {/* WhatsApp flutuante */}
       {!panelOpen && (
         <a
           href={`https://wa.me/${WA_PHONE}?text=${WA_MESSAGE}`}
