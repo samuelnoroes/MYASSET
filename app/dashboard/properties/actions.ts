@@ -32,6 +32,8 @@ type PropertyInput = {
   balloon_date: string | null;
   balloon_amount: number | null;
   payment_notes: string | null;
+  parent_property_id: string | null;
+  unit_identifier: string | null;
 };
 
 function parsePropertyForm(formData: FormData): PropertyInput {
@@ -42,6 +44,8 @@ function parsePropertyForm(formData: FormData): PropertyInput {
   const address = String(formData.get("address") || "").trim() || null;
   const city = String(formData.get("city") || "").trim() || null;
   const stateField = String(formData.get("state") || "").trim().toUpperCase() || null;
+  const parentPropertyId = String(formData.get("parent_property_id") || "").trim() || null;
+  const unitIdentifier = String(formData.get("unit_identifier") || "").trim() || null;
 
   if (!name) err("Nome do imóvel é obrigatório.");
   if (!nickname) err("Apelido do imóvel é obrigatório.");
@@ -84,6 +88,8 @@ function parsePropertyForm(formData: FormData): PropertyInput {
     balloon_date: d("balloon_date"),
     balloon_amount: n("balloon_amount"),
     payment_notes: t("payment_notes"),
+    parent_property_id: parentPropertyId,
+    unit_identifier: unitIdentifier,
   };
 }
 
@@ -142,7 +148,6 @@ export async function deleteProperty(formData: FormData) {
   revalidatePath("/dashboard/properties");
 }
 
-// ── TOGGLE DISPONÍVEL PARA PROPOSTA ─────────────────────
 export async function toggleAvailableForSale(formData: FormData) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();

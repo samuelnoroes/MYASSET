@@ -8,24 +8,25 @@ type Props = { params: { id: string } };
 
 export default async function EditPropertyPage({ params }: Props) {
   const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: property, error } = await supabase
-    .from("properties")
-    .select("*")
-    .eq("id", params.id)
-    .eq("user_id", user.id)
-    .single();
+  const [{ data: property, error }, { data: allProperties }] = await Promise.all([
+    supabase.from("properties").select("*").eq("id", params.id).eq("user_id", user.id).single(),
+    supabase
+      .from("properties")
+      .select("id, name, nickname, address, city, state, property_type, modality")
+      .eq("user_id", user.id)
+      .neq("id", params.id) // exclude self from parent list
+      .order("name", { ascending: true }),
+  ]);
 
   if (error || !property) notFound();
 
+  const parentProperties = allProperties || [];
+
   return (
     <main className="min-h-screen bg-surface">
-      {/* Header */}
       <header className="bg-header text-white shadow-sm">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/dashboard" className="font-display text-xl italic">
@@ -52,6 +53,7 @@ export default async function EditPropertyPage({ params }: Props) {
           <input type="hidden" name="id" value={property.id} />
 
           <PropertyFormFields
+            parentProperties={parentProperties}
             defaults={{
               name: property.name,
               nickname: property.nickname,
@@ -71,6 +73,8 @@ export default async function EditPropertyPage({ params }: Props) {
               target_occupancy: property.target_occupancy,
               delivery_date: property.delivery_date,
               total_investment: property.total_investment,
+              parent_property_id: property.parent_property_id,
+              unit_identifier: property.unit_identifier,
             }}
           />
 

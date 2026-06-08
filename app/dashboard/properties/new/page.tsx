@@ -4,17 +4,31 @@ import { createClient } from "@/utils/supabase/server";
 import { createProperty } from "../actions";
 import PropertyFormFields from "../_components/PropertyFormFields";
 
-export default async function NewPropertyPage() {
+export default async function NewPropertyPage({
+  searchParams,
+}: {
+  searchParams: { parent?: string };
+}) {
   const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+
+  // Fetch all properties to populate parent select
+  const { data: allProperties } = await supabase
+    .from("properties")
+    .select("id, name, nickname, address, city, state, property_type, modality")
+    .eq("user_id", user.id)
+    .order("name", { ascending: true });
+
+  const parentProperties = allProperties || [];
+
+  // Pre-fill parent if ?parent= is in URL
+  const preSelectedParent = searchParams.parent
+    ? parentProperties.find((p) => p.id === searchParams.parent)
+    : null;
 
   return (
     <main className="min-h-screen bg-surface">
-      {/* Header */}
       <header className="bg-header text-white shadow-sm">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/dashboard" className="font-display text-xl italic">
@@ -32,16 +46,25 @@ export default async function NewPropertyPage() {
       <div className="max-w-4xl mx-auto px-6 py-8">
         <div className="mb-8">
           <p className="text-xs font-bold uppercase tracking-widest text-forest mb-2">
-            Novo imóvel
+            {preSelectedParent ? `Nova unidade · ${preSelectedParent.name}` : "Novo imóvel"}
           </p>
-          <h1 className="text-3xl font-bold text-ink">Cadastre um ativo</h1>
+          <h1 className="text-3xl font-bold text-ink">
+            {preSelectedParent ? "Cadastre a unidade" : "Cadastre um ativo"}
+          </h1>
           <p className="text-sm text-ink-2 mt-2">
             Selecione a modalidade correta para ver os campos relevantes.
           </p>
         </div>
 
         <form action={createProperty} className="space-y-5">
-          <PropertyFormFields />
+          <PropertyFormFields
+            parentProperties={parentProperties}
+            defaults={
+              preSelectedParent
+                ? { parent_property_id: preSelectedParent.id }
+                : {}
+            }
+          />
 
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <button

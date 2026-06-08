@@ -104,6 +104,25 @@ export default async function PropertyDetailPage({ params }: Props) {
     .single();
 
   const hasBankAccount = !!profile?.asaas_account_id;
+
+  // Parent property (se for unidade)
+  const { data: parentProperty } = property.parent_property_id
+    ? await supabase
+        .from("properties")
+        .select("id, name, nickname")
+        .eq("id", property.parent_property_id)
+        .single()
+    : { data: null };
+
+  // Units (se for empreendimento pai)
+  const { data: units } = await supabase
+    .from("properties")
+    .select("id, name, nickname, modality, unit_identifier, monthly_rent, current_value")
+    .eq("parent_property_id", params.id)
+    .eq("user_id", user.id)
+    .order("unit_identifier", { ascending: true });
+
+  const propertyUnits = units || [];
   const charges = recentCharges ?? [];
 
   const allTxs = transactions ?? [];
@@ -160,6 +179,19 @@ export default async function PropertyDetailPage({ params }: Props) {
       </header>
 
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-5">
+
+        {/* Breadcrumb pai */}
+        {parentProperty && (
+          <div className="flex items-center gap-2 text-sm text-ink-2">
+            <Link href="/dashboard/properties" className="hover:text-forest transition-colors">Portfólio</Link>
+            <span className="text-ink-3">›</span>
+            <Link href={`/dashboard/properties/${parentProperty.id}`} className="hover:text-forest transition-colors font-medium">
+              {parentProperty.name}
+            </Link>
+            <span className="text-ink-3">›</span>
+            <span className="text-ink font-semibold">{property.unit_identifier || property.name}</span>
+          </div>
+        )}
 
         {/* Identificação + ações */}
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
@@ -222,6 +254,59 @@ export default async function PropertyDetailPage({ params }: Props) {
           monthlyRent={Number(property.monthly_rent) || null}
           marketData={property.market_data ?? null}
         />
+
+        {/* Unidades do empreendimento */}
+        {propertyUnits.length > 0 && (
+          <div className="card p-0 overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-forest">Unidades</p>
+                <p className="text-sm text-ink-2 mt-0.5">
+                  {propertyUnits.length} {propertyUnits.length === 1 ? "unidade cadastrada" : "unidades cadastradas"}
+                </p>
+              </div>
+              <Link
+                href={`/dashboard/properties/new?parent=${params.id}`}
+                className="px-4 py-2 bg-forest text-white text-xs font-bold uppercase tracking-wider rounded hover:bg-forest-light transition-colors"
+              >
+                + Nova unidade
+              </Link>
+            </div>
+            <div className="divide-y divide-border">
+              {propertyUnits.map((unit) => {
+                const unitColor = MODALITY_COLORS[unit.modality || "annual_lease"] || "#2D4A3E";
+                const yr = unit.current_value && unit.monthly_rent
+                  ? ((Number(unit.monthly_rent) / Number(unit.current_value)) * 12 * 100).toFixed(1)
+                  : null;
+                return (
+                  <Link
+                    key={unit.id}
+                    href={`/dashboard/properties/${unit.id}`}
+                    className="flex items-center gap-4 px-6 py-4 hover:bg-surface transition-colors"
+                  >
+                    <div className="shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                      style={{ backgroundColor: unitColor }}>
+                      {(unit.unit_identifier || unit.nickname || "?").substring(0, 2).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-ink truncate">{unit.name}</p>
+                      <p className="text-xs text-ink-3">{unit.unit_identifier || `@${unit.nickname}`}</p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-sm font-bold text-positive">
+                        {unit.monthly_rent
+                          ? new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(unit.monthly_rent))
+                          : "—"}
+                      </p>
+                      {yr && <p className="text-xs text-ink-3">{yr}% a.a.</p>}
+                    </div>
+                    <span className="text-ink-3 text-lg">›</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* ── KPIs ──────────────────────────────────────── */}
         {isPlanta ? (
