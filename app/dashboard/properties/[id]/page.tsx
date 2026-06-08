@@ -3,6 +3,7 @@ import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { deleteTransaction } from "./transactions/actions";
 import { toggleAvailableForSale } from "../actions";
+import MarketDataCard from "../_components/MarketDataCard";
 
 const CATEGORY_LABELS: Record<string, string> = {
   rent: "Aluguel", iptu: "IPTU", condominium: "Condomínio",
@@ -210,6 +211,17 @@ export default async function PropertyDetailPage({ params }: Props) {
             )}
           </div>
         </div>
+
+
+        {/* Card Inteligência de Mercado */}
+        <MarketDataCard
+          propertyId={params.id}
+          propertyName={property.name}
+          acquisitionValue={Number(property.acquisition_value) || null}
+          currentValue={Number(property.current_value) || null}
+          monthlyRent={Number(property.monthly_rent) || null}
+          marketData={property.market_data ?? null}
+        />
 
         {/* ── KPIs ──────────────────────────────────────── */}
         {isPlanta ? (
