@@ -11,6 +11,7 @@ const INCOME_CATEGORIES = [
 const EXPENSE_CATEGORIES = [
   { value: "iptu", label: "IPTU" },
   { value: "condominium", label: "Condomínio" },
+  { value: "admin_fee", label: "Taxa de administração (imobiliária)" },
   { value: "maintenance", label: "Manutenção" },
   { value: "insurance", label: "Seguro" },
   { value: "other", label: "Outros" },

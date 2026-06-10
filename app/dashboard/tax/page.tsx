@@ -2,8 +2,42 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 
-// ── TABELA CARNÊ-LEÃO 2025 ───────────────────────────────────
+// ── TABELAS PROGRESSIVAS POR COMPETÊNCIA ────────────────────
+// Tabela antiga (fev/2024 a abr/2025) e nova (mai/2025 em diante — Lei 15.191)
+// Em 2026 aplica-se também o redutor da Lei 15.270/2025.
+type TaxBracket = { limit: number; rate: number; deduction: number };
+
+const TABLE_OLD: TaxBracket[] = [
+  { limit: 2259.20, rate: 0,     deduction: 0 },
+  { limit: 2826.65, rate: 0.075, deduction: 169.44 },
+  { limit: 3751.05, rate: 0.15,  deduction: 381.44 },
+  { limit: 4664.68, rate: 0.225, deduction: 662.77 },
+  { limit: Infinity, rate: 0.275, deduction: 896.00 },
+];
+
+const TABLE_NEW: TaxBracket[] = [
+  { limit: 2428.80, rate: 0,     deduction: 0 },
+  { limit: 2826.65, rate: 0.075, deduction: 182.16 },
+  { limit: 3751.05, rate: 0.15,  deduction: 394.16 },
+  { limit: 4664.68, rate: 0.225, deduction: 675.49 },
+  { limit: Infinity, rate: 0.275, deduction: 908.73 },
+];
+
+function getTable(year: number, month: number): TaxBracket[] {
+  if (year > 2025 || (year === 2025 && month >= 5)) return TABLE_NEW;
+  return TABLE_OLD;
+}
+
+// Redutor mensal — Lei 15.270/2025, vigente a partir de jan/2026
+function calcRedutor2026(rendTributavel: number, imposto: number): number {
+  if (rendTributavel <= 5000) return Math.min(imposto, 312.89);
+  if (rendTributavel <= 7350) return Math.max(0, Math.min(imposto, 978.62 - 0.133145 * rendTributavel));
+  return 0;
+}
+
 function calcCarneLeao(
+  year: number,
+  month: number, // 1-12
   rendimentoBruto: number,
   despesasDedut: number = 0,
   dependentes: number = 0,
@@ -14,29 +48,30 @@ function calcCarneLeao(
   aliquota: number;
   deducao: number;
   imposto: number;
+  reducao: number;
   deducoesExtras: number;
 } {
   const DEDUCAO_DEPENDENTE = 189.59;
   const deducoesExtras = (dependentes * DEDUCAO_DEPENDENTE) + inss + pensao;
-  const base = Math.max(0, rendimentoBruto - despesasDedut - deducoesExtras);
+  const rendTributavel = Math.max(0, rendimentoBruto - despesasDedut);
+  const base = Math.max(0, rendTributavel - deducoesExtras);
 
-  let aliquota = 0;
-  let deducao = 0;
+  const table = getTable(year, month);
+  const bracket = table.find(b => base <= b.limit)!;
+  const impostoBruto = Math.max(0, base * bracket.rate - bracket.deduction);
 
-  if (base <= 2259.20) {
-    aliquota = 0; deducao = 0;
-  } else if (base <= 2826.65) {
-    aliquota = 0.075; deducao = 169.44;
-  } else if (base <= 3751.05) {
-    aliquota = 0.15; deducao = 381.44;
-  } else if (base <= 4664.68) {
-    aliquota = 0.225; deducao = 662.77;
-  } else {
-    aliquota = 0.275; deducao = 896.00;
-  }
+  // Redutor Lei 15.270 — só a partir de 2026, calculado sobre os rendimentos tributáveis
+  const reducao = year >= 2026 ? calcRedutor2026(rendTributavel, impostoBruto) : 0;
+  const imposto = Math.max(0, impostoBruto - reducao);
 
-  const imposto = Math.max(0, base * aliquota - deducao);
-  return { base, aliquota, deducao, imposto, deducoesExtras };
+  return { base, aliquota: bracket.rate, deducao: bracket.deduction, imposto, reducao, deducoesExtras };
+}
+
+// Último dia útil do mês seguinte (vencimento do DARF, código 0190)
+function darfDueDate(year: number, month: number): string {
+  let d = new Date(year, month + 1, 0); // último dia do mês seguinte (month é 1-12 → index month = mês seguinte)
+  while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() - 1);
+  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(d);
 }
 
 function formatCurrency(value: number): string {
@@ -49,7 +84,9 @@ function formatPercent(value: number): string {
 
 const MONTH_NAMES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 
-const DEDUCTIBLE_CATEGORIES = ["iptu", "condominium", "maintenance", "insurance"];
+// Dedutíveis no carnê-leão de aluguéis (IN RFB): impostos/taxas do imóvel, condomínio
+// pago pelo locador e taxa de administração imobiliária. Manutenção e seguro NÃO são dedutíveis.
+const DEDUCTIBLE_CATEGORIES = ["iptu", "condominium", "admin_fee"];
 
 type TaxProfile = {
   tax_person_type: string | null;
@@ -125,6 +162,8 @@ export default async function TaxPage({
       .reduce((acc, t) => acc + Number(t.amount), 0);
 
     const carne = isPF && hasPFTenants ? calcCarneLeao(
+      selectedYear,
+      i + 1,
       rendimentos,
       despesasDedut,
       taxProfile.tax_dependentes ?? 0,
@@ -221,7 +260,7 @@ export default async function TaxPage({
           <div className="card">
             <p className="kpi-label">Despesas dedutíveis</p>
             <p className="kpi-value">{formatCurrency(totalDespesasDedut)}</p>
-            <p className="text-xs text-ink-3 mt-1">IPTU, cond., manut., seguro</p>
+            <p className="text-xs text-ink-3 mt-1">IPTU, condomínio, taxa adm.</p>
           </div>
           <div className="card">
             <p className="kpi-label">Base tributável</p>
@@ -234,9 +273,7 @@ export default async function TaxPage({
             </p>
             <p className="kpi-value text-negative">{formatCurrency(totalCarneLeao)}</p>
             <p className="text-xs text-ink-3 mt-1">
-            {taxProfile.tax_dependentes || taxProfile.tax_inss_mensal || taxProfile.tax_pensao
-              ? "cálculo detalhado 2025"
-              : "estimativa — tabela 2025"}
+            {selectedYear >= 2026 ? "tabela 2026 + redutor Lei 15.270" : "tabela vigente no período"}
           </p>
           </div>
         </div>
@@ -269,6 +306,7 @@ export default async function TaxPage({
                     <>
                       <th className="text-right py-3 px-2 text-xs font-bold uppercase tracking-wider text-ink-3">Alíquota</th>
                       <th className="text-right py-3 px-2 text-xs font-bold uppercase tracking-wider text-ink-3 text-negative">Carnê-Leão</th>
+                      <th className="text-right py-3 px-2 text-xs font-bold uppercase tracking-wider text-ink-3">DARF até</th>
                     </>
                   )}
                 </tr>
@@ -294,6 +332,9 @@ export default async function TaxPage({
                         <td className={`py-3 px-2 text-right font-bold ${m.carne?.imposto ? "text-negative" : "text-ink-3"}`}>
                           {m.carne?.imposto ? formatCurrency(m.carne.imposto) : "—"}
                         </td>
+                        <td className="py-3 px-2 text-right text-ink-3 text-xs">
+                          {m.carne?.imposto ? darfDueDate(selectedYear, MONTH_NAMES.indexOf(m.month) + 1) : "—"}
+                        </td>
                       </>
                     )}
                   </tr>
@@ -309,6 +350,7 @@ export default async function TaxPage({
                     <>
                       <td className="py-3 px-2" />
                       <td className="py-3 px-2 text-right font-bold text-negative">{formatCurrency(totalCarneLeao)}</td>
+                      <td className="py-3 px-2" />
                     </>
                   )}
                 </tr>
@@ -356,9 +398,11 @@ export default async function TaxPage({
         <div className="card bg-surface border border-border">
           <p className="text-xs font-bold uppercase tracking-wider text-ink-3 mb-2">⚠️ Importante</p>
           <p className="text-sm text-ink-2 leading-relaxed">
-            Os valores apresentados são <strong>estimativas baseadas nas transações registradas</strong> e na tabela progressiva do Carnê-Leão 2025.
-            Não consideram deduções de dependentes, pensão alimentícia, contribuição ao INSS ou outras despesas pessoais.
-            Este relatório não substitui a orientação de um contador ou consultor tributário especializado.
+            Os valores são <strong>estimativas baseadas nas transações registradas</strong>, na tabela progressiva vigente em cada competência
+            (Lei 15.191/2025) e, a partir de 2026, no redutor mensal da Lei 15.270/2025 (isenção efetiva até R$ 5.000/mês).
+            O carnê-leão de aluguéis recebidos de pessoa física deve ser recolhido via DARF (código 0190) até o último dia útil do mês
+            seguinte ao recebimento. São dedutíveis apenas IPTU e taxas do imóvel, condomínio pago pelo locador e taxa de administração
+            imobiliária — manutenção e seguro não são dedutíveis. Este relatório não substitui a orientação de um contador.
           </p>
         </div>
 
