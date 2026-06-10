@@ -49,9 +49,9 @@ export default async function TenantNewPage({ params }: Props) {
         </div>
 
         {/* Info */}
-        <div className="px-4 py-3 bg-blue-50 border border-blue-200 rounded mb-6">
-          <p className="text-xs font-bold uppercase tracking-wider text-blue-700 mb-1">Para que serve</p>
-          <p className="text-sm text-blue-700">
+        <div className="px-4 py-3 bg-blue-500/10 border border-blue-400/30 rounded mb-6">
+          <p className="text-xs font-bold uppercase tracking-wider text-blue-300 mb-1">Para que serve</p>
+          <p className="text-sm text-blue-300">
             Os dados do inquilino são usados nos <strong>lembretes de aluguel</strong>, alertas de renovação de contrato e no agente do WhatsApp.
           </p>
         </div>
@@ -65,7 +65,7 @@ export default async function TenantNewPage({ params }: Props) {
 
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-ink-2 mb-2">
-              Nome completo <span className="text-red-500">*</span>
+              Nome completo <span className="text-red-400">*</span>
             </label>
             <input
               name="name"
@@ -79,7 +79,7 @@ export default async function TenantNewPage({ params }: Props) {
 
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-ink-2 mb-2">
-              CPF <span className="text-red-500">*</span>
+              CPF <span className="text-red-400">*</span>
             </label>
             <input
               name="cpf"
@@ -93,7 +93,7 @@ export default async function TenantNewPage({ params }: Props) {
 
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-ink-2 mb-2">
-              E-mail <span className="text-red-500">*</span>
+              E-mail <span className="text-red-400">*</span>
             </label>
             <input
               name="email"

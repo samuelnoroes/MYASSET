@@ -37,7 +37,7 @@ export default function KpiCard({ label, tooltip, children, className = "" }: Pr
           width: 20,
           height: 20,
           borderRadius: "50%",
-          backgroundColor: open ? "#2D4A3E" : "#E5E7EB",
+          backgroundColor: open ? "#C4A96B" : "#2A2D33",
           color: open ? "#fff" : "#6B7280",
           border: "none",
           cursor: "pointer",
@@ -52,13 +52,13 @@ export default function KpiCard({ label, tooltip, children, className = "" }: Pr
         }}
         onMouseEnter={e => {
           if (!open) {
-            (e.currentTarget as HTMLElement).style.backgroundColor = "#2D4A3E";
+            (e.currentTarget as HTMLElement).style.backgroundColor = "#C4A96B";
             (e.currentTarget as HTMLElement).style.color = "#fff";
           }
         }}
         onMouseLeave={e => {
           if (!open) {
-            (e.currentTarget as HTMLElement).style.backgroundColor = "#E5E7EB";
+            (e.currentTarget as HTMLElement).style.backgroundColor = "#2A2D33";
             (e.currentTarget as HTMLElement).style.color = "#6B7280";
           }
         }}
@@ -75,8 +75,8 @@ export default function KpiCard({ label, tooltip, children, className = "" }: Pr
             right: 0,
             zIndex: 50,
             width: 240,
-            backgroundColor: "#1F2937",
-            color: "#F9FAFB",
+            backgroundColor: "#141618",
+            color: "#141618",
             borderRadius: 8,
             padding: "12px 14px",
             fontSize: 12,
@@ -91,11 +91,11 @@ export default function KpiCard({ label, tooltip, children, className = "" }: Pr
             right: 12,
             width: 12,
             height: 12,
-            backgroundColor: "#1F2937",
+            backgroundColor: "#141618",
             transform: "rotate(45deg)",
             borderRadius: 2,
           }} />
-          <p style={{ fontWeight: 700, marginBottom: 4, color: "#6BA68A", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+          <p style={{ fontWeight: 700, marginBottom: 4, color: "#C4A96B", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em" }}>
             {label}
           </p>
           <p>{tooltip}</p>

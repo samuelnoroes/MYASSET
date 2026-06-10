@@ -45,7 +45,7 @@ export default function ProfileForm({ email, defaultFullName, defaultPhone }: Pr
   return (
     <div className="space-y-5">
       {saved && (
-        <div className="flex items-center gap-3 px-4 py-3 bg-green-50 border border-green-200 rounded">
+        <div className="flex items-center gap-3 px-4 py-3 bg-emerald-500/10 border border-emerald-400/30 rounded">
           <span className="text-positive text-base select-none">✓</span>
           <p className="text-sm font-semibold text-positive">
             Alterações salvas com sucesso.

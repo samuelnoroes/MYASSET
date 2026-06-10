@@ -10,9 +10,9 @@ const MODALITY_LABELS: Record<string, string> = {
 };
 
 const MODALITY_COLORS: Record<string, string> = {
-  annual_lease: "#2D4A3E",
+  annual_lease: "#C4A96B",
   short_stay: "#3B82F6",
-  under_construction: "#F59E0B",
+  under_construction: "#D9A05B",
 };
 
 function formatCurrency(value: number | null): string {
@@ -45,7 +45,7 @@ function PropertyRow({
 }) {
   const modality = property.modality || "annual_lease";
   const isPlanta = modality === "under_construction";
-  const color = MODALITY_COLORS[modality] || "#2D4A3E";
+  const color = MODALITY_COLORS[modality] || "#C4A96B";
 
   let gaugeValue = 0;
   let gaugeLabel = "";
@@ -71,7 +71,7 @@ function PropertyRow({
       {/* Gauge */}
       <div className="shrink-0 relative" style={{ width: 48, height: 48 }}>
         <svg width="48" height="48" viewBox="0 0 48 48">
-          <circle cx="24" cy="24" r={radius} fill="none" stroke="#E5E7EB" strokeWidth="4" />
+          <circle cx="24" cy="24" r={radius} fill="none" stroke="#2A2D33" strokeWidth="4" />
           {gaugeValue > 0 && (
             <circle
               cx="24" cy="24" r={radius}
@@ -197,10 +197,10 @@ export default async function PropertiesPage() {
 
   return (
     <main className="min-h-screen bg-surface">
-      <header className="bg-header text-white shadow-sm">
+      <header className="bg-header text-white ">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/dashboard" className="font-display text-xl italic">
-            My<span style={{ color: "#6BA68A" }}>Asset</span>
+            My<span style={{ color: "#C4A96B" }}>Asset</span>
           </Link>
           <Link
             href="/dashboard"

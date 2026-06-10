@@ -48,13 +48,13 @@ SEMPRE faça web_search antes de responder. Busque:
 
 Retorne APENAS JSON puro, sem markdown:
 {
-  "m2_regional": <number ou null>,
-  "aluguel_medio_regional": <number ou null>,
-  "ticket_medio_bairro": <number ou null>,
-  "tendencia_valorizacao_12m_pct": <number ou null>,
-  "current_value_estimado": <number ou null>,
-  "fontes": ["url1", "url2"],
-  "resumo_mercado": "texto 2-3 linhas"
+ "m2_regional": <number ou null>,
+ "aluguel_medio_regional": <number ou null>,
+ "ticket_medio_bairro": <number ou null>,
+ "tendencia_valorizacao_12m_pct": <number ou null>,
+ "current_value_estimado": <number ou null>,
+ "fontes": ["url1", "url2"],
+ "resumo_mercado": "texto 2-3 linhas"
 }
 
 Valores em reais sem R$ e sem pontos de milhar. Nunca invente.`,

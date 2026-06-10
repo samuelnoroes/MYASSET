@@ -57,14 +57,14 @@ const CustomBarTooltip = ({ active, payload, label }: any) => {
       <div
         style={{
           background: "white",
-          border: "1px solid #E5E7EB",
+          border: "1px solid #2A2D33",
           borderRadius: 6,
           padding: "10px 14px",
           boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
           fontSize: 13,
         }}
       >
-        <p style={{ fontWeight: 700, color: "#1A1A1A", marginBottom: 6 }}>
+        <p style={{ fontWeight: 700, color: "#F5F3EF", marginBottom: 6 }}>
           {label}
         </p>
         {payload.map((entry: any) => (
@@ -88,14 +88,14 @@ const CustomPieTooltip = ({ active, payload }: any) => {
       <div
         style={{
           background: "white",
-          border: "1px solid #E5E7EB",
+          border: "1px solid #2A2D33",
           borderRadius: 6,
           padding: "8px 12px",
           boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
           fontSize: 13,
         }}
       >
-        <p style={{ fontWeight: 600, color: "#1A1A1A" }}>
+        <p style={{ fontWeight: 600, color: "#F5F3EF" }}>
           {payload[0].name}
         </p>
         <p style={{ color: payload[0].payload.color }}>
@@ -214,7 +214,7 @@ export default function PortfolioCharts({
                 >
                   <CartesianGrid
                     strokeDasharray="3 3"
-                    stroke="#F3F4F6"
+                    stroke="#1C1E22"
                     vertical={false}
                   />
                   <XAxis
@@ -234,11 +234,11 @@ export default function PortfolioCharts({
                   />
                   <Tooltip
                     content={<CustomBarTooltip />}
-                    cursor={{ fill: "#F9FAFB" }}
+                    cursor={{ fill: "#141618" }}
                   />
                   <Bar
                     dataKey="receitas"
-                    fill="#2D4A3E"
+                    fill="#C4A96B"
                     radius={[3, 3, 0, 0]}
                   />
                   <Bar

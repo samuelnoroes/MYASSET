@@ -16,8 +16,8 @@ async function asaasFetch(path: string, method: string, body?: object) {
   const res = await fetch(`${ASAAS_BASE_URL}${path}`, {
     method,
     headers: {
-      "access_token": ASAAS_API_KEY,
-      "Content-Type": "application/json",
+ "access_token": ASAAS_API_KEY,
+ "Content-Type": "application/json",
     },
     body: body ? JSON.stringify(body) : undefined,
   });
@@ -97,7 +97,7 @@ export async function createCheckout(formData: FormData): Promise<{ url?: string
 
     const paymentsResponse = await asaasFetch(
       `/subscriptions/${subscription.id}/payments`,
-      "GET"
+ "GET"
     );
 
     const firstPayment = paymentsResponse?.data?.[0];

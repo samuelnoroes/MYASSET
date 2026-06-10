@@ -20,7 +20,7 @@ export async function markAsPaid(formData: FormData) {
 
   if (!propertyId || amount <= 0) {
     redirect(
-      "/error?message=" + encodeURIComponent("Dados inválidos para quitação.")
+ "/error?message=" + encodeURIComponent("Dados inválidos para quitação.")
     );
   }
 
@@ -34,7 +34,7 @@ export async function markAsPaid(formData: FormData) {
 
   if (!property) {
     redirect(
-      "/error?message=" + encodeURIComponent("Imóvel não encontrado.")
+ "/error?message=" + encodeURIComponent("Imóvel não encontrado.")
     );
   }
 

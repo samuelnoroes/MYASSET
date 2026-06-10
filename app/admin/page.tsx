@@ -65,10 +65,10 @@ function calcPropertyHealth(p: PropertyRow, recentTxPropertyIds: Set<string>): {
 }
 
 function scoreColor(score: number): string {
-  if (score >= 90) return "#16A34A";
-  if (score >= 70) return "#D97706";
+  if (score >= 90) return "#5FBF8A";
+  if (score >= 70) return "#D9A05B";
   if (score >= 50) return "#EA580C";
-  return "#DC2626";
+  return "#E0686C";
 }
 
 function scoreEmoji(score: number): string {
@@ -231,13 +231,13 @@ export default async function AdminPage() {
 
   return (
     <main className="min-h-screen bg-surface">
-      <header style={{ backgroundColor: "#1B3564" }} className="text-white shadow-sm">
+      <header style={{ backgroundColor: "#141618" }} className="text-white ">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href="/dashboard" className="font-display text-xl italic">
-              My<span style={{ color: "#6BA68A" }}>Asset</span>
+              My<span style={{ color: "#C4A96B" }}>Asset</span>
             </Link>
-            <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-white/10 text-white/70">
+            <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-card/10 text-white/70">
               Admin
             </span>
           </div>
@@ -271,14 +271,14 @@ export default async function AdminPage() {
           </div>
           <div className="card">
             <p className="kpi-label">Em risco</p>
-            <p className="kpi-value" style={{ color: clientsAtRisk > 0 ? "#DC2626" : "#16A34A" }}>
+            <p className="kpi-value" style={{ color: clientsAtRisk > 0 ? "#E0686C" : "#5FBF8A" }}>
               {clientsAtRisk}
             </p>
             <p className="text-xs text-ink-3 mt-1">score &lt; 70</p>
           </div>
           <div className="card">
             <p className="kpi-label">Inativos</p>
-            <p className="kpi-value" style={{ color: clientsInactive > 0 ? "#D97706" : "#16A34A" }}>
+            <p className="kpi-value" style={{ color: clientsInactive > 0 ? "#D9A05B" : "#5FBF8A" }}>
               {clientsInactive}
             </p>
             <p className="text-xs text-ink-3 mt-1">10+ dias sem login</p>
@@ -291,10 +291,10 @@ export default async function AdminPage() {
 
           {/* KPIs de comissão */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="card bg-green-50 border border-green-200">
-              <p className="kpi-label text-green-700">Comissão este mês</p>
+            <div className="card bg-emerald-500/10 border border-emerald-400/30">
+              <p className="kpi-label text-emerald-300">Comissão este mês</p>
               <p className="kpi-value text-positive">{formatCurrency(totalPlatformFeeMonth)}</p>
-              <p className="text-xs text-green-600 mt-1">
+              <p className="text-xs text-emerald-300 mt-1">
                 de {formatCurrency(totalGrossMonth)} em aluguéis
               </p>
             </div>
@@ -362,7 +362,7 @@ export default async function AdminPage() {
                           {formatCurrency(Number(fee.net_to_owner))}
                         </td>
                         <td className="py-3 px-3">
-                          <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                          <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-300 border border-blue-400/30">
                             {fee.rent_charges?.payment_method === "PIX" ? "Pix"
                               : fee.rent_charges?.payment_method === "CREDIT_CARD" ? "Cartão"
                               : fee.rent_charges?.payment_method || "—"}
@@ -403,7 +403,7 @@ export default async function AdminPage() {
           clients.forEach(c => {
             if (c.lastLoginDays > 15 && c.alertsCount > 0) {
               adminAlerts.push({
-                icon: "🔴", color: "#DC2626",
+                icon: "🔴", color: "#E0686C",
                 text: `${c.name} não acessa há ${c.lastLoginDays} dias e tem ${c.alertsCount} ${c.alertsCount === 1 ? "alerta" : "alertas"} pendentes — risco de churn`,
                 clientId: c.id, phone: c.phone,
               });
@@ -417,7 +417,7 @@ export default async function AdminPage() {
             });
             if (c.lastLoginDays > 10 && c.lastLoginDays <= 15) {
               adminAlerts.push({
-                icon: "🟡", color: "#D97706",
+                icon: "🟡", color: "#D9A05B",
                 text: `${c.name} está sem acessar há ${c.lastLoginDays} dias`,
                 clientId: c.id, phone: c.phone,
               });
@@ -504,13 +504,13 @@ export default async function AdminPage() {
                         </span>
                       </td>
                       <td className="py-3 px-3">
-                        <span className={`text-sm ${c.lastLoginDays > 10 ? "text-negative font-semibold" : c.lastLoginDays > 5 ? "text-amber-600" : "text-ink-2"}`}>
+                        <span className={`text-sm ${c.lastLoginDays > 10 ? "text-negative font-semibold" : c.lastLoginDays > 5 ? "text-amber-300" : "text-ink-2"}`}>
                           {daysAgo(c.lastLogin)}
                         </span>
                       </td>
                       <td className="py-3 px-3">
                         {c.alertsCount > 0 ? (
-                          <span className="text-xs font-bold text-negative bg-red-50 px-2 py-1 rounded-full border border-red-200">
+                          <span className="text-xs font-bold text-negative bg-red-500/10 px-2 py-1 rounded-full border border-red-400/30">
                             {c.alertsCount}
                           </span>
                         ) : (

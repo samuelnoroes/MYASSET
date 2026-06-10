@@ -22,7 +22,7 @@ export default function OGImage() {
           fontFamily: "Georgia, serif",
           fontStyle: "italic",
           fontSize: 120,
-          color: "#2D4A3E",
+          color: "#C4A96B",
           lineHeight: 1,
           marginBottom: 32,
         }}
@@ -33,7 +33,7 @@ export default function OGImage() {
         style={{
           fontFamily: "system-ui, sans-serif",
           fontSize: 28,
-          color: "#1A1A1A",
+          color: "#F5F3EF",
           opacity: 0.55,
           textAlign: "center",
           maxWidth: 700,

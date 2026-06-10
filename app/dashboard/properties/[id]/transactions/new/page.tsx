@@ -57,7 +57,7 @@ export default async function NewTransactionPage({ params, searchParams }: Props
 
   const today = new Date().toISOString().split("T")[0];
 
-  const accentColor = isIncome ? "#2D4A3E" : isPlanta ? "#3B82F6" : "#1F2937";
+  const accentColor = isIncome ? "#C4A96B" : isPlanta ? "#3B82F6" : "#141618";
   const typeLabel = isIncome
     ? "Nova receita"
     : isPlanta
@@ -72,10 +72,10 @@ export default async function NewTransactionPage({ params, searchParams }: Props
   return (
     <main className="min-h-screen bg-surface">
       {/* Header */}
-      <header className="bg-header text-white shadow-sm">
+      <header className="bg-header text-white ">
         <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/dashboard" className="font-display text-xl italic">
-            My<span style={{ color: "#6BA68A" }}>Asset</span>
+            My<span style={{ color: "#C4A96B" }}>Asset</span>
           </Link>
           <Link
             href={`/dashboard/properties/${params.id}`}
@@ -105,9 +105,9 @@ export default async function NewTransactionPage({ params, searchParams }: Props
           <div
             className="flex items-center gap-3 px-4 py-3 rounded mb-6 text-sm font-semibold"
             style={{
-              backgroundColor: isIncome ? "#F0FDF4" : isPlanta ? "#EFF6FF" : "#F9FAFB",
+              backgroundColor: isIncome ? "#13201A" : isPlanta ? "#16202B" : "#141618",
               color: accentColor,
-              border: `1px solid ${isIncome ? "#BBF7D0" : isPlanta ? "#BFDBFE" : "#E5E7EB"}`,
+              border: `1px solid ${isIncome ? "#BBF7D0" : isPlanta ? "#BFDBFE" : "#2A2D33"}`,
             }}
           >
             <span style={{ fontSize: 18 }}>

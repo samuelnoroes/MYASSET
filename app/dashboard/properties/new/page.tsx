@@ -29,10 +29,10 @@ export default async function NewPropertyPage({
 
   return (
     <main className="min-h-screen bg-surface">
-      <header className="bg-header text-white shadow-sm">
+      <header className="bg-header text-white ">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/dashboard" className="font-display text-xl italic">
-            My<span style={{ color: "#6BA68A" }}>Asset</span>
+            My<span style={{ color: "#C4A96B" }}>Asset</span>
           </Link>
           <Link
             href="/dashboard/properties"

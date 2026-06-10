@@ -141,9 +141,9 @@ export default async function DashboardPage() {
   const totalForChart = annualValue + shortStayValue + constructionValue || 1;
   const pct = (v: number) => totalForChart > 0 ? `${Math.round((v / totalForChart) * 100)}%` : "0%";
   const modalityData = [
-    { name: "Locação anual", value: annualValue, color: "#2D4A3E", percentage: pct(annualValue) },
+    { name: "Locação anual", value: annualValue, color: "#C4A96B", percentage: pct(annualValue) },
     { name: "Temporada / Airbnb", value: shortStayValue, color: "#3B82F6", percentage: pct(shortStayValue) },
-    { name: "Na planta", value: constructionValue, color: "#F59E0B", percentage: pct(constructionValue) },
+    { name: "Na planta", value: constructionValue, color: "#D9A05B", percentage: pct(constructionValue) },
   ];
 
   const today = now.getDate();
@@ -222,7 +222,7 @@ export default async function DashboardPage() {
     <main className="min-h-screen bg-surface">
 
       {/* Tabs */}
-      <div className="bg-white border-b border-border">
+      <div className="bg-card border-b border-border">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex gap-8">
             <span className="py-4 text-sm font-bold text-forest border-b-2 border-forest cursor-default">Posição</span>
@@ -233,11 +233,11 @@ export default async function DashboardPage() {
 
       {/* ── BANNER DE TRIAL ───────────────────────────── */}
       {showTrialBanner && (
-        <div className={`border-b px-6 py-3 ${showUrgentBanner ? "bg-red-50 border-red-200" : "bg-amber-50 border-amber-200"}`}>
+        <div className={`border-b px-6 py-3 ${showUrgentBanner ? "bg-red-500/10 border-red-400/30" : "bg-amber-500/10 border-amber-400/50/30"}`}>
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <span className="text-lg">{showUrgentBanner ? "🔴" : "🟡"}</span>
-              <p className={`text-sm font-semibold ${showUrgentBanner ? "text-red-700" : "text-amber-700"}`}>
+              <p className={`text-sm font-semibold ${showUrgentBanner ? "text-red-300" : "text-amber-300"}`}>
                 {showUrgentBanner
                   ? `Seu trial expira em ${daysLeft} ${daysLeft === 1 ? "dia" : "dias"}! Escolha um plano para não perder o acesso.`
                   : `Seu trial gratuito expira em ${daysLeft} dias. Escolha um plano para continuar usando o MyAsset.`
@@ -247,7 +247,7 @@ export default async function DashboardPage() {
             <Link
               href="/dashboard/plans"
               className="shrink-0 px-4 py-2 rounded text-white text-xs font-bold uppercase tracking-wider transition-colors"
-              style={{ backgroundColor: showUrgentBanner ? "#DC2626" : "#D97706" }}
+              style={{ backgroundColor: showUrgentBanner ? "#E0686C" : "#D9A05B" }}
             >
               Ver planos
             </Link>
@@ -265,13 +265,13 @@ export default async function DashboardPage() {
         {installmentAlerts.length > 0 && (
           <div className="space-y-2">
             {installmentAlerts.map((alert, i) => (
-              <div key={i} className={`flex items-center justify-between px-5 py-4 rounded-card border ${alert.daysUntil < 0 ? "border-red-200 bg-red-50" : alert.alertType === "balloon" ? "border-blue-200 bg-blue-50" : "border-amber-200 bg-amber-50"}`}>
+              <div key={i} className={`flex items-center justify-between px-5 py-4 rounded-card border ${alert.daysUntil < 0 ? "border-red-400/30 bg-red-500/10" : alert.alertType === "balloon" ? "border-blue-400/30 bg-blue-500/10" : "border-amber-400/50/30 bg-amber-500/10"}`}>
                 <div className="flex items-center gap-4 flex-1 min-w-0">
                   <span className="text-lg select-none shrink-0">
                     {alert.daysUntil < 0 ? "🔴" : alert.alertType === "balloon" ? "🏗️" : "🟡"}
                   </span>
                   <div className="min-w-0">
-                    <p className={`text-xs font-bold uppercase tracking-wider ${alert.daysUntil < 0 ? "text-red-700" : alert.alertType === "balloon" ? "text-blue-700" : "text-amber-700"}`}>
+                    <p className={`text-xs font-bold uppercase tracking-wider ${alert.daysUntil < 0 ? "text-red-300" : alert.alertType === "balloon" ? "text-blue-300" : "text-amber-300"}`}>
                       {alert.alertType === "balloon" ? "Balão / parcela especial" : "Parcela a pagar"} — {alert.dateLabel}
                     </p>
                     <p className="text-sm text-ink mt-0.5 truncate">
@@ -283,7 +283,7 @@ export default async function DashboardPage() {
                 <a
                   href={`/dashboard/properties/${alert.propertyId}/transactions/new?type=expense`}
                   className="text-xs font-bold uppercase tracking-wider px-3 py-2 rounded transition-colors shrink-0 ml-4 text-white"
-                  style={{ backgroundColor: alert.daysUntil < 0 ? "#DC2626" : alert.alertType === "balloon" ? "#3B82F6" : "#2D4A3E" }}
+                  style={{ backgroundColor: alert.daysUntil < 0 ? "#E0686C" : alert.alertType === "balloon" ? "#3B82F6" : "#C4A96B" }}
                 >
                   Registrar
                 </a>
@@ -353,9 +353,9 @@ export default async function DashboardPage() {
                   const modality = p.modality || "annual_lease";
                   const isPlanta = modality === "under_construction";
                   const isAirbnb = modality === "short_stay";
-                  const modalityColors: Record<string, string> = { annual_lease: "#2D4A3E", short_stay: "#3B82F6", under_construction: "#F59E0B" };
+                  const modalityColors: Record<string, string> = { annual_lease: "#C4A96B", short_stay: "#3B82F6", under_construction: "#D9A05B" };
                   const modalityLabels: Record<string, string> = { annual_lease: "Locação anual", short_stay: "Temporada", under_construction: "Na planta" };
-                  const color = modalityColors[modality] || "#2D4A3E";
+                  const color = modalityColors[modality] || "#C4A96B";
 
                   let gaugeValue = 0, gaugeLabel = "";
                   if (isPlanta && p.total_investment && p.acquisition_value) {
@@ -374,7 +374,7 @@ export default async function DashboardPage() {
                     <div key={p.id} className="flex items-center gap-5 py-4">
                       <div className="shrink-0 relative" style={{ width: 52, height: 52 }}>
                         <svg width="52" height="52" viewBox="0 0 52 52">
-                          <circle cx="26" cy="26" r={radius} fill="none" stroke="#E5E7EB" strokeWidth="5" />
+                          <circle cx="26" cy="26" r={radius} fill="none" stroke="#2A2D33" strokeWidth="5" />
                           {gaugeValue > 0 && <circle cx="26" cy="26" r={radius} fill="none" stroke={color} strokeWidth="5" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} strokeLinecap="round" transform="rotate(-90 26 26)" />}
                         </svg>
                         <div className="absolute inset-0 flex items-center justify-center">
@@ -385,7 +385,7 @@ export default async function DashboardPage() {
                         <div className="flex items-center gap-2 mb-0.5">
                           <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color }}>{modalityLabels[modality]}</span>
                           {p.available_for_sale && (
-                            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full border border-blue-200">Disponível</span>
+                            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-blue-500/10 text-blue-300 rounded-full border border-blue-400/30">Disponível</span>
                           )}
                         </div>
                         <div className="flex items-center gap-2">
@@ -393,7 +393,7 @@ export default async function DashboardPage() {
                           {modality === "annual_lease" && (
                             <span
                               title={paidThisMonth.has(p.id) ? "Aluguel recebido este mês" : "Aluguel pendente este mês"}
-                              className={`shrink-0 text-xs font-bold px-1.5 py-0.5 rounded-full border ${paidThisMonth.has(p.id) ? "bg-green-50 text-green-700 border-green-200" : "bg-amber-50 text-amber-700 border-amber-200"}`}
+                              className={`shrink-0 text-xs font-bold px-1.5 py-0.5 rounded-full border ${paidThisMonth.has(p.id) ? "bg-emerald-500/10 text-emerald-300 border-emerald-400/30" : "bg-amber-500/10 text-amber-300 border-amber-400/50/30"}`}
                             >
                               {paidThisMonth.has(p.id) ? "✓" : "○"}
                             </span>
@@ -402,7 +402,7 @@ export default async function DashboardPage() {
                             <Link
                               href={`/dashboard/properties/${p.id}`}
                               title="Ativar cobrança automática"
-                              className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full border border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
+                              className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full border border-blue-400/30 bg-blue-500/10 text-blue-300 hover:bg-blue-500/20 transition-colors"
                             >
                               ⚡ Ativar cobrança
                             </Link>
@@ -410,7 +410,7 @@ export default async function DashboardPage() {
                           {modality === "annual_lease" && p.rent_collection_enabled && (
                             <span
                               title="Cobrança automática ativa"
-                              className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full border border-green-200 bg-green-50 text-green-700"
+                              className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-400/30 bg-emerald-500/10 text-emerald-300"
                             >
                               🏦 Cobrança ativa
                             </span>

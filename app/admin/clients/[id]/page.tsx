@@ -40,7 +40,7 @@ const REQUIRED_FIELDS: Record<string, MissingField[]> = {
   ],
 };
 
-function scoreColor(s: number) { return s >= 90 ? "#16A34A" : s >= 70 ? "#D97706" : s >= 50 ? "#EA580C" : "#DC2626"; }
+function scoreColor(s: number) { return s >= 90 ? "#5FBF8A" : s >= 70 ? "#D9A05B" : s >= 50 ? "#EA580C" : "#E0686C"; }
 function scoreEmoji(s: number) { return s >= 90 ? "🟢" : s >= 70 ? "🟡" : s >= 50 ? "🟠" : "🔴"; }
 function formatCurrency(v: number) { return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v); }
 function daysAgo(d: string | null): string { if (!d) return "Nunca"; const diff = Math.floor((Date.now() - new Date(d).getTime()) / 86400000); return diff === 0 ? "Hoje" : diff === 1 ? "Ontem" : `${diff} dias atrás`; }
@@ -109,13 +109,13 @@ export default async function AdminClientDetailPage({ params }: Props) {
 
   return (
     <main className="min-h-screen bg-surface">
-      <header style={{ backgroundColor: "#1B3564" }} className="text-white shadow-sm">
+      <header style={{ backgroundColor: "#141618" }} className="text-white ">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href="/admin" className="font-display text-xl italic">
-              My<span style={{ color: "#6BA68A" }}>Asset</span>
+              My<span style={{ color: "#C4A96B" }}>Asset</span>
             </Link>
-            <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-white/10 text-white/70">Admin</span>
+            <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-card/10 text-white/70">Admin</span>
           </div>
           <Link href="/admin" className="text-xs text-white/50 hover:text-white transition-colors uppercase tracking-wider">
             ← Clientes
@@ -179,7 +179,7 @@ export default async function AdminClientDetailPage({ params }: Props) {
                         {MODALITY_LABELS[p.modality]}
                       </span>
                       {!p.hasActivity && (
-                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-red-50 text-red-600 rounded-full border border-red-200">
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-red-500/10 text-red-300 rounded-full border border-red-400/30">
                           Sem atividade
                         </span>
                       )}
@@ -194,8 +194,8 @@ export default async function AdminClientDetailPage({ params }: Props) {
                 </div>
 
                 {p.missing.length > 0 && (
-                  <div className="bg-red-50 border border-red-200 rounded px-4 py-3">
-                    <p className="text-xs font-bold uppercase tracking-wider text-red-700 mb-2">
+                  <div className="bg-red-500/10 border border-red-400/30 rounded px-4 py-3">
+                    <p className="text-xs font-bold uppercase tracking-wider text-red-300 mb-2">
                       {p.missing.length} {p.missing.length === 1 ? "campo faltando" : "campos faltando"}
                     </p>
                     <div className="space-y-1">
@@ -203,8 +203,8 @@ export default async function AdminClientDetailPage({ params }: Props) {
                         <div key={m.field} className="flex items-start gap-2">
                           <span className="text-red-400 text-xs mt-0.5">✕</span>
                           <div>
-                            <span className="text-sm font-semibold text-red-700">{m.label}</span>
-                            <span className="text-xs text-red-600 ml-2">→ {m.impact}</span>
+                            <span className="text-sm font-semibold text-red-300">{m.label}</span>
+                            <span className="text-xs text-red-300 ml-2">→ {m.impact}</span>
                           </div>
                         </div>
                       ))}

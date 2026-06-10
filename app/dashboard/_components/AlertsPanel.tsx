@@ -52,10 +52,10 @@ export default function AlertsPanel({ alerts, onMarkPaid }: Props) {
   if (visible.length === 0) return null;
 
   const colorMap = {
-    danger:      { border: "border-red-200",    bg: "bg-red-50",    text: "text-red-700",    icon: "🔴" },
-    warning:     { border: "border-amber-200",  bg: "bg-amber-50",  text: "text-amber-700",  icon: "🟡" },
-    installment: { border: "border-amber-200",  bg: "bg-amber-50",  text: "text-amber-700",  icon: "🟡" },
-    balloon:     { border: "border-blue-200",   bg: "bg-blue-50",   text: "text-blue-700",   icon: "🏗️" },
+    danger:      { border: "border-red-400/30",    bg: "bg-red-500/10",    text: "text-red-300",    icon: "🔴" },
+    warning:     { border: "border-amber-400/50/30",  bg: "bg-amber-500/10",  text: "text-amber-300",  icon: "🟡" },
+    installment: { border: "border-amber-400/50/30",  bg: "bg-amber-500/10",  text: "text-amber-300",  icon: "🟡" },
+    balloon:     { border: "border-blue-400/30",   bg: "bg-blue-500/10",   text: "text-blue-300",   icon: "🏗️" },
   };
 
   return (
@@ -112,7 +112,7 @@ export default function AlertsPanel({ alerts, onMarkPaid }: Props) {
                 <Link
                   href={`/dashboard/properties/${alert.propertyId}/transactions/new?type=expense`}
                   className="px-4 py-2 text-white text-xs font-bold uppercase tracking-wider rounded transition-colors"
-                  style={{ backgroundColor: alert.type === "danger" ? "#DC2626" : alert.type === "balloon" ? "#3B82F6" : "#2D4A3E" }}
+                  style={{ backgroundColor: alert.type === "danger" ? "#E0686C" : alert.type === "balloon" ? "#3B82F6" : "#C4A96B" }}
                 >
                   Registrar
                 </Link>

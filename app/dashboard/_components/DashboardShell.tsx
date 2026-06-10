@@ -26,15 +26,15 @@ const TYPE_CONFIG: Record<
   string,
   { label: string; color: string; bg: string; icon: string; btnBg: string }
 > = {
-  opportunity: { label: "Oportunidade", color: "#D97706", bg: "#FFFBEB", icon: "💡", btnBg: "#D97706" },
-  optimization: { label: "Otimização",  color: "#2D4A3E", bg: "#F0FDF4", icon: "📈", btnBg: "#2D4A3E" },
-  news:         { label: "Mercado",     color: "#3B82F6", bg: "#EFF6FF", icon: "📰", btnBg: "#3B82F6" },
+  opportunity: { label: "Oportunidade", color: "#D9A05B", bg: "#231C10", icon: "💡", btnBg: "#D9A05B" },
+  optimization: { label: "Otimização",  color: "#C4A96B", bg: "#13201A", icon: "📈", btnBg: "#C4A96B" },
+  news:         { label: "Mercado",     color: "#3B82F6", bg: "#16202B", icon: "📰", btnBg: "#3B82F6" },
 };
 
 const PLAN_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  trial:    { label: "Trial",    color: "#D97706", bg: "#FFFBEB" },
-  essencial: { label: "Essencial", color: "#3B82F6", bg: "#EFF6FF" },
-  pro:      { label: "Pro",      color: "#16A34A", bg: "#F0FDF4" },
+  trial:    { label: "Trial",    color: "#D9A05B", bg: "#231C10" },
+  essencial: { label: "Essencial", color: "#3B82F6", bg: "#16202B" },
+  pro:      { label: "Pro",      color: "#5FBF8A", bg: "#13201A" },
 };
 
 const NAV_ITEMS = [
@@ -145,13 +145,14 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   const isPlanActive = pathname === "/dashboard/plans";
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "#F2F2F0" }}>
+    <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "#0C0D0F" }}>
 
       <aside
         style={{
           width: sidebarWidth,
           minWidth: sidebarWidth,
-          backgroundColor: "#1F2937",
+          backgroundColor: "#141618",
+          borderRight: "1px solid #2A2D33",
           display: "flex",
           flexDirection: "column",
           transition: "width 0.25s ease, min-width 0.25s ease",
@@ -177,7 +178,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           {sidebarOpen && (
             <Link href="/dashboard" style={{ textDecoration: "none" }}>
               <span style={{ fontFamily: "var(--font-display, serif)", fontSize: 22, fontStyle: "italic", fontWeight: 700, color: "#fff", letterSpacing: "-0.5px" }}>
-                My<span style={{ color: "#6BA68A" }}>Asset</span>
+                My<span style={{ color: "#C4A96B" }}>Asset</span>
               </span>
             </Link>
           )}
@@ -227,8 +228,8 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                   gap: 12,
                   padding: sidebarOpen ? "10px 20px" : "10px 0",
                   justifyContent: sidebarOpen ? "flex-start" : "center",
-                  backgroundColor: isActive ? "rgba(109,166,138,0.15)" : "transparent",
-                  borderLeft: isActive ? "3px solid #6BA68A" : "3px solid transparent",
+                  backgroundColor: isActive ? "rgba(196,169,107,0.08)" : "transparent",
+                  borderLeft: isActive ? "3px solid #C4A96B" : "3px solid transparent",
                   textDecoration: "none",
                   transition: "background 0.15s",
                   whiteSpace: "nowrap",
@@ -247,7 +248,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                       <span style={{
                         fontSize: 9, fontWeight: 800, letterSpacing: "0.06em",
                         textTransform: "uppercase", padding: "2px 6px",
-                        backgroundColor: "#D97706", color: "#fff",
+                        backgroundColor: "#C4A96B", color: "#0C0D0F",
                         borderRadius: 999, flexShrink: 0,
                       }}>
                         {item.badge}
@@ -270,7 +271,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
               padding: sidebarOpen ? "10px 20px" : "10px 0",
               justifyContent: sidebarOpen ? "flex-start" : "center",
               backgroundColor: isPlanActive ? "rgba(109,166,138,0.15)" : "transparent",
-              borderLeft: isPlanActive ? "3px solid #6BA68A" : "3px solid transparent",
+              borderLeft: isPlanActive ? "3px solid #C4A96B" : "3px solid transparent",
               textDecoration: "none",
               transition: "background 0.15s",
               whiteSpace: "nowrap",
@@ -359,7 +360,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                 </span>
                 {visibleNotifs.length > 0 && (
                   <span style={{
-                    fontSize: 10, fontWeight: 700, backgroundColor: "#D97706",
+                    fontSize: 10, fontWeight: 700, backgroundColor: "#D9A05B",
                     color: "#fff", borderRadius: 999, padding: "1px 6px", flexShrink: 0,
                   }}>
                     {visibleNotifs.length}
@@ -392,7 +393,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
             >
               <span style={{ fontSize: 18, flexShrink: 0, width: 24, textAlign: "center" }}>🛡️</span>
               {sidebarOpen && (
-                <span style={{ fontSize: 14, fontWeight: 700, color: "#6BA68A" }}>Admin</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: "#C4A96B" }}>Admin</span>
               )}
             </Link>
           </div>
@@ -449,7 +450,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           right: 0,
           height: "100vh",
           backgroundColor: "#fff",
-          borderLeft: "1px solid #E5E7EB",
+          borderLeft: "1px solid #2A2D33",
           display: "flex",
           flexDirection: "column",
           transform: panelOpen ? "translateX(0)" : `translateX(${PANEL_WIDTH}px)`,
@@ -460,7 +461,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
       >
         <div style={{
           padding: "20px 16px 14px",
-          borderBottom: "1px solid #F3F4F6",
+          borderBottom: "1px solid #1C1E22",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -470,7 +471,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
             <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "#9CA3AF", marginBottom: 2 }}>
               A5 Asset
             </p>
-            <p style={{ fontSize: 14, fontWeight: 700, color: "#1A1A1A" }}>Informativos</p>
+            <p style={{ fontSize: 14, fontWeight: 700, color: "#F5F3EF" }}>Informativos</p>
           </div>
           <button
             onClick={() => togglePanel(false)}
@@ -525,7 +526,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                     </div>
                     <span style={{ fontSize: 10, color: "#9CA3AF" }}>{formatDate(n.created_at)}</span>
                   </div>
-                  <p style={{ fontSize: 13, fontWeight: 600, color: "#1A1A1A", lineHeight: 1.4, marginBottom: 4 }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: "#F5F3EF", lineHeight: 1.4, marginBottom: 4 }}>
                     {n.title}
                   </p>
                   <p style={{ fontSize: 12, color: "#6B7280", lineHeight: 1.6, marginBottom: n.contact_label ? 10 : 0 }}>
@@ -556,7 +557,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           )}
         </div>
 
-        <div style={{ padding: "12px 16px", borderTop: "1px solid #F3F4F6", flexShrink: 0 }}>
+        <div style={{ padding: "12px 16px", borderTop: "1px solid #1C1E22", flexShrink: 0 }}>
           <a
             href={`https://wa.me/${WA_PHONE}?text=${WA_MESSAGE}`}
             target="_blank"
@@ -564,15 +565,15 @@ export default function DashboardShell({ children }: { children: React.ReactNode
             style={{
               display: "flex", alignItems: "center", gap: 8,
               padding: "10px 14px", borderRadius: 8,
-              backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0",
+              backgroundColor: "#13201A", border: "1px solid #BBF7D0",
               textDecoration: "none",
             }}
           >
-            <svg width="18" height="18" viewBox="0 0 32 32" fill="#16A34A">
+            <svg width="18" height="18" viewBox="0 0 32 32" fill="#5FBF8A">
               <path d="M16 2C8.268 2 2 8.268 2 16c0 2.478.675 4.796 1.851 6.782L2 30l7.438-1.82A13.93 13.93 0 0016 30c7.732 0 14-6.268 14-14S23.732 2 16 2zm6.29 19.927c-.344-.172-2.035-1.003-2.35-1.118-.316-.115-.546-.172-.776.172-.23.344-.888 1.118-1.088 1.348-.2.23-.4.258-.744.086-.344-.172-1.454-.535-2.768-1.703-1.023-.912-1.714-2.037-1.914-2.381-.2-.344-.022-.53.15-.701.155-.154.344-.4.516-.601.172-.2.23-.344.344-.573.115-.23.057-.43-.028-.601-.086-.172-.776-1.872-1.062-2.564-.28-.672-.565-.58-.776-.59l-.66-.012c-.23 0-.601.086-.916.43-.315.344-1.204 1.175-1.204 2.866 0 1.69 1.233 3.324 1.405 3.553.172.23 2.428 3.71 5.882 5.203.822.355 1.464.567 1.965.726.826.262 1.578.225 2.173.137.663-.098 2.035-.832 2.322-1.635.287-.803.287-1.49.2-1.635-.086-.144-.315-.23-.659-.4z"/>
             </svg>
             <div>
-              <p style={{ fontSize: 12, fontWeight: 700, color: "#16A34A", lineHeight: 1 }}>Suporte A5</p>
+              <p style={{ fontSize: 12, fontWeight: 700, color: "#5FBF8A", lineHeight: 1 }}>Suporte A5</p>
               <p style={{ fontSize: 11, color: "#6B7280", lineHeight: 1.4, marginTop: 2 }}>Fale com a equipe</p>
             </div>
           </a>
@@ -585,7 +586,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           title="Abrir informativos"
           style={{
             position: "fixed", right: 0, top: "50%", transform: "translateY(-50%)",
-            backgroundColor: "#1F2937", color: "#fff", border: "none",
+            backgroundColor: "#141618", color: "#fff", border: "none",
             borderRadius: "6px 0 0 6px", padding: "12px 8px", cursor: "pointer",
             zIndex: 41, writingMode: "vertical-rl", fontSize: 11, fontWeight: 700,
             letterSpacing: "0.1em", textTransform: "uppercase",

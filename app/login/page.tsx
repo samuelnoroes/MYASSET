@@ -10,16 +10,16 @@ export default function LoginPage() {
         <div className="text-center mb-10">
           <Link href="/">
             <h1 className="font-display text-4xl italic text-white">
-              My<span style={{ color: "#6BA68A" }}>Asset</span>
+              My<span style={{ color: "#C4A96B" }}>Asset</span>
             </h1>
           </Link>
-          <p className="text-xs tracking-[0.3em] uppercase text-gray-500 mt-3">
-            Acesse sua conta
+          <p className="font-mono text-[10px] tracking-[0.22em] uppercase text-forest mt-3">
+            Acesso
           </p>
         </div>
 
         {/* Card de login */}
-        <div className="bg-card rounded-card shadow-card-md p-8">
+        <div className="bg-card border border-border rounded-card p-8">
           {/* Google */}
           <div className="mb-6">
             <GoogleLoginButton />
@@ -39,7 +39,7 @@ export default function LoginPage() {
             <div>
               <label
                 htmlFor="email"
-                className="block text-xs font-semibold uppercase tracking-wider text-ink-2 mb-2"
+                className="block font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-ink-3 mb-2"
               >
                 E-mail
               </label>
@@ -49,7 +49,7 @@ export default function LoginPage() {
                 type="email"
                 required
                 autoComplete="email"
-                className="w-full px-4 py-3 bg-surface border border-border rounded focus:border-forest focus:outline-none transition-colors text-ink text-sm"
+                className="w-full px-4 py-3.5 bg-card-2 border border-border rounded-lg focus:border-moss focus:outline-none transition-colors text-ink text-[15px] font-light"
               />
             </div>
 
@@ -57,13 +57,13 @@ export default function LoginPage() {
               <div className="flex items-center justify-between mb-2">
                 <label
                   htmlFor="password"
-                  className="text-xs font-semibold uppercase tracking-wider text-ink-2"
+                  className="font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-ink-3"
                 >
                   Senha
                 </label>
                 <Link
                   href="/forgot-password"
-                  className="text-xs text-ink-3 hover:text-forest transition-colors"
+                  className="text-xs text-forest hover:text-forest-light transition-colors"
                 >
                   Esqueci minha senha
                 </Link>
@@ -75,20 +75,20 @@ export default function LoginPage() {
                 required
                 minLength={6}
                 autoComplete="current-password"
-                className="w-full px-4 py-3 bg-surface border border-border rounded focus:border-forest focus:outline-none transition-colors text-ink text-sm"
+                className="w-full px-4 py-3.5 bg-card-2 border border-border rounded-lg focus:border-moss focus:outline-none transition-colors text-ink text-[15px] font-light"
               />
             </div>
 
             <div className="flex flex-col gap-3 pt-2">
               <button
                 formAction={login}
-                className="w-full py-3 bg-forest text-white font-bold tracking-wider uppercase text-sm hover:bg-forest-light transition-colors rounded"
+                className="w-full py-3.5 bg-forest text-[#0C0D0F] font-semibold tracking-[0.06em] uppercase text-[13px] hover:bg-forest-light transition-colors rounded-lg"
               >
                 Entrar
               </button>
               <button
                 formAction={signup}
-                className="w-full py-3 bg-surface border border-border text-ink font-bold tracking-wider uppercase text-sm hover:border-forest hover:text-forest transition-colors rounded"
+                className="w-full py-3.5 bg-transparent border border-border text-ink-2 font-medium tracking-[0.04em] text-[13px] hover:border-moss hover:text-ink transition-colors rounded-lg"
               >
                 Criar conta
               </button>

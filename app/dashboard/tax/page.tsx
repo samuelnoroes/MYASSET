@@ -203,10 +203,10 @@ export default async function TaxPage({
 
   return (
     <main className="min-h-screen bg-surface">
-      <header className="bg-header text-white shadow-sm">
+      <header className="bg-header text-white ">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/dashboard" className="font-display text-xl italic">
-            My<span style={{ color: "#6BA68A" }}>Asset</span>
+            My<span style={{ color: "#C4A96B" }}>Asset</span>
           </Link>
           <div className="flex items-center gap-6">
             <Link href="/dashboard/tax/profile" className="text-xs text-gray-400 hover:text-white transition-colors uppercase tracking-wider">
@@ -242,7 +242,7 @@ export default async function TaxPage({
               <Link
                 key={y}
                 href={`/dashboard/tax?year=${y}`}
-                className={`px-4 py-2 text-sm font-bold rounded transition-colors ${selectedYear === y ? "bg-forest text-white" : "bg-white border border-border text-ink hover:border-forest hover:text-forest"}`}
+                className={`px-4 py-2 text-sm font-bold rounded transition-colors ${selectedYear === y ? "bg-forest text-white" : "bg-card border border-border text-ink hover:border-forest hover:text-forest"}`}
               >
                 {y}
               </Link>
@@ -280,9 +280,9 @@ export default async function TaxPage({
 
         {/* ── AVISO PARA PJ ─────────────────────────────────── */}
         {!isPF && (
-          <div className="card border-l-4 border-amber-400 bg-amber-50">
-            <p className="text-sm font-bold text-amber-700 mb-1">Atenção — Pessoa Jurídica</p>
-            <p className="text-sm text-amber-700">
+          <div className="card border-l-4 border-amber-400/50 bg-amber-500/10">
+            <p className="text-sm font-bold text-amber-300 mb-1">Atenção — Pessoa Jurídica</p>
+            <p className="text-sm text-amber-300">
               A tributação de PJ sobre rendimentos imobiliários varia conforme o regime (Simples Nacional, Lucro Presumido ou Lucro Real). Os valores acima são uma estimativa base. Consulte um especialista para calcular corretamente.
             </p>
           </div>
@@ -410,7 +410,7 @@ export default async function TaxPage({
         {totalCarneLeao > 0 && (
           <div
             className="rounded-card p-6 text-white"
-            style={{ background: "linear-gradient(135deg, #1B3564 0%, #2D4A3E 100%)" }}
+            style={{ background: "linear-gradient(135deg, #141618 0%, #1C1E22 100%)" }}
           >
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
               <div>

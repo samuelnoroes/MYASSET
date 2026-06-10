@@ -26,7 +26,7 @@ export default function GoogleLoginButton() {
     <button
       onClick={handleClick}
       disabled={loading}
-      className="w-full py-3 bg-white border border-ink/20 text-ink font-medium tracking-wider uppercase text-xs hover:border-forest hover:text-forest transition-colors flex items-center justify-center gap-3"
+      className="w-full py-3.5 bg-transparent border border-border rounded-lg text-ink-2 font-medium text-[13px] hover:border-moss hover:text-ink transition-colors flex items-center justify-center gap-3"
     >
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
         <path

@@ -4,7 +4,7 @@ type Props = {
 };
 
 export default function A5Logo({ light = false, height = 28 }: Props) {
-  const color = light ? "#FFFFFF" : "#1B3564";
+  const color = light ? "#FFFFFF" : "#141618";
   const width = Math.round(height * 1.65);
 
   return (

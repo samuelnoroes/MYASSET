@@ -98,7 +98,7 @@ export default function MarketDataCard({
       </div>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-negative">
+        <div className="mb-4 p-3 bg-red-500/10 border border-red-400/30 rounded-lg text-sm text-negative">
           {error}
         </div>
       )}

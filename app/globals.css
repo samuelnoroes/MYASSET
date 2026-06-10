@@ -10,38 +10,44 @@ body {
 body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #F2F2F0;
-  color: #1A1A1A;
+  background-color: #0C0D0F;
+  color: #F5F3EF;
   font-size: 15px;
 }
+
+::selection { background: rgba(196, 169, 107, 0.25); }
 
 @layer components {
   /* Label de seção estilo XP — com linha colorida embaixo */
   .section-title {
-    @apply text-xs font-bold uppercase tracking-widest text-ink-2;
+    @apply font-mono text-[10px] font-medium uppercase text-ink-2;
+    letter-spacing: 0.18em;
     display: inline-block;
     padding-bottom: 6px;
-    border-bottom: 2px solid #2D4A3E;
+    border-bottom: 1px solid #8B7240;
     margin-bottom: 20px;
   }
 
   /* Card padrão */
   .card {
-    @apply bg-card rounded-card shadow-card p-6;
+    @apply bg-card rounded-card p-6 border border-border;
   }
 
   /* KPI label */
   .kpi-label {
-    @apply text-xs uppercase tracking-widest text-ink-3 font-semibold mb-1;
+    @apply font-mono text-[10px] uppercase text-ink-3 font-medium mb-1;
+    letter-spacing: 0.14em;
   }
 
   /* KPI valor */
   .kpi-value {
-    @apply text-2xl font-bold text-ink;
+    @apply font-mono text-2xl font-medium text-ink;
+    letter-spacing: -0.02em;
   }
 
   /* KPI valor grande */
   .kpi-value-lg {
-    @apply text-3xl font-bold text-ink;
+    @apply font-mono text-3xl font-medium text-ink;
+    letter-spacing: -0.02em;
   }
 }

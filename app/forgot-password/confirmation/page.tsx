@@ -7,12 +7,12 @@ export default function ForgotPasswordConfirmationPage() {
         <div className="text-center mb-10">
           <Link href="/login">
             <h1 className="font-display text-4xl italic text-white">
-              My<span style={{ color: "#6BA68A" }}>Asset</span>
+              My<span style={{ color: "#C4A96B" }}>Asset</span>
             </h1>
           </Link>
         </div>
 
-        <div className="bg-card rounded-card shadow-card-md p-8 text-center">
+        <div className="bg-card rounded-card  p-8 text-center">
           <p className="text-4xl mb-5">📧</p>
           <h2 className="text-lg font-bold text-ink mb-3">
             Verifique seu e-mail

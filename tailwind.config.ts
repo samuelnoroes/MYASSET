@@ -8,44 +8,47 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        display: ["var(--font-display)", "serif"],
-        sans: ["var(--font-sans)", "sans-serif"],
+        display: ["var(--font-display)", "Georgia", "serif"],
+        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        mono: ["var(--font-mono)", "monospace"],
       },
       colors: {
-        // Fundos
-        surface: "#F2F2F0",
-        card: "#FFFFFF",
+        // Fundos — private banking dark
+        surface: "#0C0D0F",
+        card: "#141618",
+        "card-2": "#1C1E22",
 
-        // Identidade MyAsset
-        forest: "#2D4A3E",
-        "forest-light": "#3D6B58",
-        moss: "#8FA398",
+        // Identidade MyAsset — acento dourado
+        forest: "#C4A96B",
+        "forest-light": "#D4B97A",
+        moss: "#8B7240",
 
         // Texto
-        ink: "#1A1A1A",
-        "ink-2": "#4B5563",
-        "ink-3": "#9CA3AF",
+        ink: "#F5F3EF",
+        "ink-2": "#9BA3AF",
+        "ink-3": "#6B7280",
+        muted: "#4A4F5A",
 
         // Financeiro
-        positive: "#16A34A",
-        negative: "#DC2626",
-        warning: "#D97706",
+        positive: "#5FBF8A",
+        negative: "#E0686C",
+        warning: "#D9A05B",
 
-        // Header escuro
-        header: "#1F2937",
+        // Header
+        header: "#0C0D0F",
 
         // Bordas
-        border: "#E5E7EB",
+        border: "#2A2D33",
 
         // Alertas
-        cream: "#F2F2F0",
+        cream: "#141618",
       },
       boxShadow: {
-        card: "0 1px 3px 0 rgba(0,0,0,0.07), 0 1px 2px -1px rgba(0,0,0,0.04)",
-        "card-md": "0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.04)",
+        card: "0 1px 0 0 rgba(0,0,0,0.4)",
+        "card-md": "0 12px 32px -12px rgba(0,0,0,0.6)",
       },
       borderRadius: {
-        card: "8px",
+        card: "12px",
       },
     },
   },

@@ -5,10 +5,10 @@ export default function TermosPage() {
     <main className="min-h-screen bg-surface">
 
       {/* Header */}
-      <header style={{ backgroundColor: "#1B3564" }} className="text-white py-6 px-6">
+      <header style={{ backgroundColor: "#141618" }} className="text-white py-6 px-6">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <Link href="/" className="font-display text-2xl italic font-bold">
-            My<span style={{ color: "#6BA68A" }}>Asset</span>
+            My<span style={{ color: "#C4A96B" }}>Asset</span>
           </Link>
           <span className="text-xs text-white/50 uppercase tracking-widest">Documentos Legais</span>
         </div>
@@ -223,7 +223,7 @@ export default function TermosPage() {
             <div>
               <h3 className="font-bold text-ink uppercase tracking-wider text-xs mb-2">9. Contato e Autoridade</h3>
               <p>Encarregado (DPO): <span className="font-semibold">[A PREENCHER — EMAIL]</span></p>
-              <p>Autoridade Nacional de Proteção de Dados (ANPD): <a href="https://www.gov.br/anpd" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">www.gov.br/anpd</a></p>
+              <p>Autoridade Nacional de Proteção de Dados (ANPD): <a href="https://www.gov.br/anpd" target="_blank" rel="noopener noreferrer" className="text-blue-300 underline">www.gov.br/anpd</a></p>
             </div>
 
           </div>
@@ -296,20 +296,20 @@ export default function TermosPage() {
         </section>
 
         {/* Aceite digital */}
-        <div className="card bg-green-50 border border-green-200 text-center">
-          <p className="text-sm font-bold text-green-800 mb-2">✅ Aceite Digital</p>
-          <p className="text-sm text-green-700">
+        <div className="card bg-emerald-500/10 border border-emerald-400/30 text-center">
+          <p className="text-sm font-bold text-emerald-200 mb-2">✅ Aceite Digital</p>
+          <p className="text-sm text-emerald-300">
             Ao realizar o cadastro na plataforma MyAsset e marcar a caixa de aceite,
             o Usuário confirma que leu, compreendeu e concorda com todos os documentos acima.
           </p>
-          <p className="text-xs text-green-600 mt-2">
+          <p className="text-xs text-emerald-300 mt-2">
             Nos termos do art. 10, §2º da MP 2.200-2/2001, o aceite digital equivale à assinatura para todos os fins legais.
           </p>
           <div className="mt-4">
             <Link
               href="/login"
               className="inline-flex items-center gap-2 px-6 py-3 rounded text-white font-bold text-sm uppercase tracking-wider"
-              style={{ backgroundColor: "#1B3564" }}
+              style={{ backgroundColor: "#141618" }}
             >
               Voltar para o MyAsset
             </Link>

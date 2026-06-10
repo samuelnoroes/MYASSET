@@ -12,8 +12,8 @@ export async function POST(req: Request) {
     console.log(`Webhook event: ${event} | ref: ${externalRef}`);
 
     // ── IDENTIFICAR TIPO DE PAGAMENTO ─────────────────────
-    // Assinatura do app:  "userId:plan"       (ex: "abc123:essencial")
-    // Aluguel:            "rent:propertyId:userId" (ex: "rent:prop123:abc123")
+    // Assinatura do app: "userId:plan"       (ex: "abc123:essencial")
+    // Aluguel: "rent:propertyId:userId" (ex: "rent:prop123:abc123")
 
     // Pagamentos de aluguel ("rent:...") agora são tratados pelo MyRent — ignorar aqui.
     if (externalRef.startsWith("rent:")) {

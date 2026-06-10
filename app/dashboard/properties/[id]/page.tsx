@@ -19,9 +19,9 @@ const MODALITY_LABELS: Record<string, string> = {
   under_construction: "Na planta",
 };
 const MODALITY_COLORS: Record<string, string> = {
-  annual_lease: "#2D4A3E",
+  annual_lease: "#C4A96B",
   short_stay: "#3B82F6",
-  under_construction: "#F59E0B",
+  under_construction: "#D9A05B",
 };
 
 function formatCurrency(value: number | null): string {
@@ -121,7 +121,7 @@ export default async function PropertyDetailPage({ params }: Props) {
   const isAnnual = modality === "annual_lease";
   const isShortStay = modality === "short_stay";
   const isPlanta = modality === "under_construction";
-  const color = MODALITY_COLORS[modality] || "#2D4A3E";
+  const color = MODALITY_COLORS[modality] || "#C4A96B";
 
   const yieldAnual = property.current_value && property.monthly_rent
     ? (Number(property.monthly_rent) / Number(property.current_value)) * 12 : null;
@@ -143,10 +143,10 @@ export default async function PropertyDetailPage({ params }: Props) {
   return (
     <main className="min-h-screen bg-surface">
       {/* Header */}
-      <header className="bg-header text-white shadow-sm">
+      <header className="bg-header text-white ">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/dashboard" className="font-display text-xl italic">
-            My<span style={{ color: "#6BA68A" }}>Asset</span>
+            My<span style={{ color: "#C4A96B" }}>Asset</span>
           </Link>
           <Link href="/dashboard/properties" className="text-xs text-gray-400 hover:text-white transition-colors uppercase tracking-wider">
             ← Portfólio
@@ -175,7 +175,7 @@ export default async function PropertyDetailPage({ params }: Props) {
             <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color }}>
               {MODALITY_LABELS[modality]}
               {property.available_for_sale && (
-                <span className="ml-3 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-[10px] border border-blue-200">
+                <span className="ml-3 px-2 py-0.5 bg-blue-100 text-blue-300 rounded-full text-[10px] border border-blue-400/30">
                   Disponível para proposta
                 </span>
               )}
@@ -199,7 +199,7 @@ export default async function PropertyDetailPage({ params }: Props) {
             <form action={toggleAvailableForSale}>
               <input type="hidden" name="id" value={property.id} />
               <input type="hidden" name="current" value={String(property.available_for_sale)} />
-              <button type="submit" className={`w-full px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-colors text-center ${property.available_for_sale ? "bg-blue-600 text-white hover:bg-blue-700" : "bg-surface border border-border text-ink hover:border-blue-500 hover:text-blue-600"}`}>
+              <button type="submit" className={`w-full px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-colors text-center ${property.available_for_sale ? "bg-blue-600 text-white hover:bg-blue-700" : "bg-surface border border-border text-ink hover:border-blue-500 hover:text-blue-300"}`}>
                 {property.available_for_sale ? "✓ Disponível para proposta" : "Marcar para proposta"}
               </button>
             </form>
@@ -250,7 +250,7 @@ export default async function PropertyDetailPage({ params }: Props) {
             </div>
             <div className="divide-y divide-border">
               {propertyUnits.map((unit) => {
-                const unitColor = MODALITY_COLORS[unit.modality || "annual_lease"] || "#2D4A3E";
+                const unitColor = MODALITY_COLORS[unit.modality || "annual_lease"] || "#C4A96B";
                 const yr = unit.current_value && unit.monthly_rent
                   ? ((Number(unit.monthly_rent) / Number(unit.current_value)) * 12 * 100).toFixed(1)
                   : null;
@@ -288,22 +288,22 @@ export default async function PropertyDetailPage({ params }: Props) {
         {isPlanta ? (
           <>
             {showInstallmentAlert && (
-              <div className={`flex items-center gap-4 px-5 py-4 rounded-card border ${nextInstallmentDays! < 0 ? "border-red-200 bg-red-50" : "border-amber-200 bg-amber-50"}`}>
+              <div className={`flex items-center gap-4 px-5 py-4 rounded-card border ${nextInstallmentDays! < 0 ? "border-red-400/30 bg-red-500/10" : "border-amber-400/50/30 bg-amber-500/10"}`}>
                 <span className="text-lg">{nextInstallmentDays! < 0 ? "🔴" : "🟡"}</span>
                 <div>
-                  <p className={`text-xs font-bold uppercase tracking-wider ${nextInstallmentDays! < 0 ? "text-red-700" : "text-amber-700"}`}>
+                  <p className={`text-xs font-bold uppercase tracking-wider ${nextInstallmentDays! < 0 ? "text-red-300" : "text-amber-300"}`}>
                     {nextInstallmentDays! < 0 ? `Parcela em atraso — ${Math.abs(nextInstallmentDays!)} ${Math.abs(nextInstallmentDays!) === 1 ? "dia" : "dias"}` : nextInstallmentDays === 0 ? "Parcela vence hoje" : `Parcela vence em ${nextInstallmentDays} ${nextInstallmentDays === 1 ? "dia" : "dias"}`}
                   </p>
                   <p className="text-sm text-ink mt-0.5">{formatCurrency(property.installment_amount)} · {formatDate(property.next_installment_date)}</p>
                 </div>
-                <a href={`/dashboard/properties/${params.id}/transactions/new?type=expense`} className="ml-auto text-xs font-bold uppercase tracking-wider px-3 py-2 rounded text-white" style={{ backgroundColor: nextInstallmentDays! < 0 ? "#DC2626" : "#2D4A3E" }}>Registrar</a>
+                <a href={`/dashboard/properties/${params.id}/transactions/new?type=expense`} className="ml-auto text-xs font-bold uppercase tracking-wider px-3 py-2 rounded text-white" style={{ backgroundColor: nextInstallmentDays! < 0 ? "#E0686C" : "#C4A96B" }}>Registrar</a>
               </div>
             )}
             {showBalloonAlert && (
-              <div className="flex items-center gap-4 px-5 py-4 rounded-card border border-blue-200 bg-blue-50">
+              <div className="flex items-center gap-4 px-5 py-4 rounded-card border border-blue-400/30 bg-blue-500/10">
                 <span className="text-lg">🏗️</span>
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-wider text-blue-700">Balão / parcela especial — {balloonDays === 0 ? "vence hoje" : `vence em ${balloonDays} ${balloonDays === 1 ? "dia" : "dias"}`}</p>
+                  <p className="text-xs font-bold uppercase tracking-wider text-blue-300">Balão / parcela especial — {balloonDays === 0 ? "vence hoje" : `vence em ${balloonDays} ${balloonDays === 1 ? "dia" : "dias"}`}</p>
                   <p className="text-sm text-ink mt-0.5">{formatCurrency(property.balloon_amount)} · {formatDate(property.balloon_date)}</p>
                 </div>
                 <a href={`/dashboard/properties/${params.id}/transactions/new?type=expense`} className="ml-auto text-xs font-bold uppercase tracking-wider px-3 py-2 rounded text-white bg-blue-600">Registrar</a>

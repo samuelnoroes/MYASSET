@@ -21,19 +21,19 @@ export async function saveProfile(formData: FormData) {
 
   if (!fullName) {
     redirect(
-      "/error?message=" + encodeURIComponent("Nome completo é obrigatório.")
+ "/error?message=" + encodeURIComponent("Nome completo é obrigatório.")
     );
   }
 
   if (!phone) {
     redirect(
-      "/error?message=" + encodeURIComponent("WhatsApp é obrigatório.")
+ "/error?message=" + encodeURIComponent("WhatsApp é obrigatório.")
     );
   }
 
   if (!termsAccepted) {
     redirect(
-      "/error?message=" + encodeURIComponent("Você precisa aceitar os Termos de Uso para continuar.")
+ "/error?message=" + encodeURIComponent("Você precisa aceitar os Termos de Uso para continuar.")
     );
   }
 

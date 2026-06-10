@@ -44,14 +44,14 @@ type DefaultValues = {
 };
 
 const inputClass =
-  "w-full px-4 py-3 bg-surface border border-border rounded text-sm text-ink focus:border-forest focus:outline-none transition-colors";
+ "w-full px-4 py-3 bg-surface border border-border rounded text-sm text-ink focus:border-forest focus:outline-none transition-colors";
 const selectClass =
-  "w-full px-4 py-3 bg-surface border border-border rounded text-sm text-ink focus:border-forest focus:outline-none transition-colors";
+ "w-full px-4 py-3 bg-surface border border-border rounded text-sm text-ink focus:border-forest focus:outline-none transition-colors";
 const labelClass =
-  "block text-xs font-semibold uppercase tracking-wider text-ink-2 mb-2";
+ "block text-xs font-semibold uppercase tracking-wider text-ink-2 mb-2";
 const hintClass = "text-xs text-ink-3 mt-1";
 const sectionTitleClass =
-  "text-xs font-bold uppercase tracking-widest text-ink-2 pb-2 border-b-2 border-forest inline-block mb-5";
+ "text-xs font-bold uppercase tracking-widest text-ink-2 pb-2 border-b-2 border-forest inline-block mb-5";
 
 export default function PropertyFormFields({
   defaults = {},

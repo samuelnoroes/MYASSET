@@ -17,13 +17,13 @@ export default async function OnboardingPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-10">
           <h1 className="font-display text-4xl italic text-white">
-            My<span style={{ color: "#6BA68A" }}>Asset</span>
+            My<span style={{ color: "#C4A96B" }}>Asset</span>
           </h1>
-          <p className="text-xs tracking-[0.3em] uppercase text-gray-500 mt-3">
+          <p className="text-xs tracking-[0.3em] uppercase text-ink-3 mt-3">
             Complete seu perfil
           </p>
         </div>
-        <div className="bg-card rounded-card shadow-card-md p-8">
+        <div className="bg-card rounded-card  p-8">
           <p className="text-sm text-ink-2 mb-6">
             Precisamos de mais algumas informações para personalizar sua
             experiência e enviar alertas importantes.

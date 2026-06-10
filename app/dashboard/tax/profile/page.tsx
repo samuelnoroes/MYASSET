@@ -105,10 +105,10 @@ export default function TaxProfilePage() {
 
   return (
     <main className="min-h-screen bg-surface">
-      <header className="bg-header text-white shadow-sm">
+      <header className="bg-header text-white ">
         <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/dashboard" className="font-display text-xl italic">
-            My<span style={{ color: "#6BA68A" }}>Asset</span>
+            My<span style={{ color: "#C4A96B" }}>Asset</span>
           </Link>
           <span className="text-xs text-gray-400 uppercase tracking-wider">
             Perfil fiscal — {Math.min(step + 1, STEPS.length + 1)} de {STEPS.length + 1}
@@ -145,7 +145,7 @@ export default function TaxProfilePage() {
                   key={opt.value}
                   onClick={() => handleSelect(opt.value)}
                   disabled={saving}
-                  className="w-full text-left card hover:border-forest hover:shadow-card-md transition-all border-2 border-transparent"
+                  className="w-full text-left card hover:border-forest hover: transition-all border-2 border-transparent"
                 >
                   <p className="font-bold text-base text-ink mb-1">{opt.label}</p>
                   <p className="text-sm text-ink-2">{opt.desc}</p>
@@ -176,11 +176,11 @@ export default function TaxProfilePage() {
               </h1>
 
               {/* Banner explicativo */}
-              <div className="bg-amber-50 border border-amber-200 rounded-card px-5 py-4 mb-6">
-                <p className="text-sm font-bold text-amber-700 mb-1">
+              <div className="bg-amber-500/10 border border-amber-400/50/30 rounded-card px-5 py-4 mb-6">
+                <p className="text-sm font-bold text-amber-300 mb-1">
                   ℹ️ Estas informações são totalmente opcionais
                 </p>
-                <p className="text-sm text-amber-700 leading-relaxed">
+                <p className="text-sm text-amber-300 leading-relaxed">
                   Sem elas, o relatório mostra uma <strong>estimativa precisa</strong> do Carnê-Leão sobre seus rendimentos imobiliários.
                   Com elas, o cálculo fica <strong>ainda mais exato</strong>, descontando as deduções pessoais que a lei permite.
                   Se não tiver interesse nesse nível de detalhe, clique em <strong>"Gerar relatório"</strong> direto.

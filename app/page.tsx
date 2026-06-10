@@ -15,11 +15,11 @@ export default async function Home() {
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <h1 className="font-display text-2xl italic">
-              My<span style={{ color: "#6BA68A" }}>Asset</span>
+              My<span style={{ color: "#C4A96B" }}>Asset</span>
             </h1>
-            <div className="w-px h-5 bg-white/20" />
+            <div className="w-px h-5 bg-card/20" />
             <div className="flex items-center gap-1.5">
-              <span className="text-[10px] text-gray-500 uppercase tracking-wider">by</span>
+              <span className="text-[10px] text-ink-3 uppercase tracking-wider">by</span>
               <A5Logo light height={20} />
             </div>
           </div>
@@ -35,7 +35,7 @@ export default async function Home() {
           Gestão de portfólio imobiliário
         </p>
         <h2 className="font-display text-6xl md:text-8xl italic mb-8 leading-tight">
-          My<span style={{ color: "#6BA68A" }}>Asset</span>
+          My<span style={{ color: "#C4A96B" }}>Asset</span>
         </h2>
         <p className="text-base md:text-lg text-gray-400 max-w-lg mx-auto leading-relaxed mb-12">
           A clareza que o investidor imobiliário sempre quis sobre o próprio patrimônio.
@@ -56,7 +56,7 @@ export default async function Home() {
         <div className="max-w-7xl mx-auto px-6 py-16">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
-              <p className="text-xs tracking-[0.25em] uppercase mb-3" style={{ color: "#6BA68A" }}>01</p>
+              <p className="text-xs tracking-[0.25em] uppercase mb-3" style={{ color: "#C4A96B" }}>01</p>
               <h3 className="text-lg font-bold text-white mb-3">Dashboard completo</h3>
               <p className="text-sm text-gray-400 leading-relaxed">
                 Yield, ROI, valorização e fluxo de caixa. Donut chart de distribuição
@@ -64,7 +64,7 @@ export default async function Home() {
               </p>
             </div>
             <div>
-              <p className="text-xs tracking-[0.25em] uppercase mb-3" style={{ color: "#6BA68A" }}>02</p>
+              <p className="text-xs tracking-[0.25em] uppercase mb-3" style={{ color: "#C4A96B" }}>02</p>
               <h3 className="text-lg font-bold text-white mb-3">Alertas inteligentes</h3>
               <p className="text-sm text-gray-400 leading-relaxed">
                 Cobrança 5 dias antes do vencimento. Alerta de inadimplência no dia.
@@ -72,7 +72,7 @@ export default async function Home() {
               </p>
             </div>
             <div>
-              <p className="text-xs tracking-[0.25em] uppercase mb-3" style={{ color: "#6BA68A" }}>03</p>
+              <p className="text-xs tracking-[0.25em] uppercase mb-3" style={{ color: "#C4A96B" }}>03</p>
               <h3 className="text-lg font-bold text-white mb-3">3 perfis de investidor</h3>
               <p className="text-sm text-gray-400 leading-relaxed">
                 Locação anual, temporada/Airbnb ou na planta. Cada perfil com
@@ -86,13 +86,13 @@ export default async function Home() {
       {/* Footer com A5 */}
       <footer className="border-t border-white/10 py-8">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
-          <span className="font-display italic text-sm text-gray-500">MyAsset</span>
+          <span className="font-display italic text-sm text-ink-3">MyAsset</span>
           <div className="flex items-center gap-3">
-            <span className="text-xs text-gray-600 uppercase tracking-wider">Uma solução</span>
+            <span className="text-xs text-ink-2 uppercase tracking-wider">Uma solução</span>
             <A5Logo light height={22} />
-            <span className="text-xs text-gray-600 uppercase tracking-wider">Asset</span>
+            <span className="text-xs text-ink-2 uppercase tracking-wider">Asset</span>
           </div>
-          <p className="text-xs uppercase tracking-wider text-gray-600">Versão beta</p>
+          <p className="text-xs uppercase tracking-wider text-ink-2">Versão beta</p>
         </div>
       </footer>
     </main>

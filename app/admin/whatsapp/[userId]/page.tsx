@@ -175,7 +175,7 @@ export default async function AdminWhatsAppConversationPage({
                     <div
                       className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${
                         msg.role === "user"
-                          ? "bg-white border border-border rounded-tl-sm"
+                          ? "bg-card border border-border rounded-tl-sm"
                           : "bg-forest text-white rounded-tr-sm"
                       }`}
                     >

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { Instrument_Serif, DM_Sans } from "next/font/google";
+import { DM_Serif_Display, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const display = Instrument_Serif({
+const display = DM_Serif_Display({
   weight: "400",
   style: ["normal", "italic"],
   subsets: ["latin"],
@@ -10,20 +10,26 @@ const display = Instrument_Serif({
   display: "swap",
 });
 
-const sans = DM_Sans({
+const sans = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
+  display: "swap",
+});
+
+const mono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
   display: "swap",
 });
 
 export const metadata: Metadata = {
   title: "MyAsset — Gestão de portfólio imobiliário",
   description:
-    "Acompanhe yield, ROI e fluxo de caixa dos seus imóveis com clareza. Cadastre ativos, lance receitas e despesas, e veja o desempenho do seu portfólio em tempo real.",
+ "Acompanhe yield, ROI e fluxo de caixa dos seus imóveis com clareza. Cadastre ativos, lance receitas e despesas, e veja o desempenho do seu portfólio em tempo real.",
   openGraph: {
     title: "MyAsset — Gestão de portfólio imobiliário",
     description:
-      "A clareza que o investidor imobiliário sempre quis sobre o próprio patrimônio.",
+ "A clareza que o investidor imobiliário sempre quis sobre o próprio patrimônio.",
     siteName: "MyAsset",
     locale: "pt_BR",
     type: "website",
@@ -41,7 +47,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="pt-BR" className={`${display.variable} ${sans.variable}`}>
+    <html lang="pt-BR" className={`${display.variable} ${sans.variable} ${mono.variable}`}>
       <body className="font-sans bg-cream text-ink antialiased">
         {children}
       </body>

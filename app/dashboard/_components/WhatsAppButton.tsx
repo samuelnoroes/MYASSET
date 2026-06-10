@@ -3,7 +3,7 @@
 export default function WhatsAppButton() {
   const phone = "5511987266842";
   const message = encodeURIComponent(
-    "Olá! Preciso de suporte com o MyAsset. 👋"
+ "Olá! Preciso de suporte com o MyAsset. 👋"
   );
   const url = `https://wa.me/${phone}?text=${message}`;
 
@@ -16,7 +16,7 @@ export default function WhatsAppButton() {
       className="fixed bottom-6 right-6 z-50 flex items-center gap-2 group"
     >
       {/* Tooltip */}
-      <span className="hidden group-hover:flex items-center bg-white text-ink text-xs font-semibold px-3 py-2 rounded shadow-card-md whitespace-nowrap border border-border">
+      <span className="hidden group-hover:flex items-center bg-card text-ink text-xs font-semibold px-3 py-2 rounded  whitespace-nowrap border border-border">
         Falar com suporte
       </span>
 
