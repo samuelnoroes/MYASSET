@@ -81,21 +81,29 @@ export default function AlertsPanel({ alerts, onMarkPaid }: Props) {
         return (
           <div
             key={alert.id}
-            className={`flex items-center justify-between px-5 py-4 rounded-card border ${c.border} ${c.bg}`}
+            className={`flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-4 py-3 sm:px-5 sm:py-4 rounded-card border ${c.border} ${c.bg}`}
           >
-            <div className="flex items-center gap-4 flex-1 min-w-0">
+            <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
               <span className="text-lg select-none shrink-0">{c.icon}</span>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className={`text-xs font-bold uppercase tracking-wider ${c.text}`}>
                   {alert.message}
                 </p>
-                <p className="text-sm text-ink mt-0.5 truncate">
+                <p className="text-sm text-ink mt-0.5 sm:truncate">
                   <strong>{alert.propertyName}</strong> · {alert.detail}
                 </p>
               </div>
+              {/* Dispensar — canto direito no mobile */}
+              <button
+                onClick={() => dismiss(alert.id)}
+                title="Dispensar este alerta"
+                className="sm:hidden self-start text-ink-3 hover:text-negative transition-colors text-lg leading-none shrink-0"
+              >
+                ×
+              </button>
             </div>
 
-            <div className="flex items-center gap-3 shrink-0 ml-4">
+            <div className="flex items-center gap-3 shrink-0 sm:ml-4">
               {/* Ação principal */}
               {alert.actionType === "markPaid" ? (
                 <form action={onMarkPaid}>
@@ -126,11 +134,11 @@ export default function AlertsPanel({ alerts, onMarkPaid }: Props) {
                 Ver →
               </Link>
 
-              {/* Dispensar individual */}
+              {/* Dispensar individual — só desktop (no mobile fica no topo) */}
               <button
                 onClick={() => dismiss(alert.id)}
                 title="Dispensar este alerta"
-                className="text-ink-3 hover:text-negative transition-colors text-lg leading-none ml-1"
+                className="hidden sm:block text-ink-3 hover:text-negative transition-colors text-lg leading-none ml-1"
               >
                 ×
               </button>
