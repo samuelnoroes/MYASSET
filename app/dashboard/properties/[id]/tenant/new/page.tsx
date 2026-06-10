@@ -48,12 +48,11 @@ export default async function TenantNewPage({ params }: Props) {
           </p>
         </div>
 
-        {/* Info de cobrança */}
+        {/* Info */}
         <div className="px-4 py-3 bg-blue-50 border border-blue-200 rounded mb-6">
-          <p className="text-xs font-bold uppercase tracking-wider text-blue-700 mb-1">Como funciona</p>
+          <p className="text-xs font-bold uppercase tracking-wider text-blue-700 mb-1">Para que serve</p>
           <p className="text-sm text-blue-700">
-            O inquilino receberá um link de pagamento por email todo mês, com opção de pagar via <strong>Pix ou cartão</strong>.
-            O valor cai direto na sua conta em D+1.
+            Os dados do inquilino são usados nos <strong>lembretes de aluguel</strong>, alertas de renovação de contrato e no agente do WhatsApp.
           </p>
         </div>
 
@@ -124,7 +123,7 @@ export default async function TenantNewPage({ params }: Props) {
 
           <div className="pt-2 border-t border-border">
             <p className="text-xs text-ink-3 mb-4">
-              Os dados do inquilino são transmitidos de forma segura ao Asaas para geração das cobranças.
+              Os dados ficam armazenados com segurança e são visíveis apenas para você.
               O inquilino não precisa criar conta no MyAsset.
             </p>
             <button
