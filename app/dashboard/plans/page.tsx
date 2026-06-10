@@ -133,7 +133,7 @@ export default function PlansPage() {
               "Relatório IR (Carnê-Leão)",
               "Alertas de vencimento e renovação",
               "Inteligência de mercado (MarketDataCard)",
-              ...(pid === "essencial" ? [] : ["Agente WhatsApp inteligente"]),
+              `Agente WhatsApp inteligente (${cfg.monthlyMessages} msgs/mês)`,
               ...(cfg.marketRefresh === "mensal"
                 ? ["Atualização de mercado mensal"]
                 : cfg.marketRefresh === "trimestral"

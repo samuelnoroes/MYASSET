@@ -36,7 +36,7 @@ export default async function WhatsAppPage() {
     .single();
 
   const phone = profile?.whatsapp_number || profile?.phone || "";
-  const isPro = profile?.plan === "pro" || profile?.plan === "plus";
+  const isPro = ["pro", "plus", "essencial"].includes(profile?.plan ?? "");
   const limits = getPlanLimits(profile?.plan);
   const isPaired = !!profile?.paired_at;
   const waLink = `https://wa.me/${BOT_NUMBER}?text=${encodeURIComponent("Oi")}`;
@@ -98,7 +98,7 @@ export default async function WhatsAppPage() {
             <div className="flex items-start gap-3 p-4 bg-amber-500/10 border border-amber-400/30 rounded-lg mb-4">
               <span className="text-amber-500 text-lg">⚠️</span>
               <div>
-                <p className="text-sm font-semibold text-amber-200">Disponível nos planos Plus e Pro</p>
+                <p className="text-sm font-semibold text-amber-200">Disponível nos planos pagos (Essencial, Plus e Pro)</p>
                 <p className="text-xs text-amber-300 mt-0.5">
                   Faça upgrade para usar o assistente WhatsApp.
                 </p>
