@@ -233,7 +233,7 @@ export default async function DashboardPage() {
 
       {/* ── BANNER DE TRIAL ───────────────────────────── */}
       {showTrialBanner && (
-        <div className={`border-b px-6 py-3 ${showUrgentBanner ? "bg-red-500/10 border-red-400/30" : "bg-amber-500/10 border-amber-400/50/30"}`}>
+        <div className={`border-b px-6 py-3 ${showUrgentBanner ? "bg-red-500/10 border-red-400/30" : "bg-amber-500/10 border-amber-400/30"}`}>
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <span className="text-lg">{showUrgentBanner ? "🔴" : "🟡"}</span>
@@ -265,7 +265,7 @@ export default async function DashboardPage() {
         {installmentAlerts.length > 0 && (
           <div className="space-y-2">
             {installmentAlerts.map((alert, i) => (
-              <div key={i} className={`flex items-center justify-between px-5 py-4 rounded-card border ${alert.daysUntil < 0 ? "border-red-400/30 bg-red-500/10" : alert.alertType === "balloon" ? "border-blue-400/30 bg-blue-500/10" : "border-amber-400/50/30 bg-amber-500/10"}`}>
+              <div key={i} className={`flex items-center justify-between px-5 py-4 rounded-card border ${alert.daysUntil < 0 ? "border-red-400/30 bg-red-500/10" : alert.alertType === "balloon" ? "border-blue-400/30 bg-blue-500/10" : "border-amber-400/30 bg-amber-500/10"}`}>
                 <div className="flex items-center gap-4 flex-1 min-w-0">
                   <span className="text-lg select-none shrink-0">
                     {alert.daysUntil < 0 ? "🔴" : alert.alertType === "balloon" ? "🏗️" : "🟡"}
@@ -393,7 +393,7 @@ export default async function DashboardPage() {
                           {modality === "annual_lease" && (
                             <span
                               title={paidThisMonth.has(p.id) ? "Aluguel recebido este mês" : "Aluguel pendente este mês"}
-                              className={`shrink-0 text-xs font-bold px-1.5 py-0.5 rounded-full border ${paidThisMonth.has(p.id) ? "bg-emerald-500/10 text-emerald-300 border-emerald-400/30" : "bg-amber-500/10 text-amber-300 border-amber-400/50/30"}`}
+                              className={`shrink-0 text-xs font-bold px-1.5 py-0.5 rounded-full border ${paidThisMonth.has(p.id) ? "bg-emerald-500/10 text-emerald-300 border-emerald-400/30" : "bg-amber-500/10 text-amber-300 border-amber-400/30"}`}
                             >
                               {paidThisMonth.has(p.id) ? "✓" : "○"}
                             </span>

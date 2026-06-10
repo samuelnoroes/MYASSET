@@ -34,6 +34,7 @@ const TYPE_CONFIG: Record<
 const PLAN_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
   trial:    { label: "Trial",    color: "#D9A05B", bg: "#231C10" },
   essencial: { label: "Essencial", color: "#3B82F6", bg: "#16202B" },
+  plus:      { label: "Plus",      color: "#C4A96B", bg: "#231C10" },
   pro:      { label: "Pro",      color: "#5FBF8A", bg: "#13201A" },
 };
 

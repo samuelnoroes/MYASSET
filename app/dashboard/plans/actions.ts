@@ -8,8 +8,9 @@ const ASAAS_BASE_URL = process.env.ASAAS_BASE_URL!;
 const ASAAS_API_KEY = process.env.ASAAS_API_KEY!;
 
 const PLAN_VALUES: Record<string, number> = {
-  essencial: 27.90,
-  pro: 37.90,
+  essencial: 24.99,
+  plus: 37.99,
+  pro: 54.99,
 };
 
 async function asaasFetch(path: string, method: string, body?: object) {
@@ -41,7 +42,7 @@ export async function createCheckout(formData: FormData): Promise<{ url?: string
   if (!user) return { error: "Usuário não autenticado" };
 
   const plan = formData.get("plan") as string;
-  if (!["essencial", "pro"].includes(plan)) return { error: "Plano inválido" };
+  if (!["essencial", "plus", "pro"].includes(plan)) return { error: "Plano inválido" };
 
   const { data: profile } = await supabase
     .from("user_profiles")
@@ -83,7 +84,7 @@ export async function createCheckout(formData: FormData): Promise<{ url?: string
       value,
       nextDueDate: dueDateStr,
       cycle: "MONTHLY",
-      description: `MyAsset ${plan === "pro" ? "Pro" : "Essencial"} — assinatura mensal`,
+      description: `MyAsset ${plan === "pro" ? "Pro" : plan === "plus" ? "Plus" : "Essencial"} — assinatura mensal`,
       externalReference: `${user.id}:${plan}`,
     });
 

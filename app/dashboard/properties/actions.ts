@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
+import { getPlanLimits } from "@/app/lib/plans";
 
 function err(message: string): never {
   redirect("/error?message=" + encodeURIComponent(message));
@@ -94,6 +95,20 @@ function parsePropertyForm(formData: FormData): PropertyInput {
 }
 
 export async function createProperty(formData: FormData) {
+  {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const [{ data: profile }, { count }] = await Promise.all([
+        supabase.from("user_profiles").select("plan").eq("id", user.id).single(),
+        supabase.from("properties").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("is_active", true),
+      ]);
+      const limits = getPlanLimits(profile?.plan);
+      if ((count ?? 0) >= limits.maxProperties) {
+        err(`Seu plano ${limits.label} permite até ${limits.maxProperties} imóveis. Faça upgrade em Meu Plano para cadastrar mais.`);
+      }
+    }
+  }
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");

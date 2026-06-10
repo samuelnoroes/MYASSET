@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { saveWhatsAppNumber } from "./actions";
+import { getPlanLimits } from "@/app/lib/plans";
 
 const BOT_NUMBER = "5511987266842";
 const BOT_DISPLAY = "+55 (11) 98726-6842";
@@ -35,7 +36,8 @@ export default async function WhatsAppPage() {
     .single();
 
   const phone = profile?.whatsapp_number || profile?.phone || "";
-  const isPro = profile?.plan === "pro";
+  const isPro = profile?.plan === "pro" || profile?.plan === "plus";
+  const limits = getPlanLimits(profile?.plan);
   const isPaired = !!profile?.paired_at;
   const waLink = `https://wa.me/${BOT_NUMBER}?text=${encodeURIComponent("Oi")}`;
 
@@ -78,7 +80,7 @@ export default async function WhatsAppPage() {
           {isPaired && (
             <div className="flex gap-4 mb-5 p-3 bg-surface rounded-lg border border-border">
               <div className="flex-1 text-center">
-                <p className="text-2xl font-bold text-ink">{usage?.message_count ?? 0}</p>
+                <p className="text-2xl font-bold text-ink">{usage?.message_count ?? 0}<span className="text-sm font-normal text-ink-3"> / {limits.monthlyMessages}</span></p>
                 <p className="text-xs text-ink-3 mt-0.5">mensagens este mês</p>
               </div>
               <div className="w-px bg-border" />
@@ -93,10 +95,10 @@ export default async function WhatsAppPage() {
 
           {/* Plano não pro */}
           {!isPro && (
-            <div className="flex items-start gap-3 p-4 bg-amber-500/10 border border-amber-400/50/30 rounded-lg mb-4">
+            <div className="flex items-start gap-3 p-4 bg-amber-500/10 border border-amber-400/30 rounded-lg mb-4">
               <span className="text-amber-500 text-lg">⚠️</span>
               <div>
-                <p className="text-sm font-semibold text-amber-200">Recurso exclusivo do plano Pro</p>
+                <p className="text-sm font-semibold text-amber-200">Disponível nos planos Plus e Pro</p>
                 <p className="text-xs text-amber-300 mt-0.5">
                   Faça upgrade para usar o assistente WhatsApp.
                 </p>

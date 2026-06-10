@@ -176,7 +176,7 @@ export default function TaxProfilePage() {
               </h1>
 
               {/* Banner explicativo */}
-              <div className="bg-amber-500/10 border border-amber-400/50/30 rounded-card px-5 py-4 mb-6">
+              <div className="bg-amber-500/10 border border-amber-400/30 rounded-card px-5 py-4 mb-6">
                 <p className="text-sm font-bold text-amber-300 mb-1">
                   ℹ️ Estas informações são totalmente opcionais
                 </p>

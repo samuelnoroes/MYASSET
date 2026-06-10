@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { createCheckout, cancelPlan } from "./actions";
+import { PLAN_LIMITS, type PlanId } from "@/app/lib/plans";
 
 type Profile = {
   plan: string;
@@ -111,8 +112,8 @@ export default function PlansPage() {
               Seu trial de 30 dias expirou. Escolha um plano para continuar.
             </p>
           )}
-          {plan === "essencial" && (
-            <p className="text-ink-2">Você está no plano <span className="font-bold">Essencial</span>. Faça upgrade para Pro e libere o WhatsApp.</p>
+          {(plan === "essencial" || plan === "plus") && (
+            <p className="text-ink-2">Você está no plano <span className="font-bold">{PLAN_LIMITS[plan as PlanId]?.label}</span>. Faça upgrade para ampliar seus limites.</p>
           )}
           {plan === "pro" && (
             <p className="text-ink-2">Você está no plano <span className="font-bold text-emerald-300">Pro</span>. Aproveite todos os recursos! 🚀</p>
@@ -120,118 +121,84 @@ export default function PlansPage() {
         </div>
 
         {/* Cards */}
-        <div className="grid md:grid-cols-2 gap-6">
-
-          {/* Essencial */}
-          <div className={`card border-2 transition-all ${plan === "essencial" ? "border-blue-500" : "border-border hover:border-blue-300"}`}>
-            {plan === "essencial" && (
-              <div className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-300 text-xs font-bold rounded-full uppercase tracking-wider mb-3">
-                ✓ Plano atual
-              </div>
-            )}
-            <div className="mb-4">
-              <h2 className="text-xl font-bold text-ink mb-1">Essencial</h2>
-              <p className="text-sm text-ink-3">Gestão completa do seu portfólio</p>
-            </div>
-            <div className="mb-6">
-              <p className="text-4xl font-bold text-ink">R$ 27,90<span className="text-base font-normal text-ink-3">/mês</span></p>
-            </div>
-            <ul className="space-y-3 mb-6">
-              {["Imóveis ilimitados", "Dashboard completo com gráficos", "Controle de transações", "Relatório IR (Carnê-Leão)", "Alertas de vencimento"].map(item => (
-                <li key={item} className="flex items-start gap-2 text-sm">
-                  <span className="text-positive text-lg">✓</span>
-                  <span className="text-ink-2">{item}</span>
-                </li>
-              ))}
-              <li className="flex items-start gap-2 text-sm opacity-40">
-                <span className="text-ink-3 text-lg">✕</span>
-                <span className="text-ink-3 line-through">WhatsApp integrado</span>
-              </li>
-            </ul>
-
-            {plan === "essencial" ? (
-              <div className="space-y-2">
-                <div className="text-center py-3 px-4 bg-blue-500/10 rounded text-sm text-blue-300 font-semibold">
-                  Plano atual — renovação automática mensal
-                </div>
-                <button
-                  onClick={handleCancel}
-                  disabled={canceling}
-                  className="w-full py-2 px-4 border border-red-400/30 text-red-400 hover:bg-red-500/10 text-xs font-semibold rounded transition-colors disabled:opacity-50"
-                >
-                  {canceling ? "Cancelando..." : "Cancelar assinatura"}
-                </button>
-              </div>
-            ) : plan === "pro" ? (
-              <div className="text-center py-3 px-4 bg-card-2 rounded text-sm text-ink-3">Você já tem o Pro 🚀</div>
-            ) : (
-              <button
-                onClick={() => handleSelectPlan("essencial")}
-                disabled={!!processingPlan}
-                className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded transition-colors disabled:opacity-50"
+        <div className="grid md:grid-cols-3 gap-6">
+          {(["essencial", "plus", "pro"] as PlanId[]).map((pid) => {
+            const cfg = PLAN_LIMITS[pid];
+            const isCurrent = plan === pid;
+            const featured = pid === "plus";
+            const features = [
+              `Até ${cfg.maxProperties} imóveis no portfólio`,
+              `${cfg.monthlyMessages} mensagens/mês no WhatsApp`,
+              "Dashboard completo com gráficos",
+              "Relatório IR (Carnê-Leão)",
+              "Alertas de vencimento e renovação",
+              ...(pid === "essencial" ? [] : ["Agente WhatsApp inteligente", "Inteligência de mercado (MarketDataCard)"]),
+              ...(cfg.marketRefresh === "mensal"
+                ? ["Atualização de mercado mensal"]
+                : cfg.marketRefresh === "trimestral"
+                ? ["Atualização de mercado trimestral"]
+                : []),
+            ];
+            return (
+              <div
+                key={pid}
+                className={`card border transition-all relative ${isCurrent ? "border-forest" : featured ? "border-moss hover:border-forest" : "border-border hover:border-moss"}`}
               >
-                {processingPlan === "essencial" ? "Aguarde..." : "Assinar Essencial — R$ 27,90/mês"}
-              </button>
-            )}
-          </div>
-
-          {/* Pro */}
-          <div className={`card border-2 relative transition-all ${plan === "pro" ? "border-green-500" : "border-blue-500 hover:border-blue-600"}`}>
-            {plan !== "pro" && (
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                Recomendado
-              </div>
-            )}
-            {plan === "pro" && (
-              <div className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-emerald-300 text-xs font-bold rounded-full uppercase tracking-wider mb-3">
-                ✓ Plano atual
-              </div>
-            )}
-            <div className="mb-4">
-              <h2 className="text-xl font-bold text-ink mb-1">Pro</h2>
-              <p className="text-sm text-ink-3">Tudo do Essencial + WhatsApp</p>
-            </div>
-            <div className="mb-6">
-              <p className="text-4xl font-bold text-ink">R$ 37,90<span className="text-base font-normal text-ink-3">/mês</span></p>
-              {plan !== "pro" && <p className="text-xs text-blue-300 mt-1">+R$ 10,00/mês vs Essencial</p>}
-            </div>
-            <ul className="space-y-3 mb-6">
-              <li className="flex items-start gap-2 text-sm">
-                <span className="text-positive text-lg">✓</span>
-                <span className="text-ink-2 font-semibold">Tudo do Essencial, mais:</span>
-              </li>
-              {["Assistente WhatsApp inteligente", "Resumo semanal automático", "Registrar receitas/despesas por texto", "Consultar rentabilidade via WhatsApp"].map(item => (
-                <li key={item} className="flex items-start gap-2 text-sm">
-                  <span className="text-positive text-lg">✓</span>
-                  <span className="text-ink-2">{item}</span>
-                </li>
-              ))}
-            </ul>
-
-            {plan === "pro" ? (
-              <div className="space-y-2">
-                <div className="text-center py-3 px-4 bg-emerald-500/10 rounded text-sm text-emerald-300 font-semibold">
-                  Plano atual — renovação automática mensal
+                {featured && !isCurrent && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-forest text-[#0C0D0F] text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-[0.1em]">
+                    Recomendado
+                  </div>
+                )}
+                {isCurrent && (
+                  <div className="inline-flex items-center gap-1 px-2 py-1 bg-forest/10 text-forest text-[10px] font-bold rounded-full uppercase tracking-[0.1em] mb-3">
+                    ✓ Plano atual
+                  </div>
+                )}
+                <div className="mb-4">
+                  <h2 className="text-xl font-bold text-ink mb-1">{cfg.label}</h2>
+                  <p className="text-sm text-ink-3">
+                    {pid === "essencial" ? "Para começar com clareza" : pid === "plus" ? "Para portfólios em crescimento" : "Para investidores ativos"}
+                  </p>
                 </div>
-                <button
-                  onClick={handleCancel}
-                  disabled={canceling}
-                  className="w-full py-2 px-4 border border-red-400/30 text-red-400 hover:bg-red-500/10 text-xs font-semibold rounded transition-colors disabled:opacity-50"
-                >
-                  {canceling ? "Cancelando..." : "Cancelar assinatura"}
-                </button>
+                <div className="mb-6">
+                  <p className="font-mono text-3xl font-medium text-ink">
+                    R$ {cfg.price.toFixed(2).replace(".", ",")}
+                    <span className="text-sm font-normal text-ink-3">/mês</span>
+                  </p>
+                </div>
+                <ul className="space-y-2.5 mb-6">
+                  {features.map((item) => (
+                    <li key={item} className="flex items-start gap-2 text-sm">
+                      <span className="text-forest">✓</span>
+                      <span className="text-ink-2">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+                {isCurrent ? (
+                  <div className="space-y-2">
+                    <div className="text-center py-3 px-4 bg-forest/10 rounded text-sm text-forest font-semibold">
+                      Plano atual — renovação mensal
+                    </div>
+                    <button
+                      onClick={handleCancel}
+                      disabled={canceling}
+                      className="w-full py-2 px-4 border border-red-400/30 text-red-400 hover:bg-red-500/10 text-xs font-semibold rounded transition-colors disabled:opacity-50"
+                    >
+                      {canceling ? "Cancelando..." : "Cancelar assinatura"}
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => handleSelectPlan(pid)}
+                    disabled={!!processingPlan}
+                    className={`w-full py-3 px-4 font-semibold rounded transition-colors disabled:opacity-50 text-[13px] uppercase tracking-[0.06em] ${featured ? "bg-forest text-[#0C0D0F] hover:bg-forest-light" : "bg-transparent border border-border text-ink-2 hover:border-moss hover:text-ink"}`}
+                  >
+                    {processingPlan === pid ? "Aguarde..." : `Assinar ${cfg.label}`}
+                  </button>
+                )}
               </div>
-            ) : (
-              <button
-                onClick={() => handleSelectPlan("pro")}
-                disabled={!!processingPlan}
-                className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded transition-colors disabled:opacity-50"
-              >
-                {processingPlan === "pro" ? "Aguarde..." : "Assinar Pro — R$ 37,90/mês"}
-              </button>
-            )}
-          </div>
-
+            );
+          })}
         </div>
 
         {/* Info */}

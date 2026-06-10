@@ -288,7 +288,7 @@ export default async function PropertyDetailPage({ params }: Props) {
         {isPlanta ? (
           <>
             {showInstallmentAlert && (
-              <div className={`flex items-center gap-4 px-5 py-4 rounded-card border ${nextInstallmentDays! < 0 ? "border-red-400/30 bg-red-500/10" : "border-amber-400/50/30 bg-amber-500/10"}`}>
+              <div className={`flex items-center gap-4 px-5 py-4 rounded-card border ${nextInstallmentDays! < 0 ? "border-red-400/30 bg-red-500/10" : "border-amber-400/30 bg-amber-500/10"}`}>
                 <span className="text-lg">{nextInstallmentDays! < 0 ? "🔴" : "🟡"}</span>
                 <div>
                   <p className={`text-xs font-bold uppercase tracking-wider ${nextInstallmentDays! < 0 ? "text-red-300" : "text-amber-300"}`}>

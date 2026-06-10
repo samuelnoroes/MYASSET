@@ -53,8 +53,8 @@ export default function AlertsPanel({ alerts, onMarkPaid }: Props) {
 
   const colorMap = {
     danger:      { border: "border-red-400/30",    bg: "bg-red-500/10",    text: "text-red-300",    icon: "🔴" },
-    warning:     { border: "border-amber-400/50/30",  bg: "bg-amber-500/10",  text: "text-amber-300",  icon: "🟡" },
-    installment: { border: "border-amber-400/50/30",  bg: "bg-amber-500/10",  text: "text-amber-300",  icon: "🟡" },
+    warning:     { border: "border-amber-400/30",  bg: "bg-amber-500/10",  text: "text-amber-300",  icon: "🟡" },
+    installment: { border: "border-amber-400/30",  bg: "bg-amber-500/10",  text: "text-amber-300",  icon: "🟡" },
     balloon:     { border: "border-blue-400/30",   bg: "bg-blue-500/10",   text: "text-blue-300",   icon: "🏗️" },
   };
 
