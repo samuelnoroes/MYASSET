@@ -37,12 +37,57 @@ const PLAN_CONFIG: Record<string, { label: string; color: string; bg: string }> 
   pro:      { label: "Pro",      color: "#5FBF8A", bg: "#13201A" },
 };
 
+
+const NAV_ICONS: Record<string, JSX.Element> = {
+  dashboard: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/>
+      <rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>
+    </svg>
+  ),
+  portfolio: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 9h1M9 12h1M9 15h1M14 9h1M14 12h1M14 15h1"/>
+    </svg>
+  ),
+  tax: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M4 4h16v16H4z"/><path d="M8 14l3-3 2 2 3-4"/><path d="M8 18h8"/>
+    </svg>
+  ),
+  whatsapp: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/>
+    </svg>
+  ),
+  profile: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0114 0v1"/>
+    </svg>
+  ),
+  plan: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M6 3h12l4 6-10 12L2 9z"/><path d="M2 9h20M9 3l3 6 3-6"/>
+    </svg>
+  ),
+  bell: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/>
+    </svg>
+  ),
+  exit: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/>
+    </svg>
+  ),
+};
+
 const NAV_ITEMS = [
-  { href: "/dashboard",                      label: "Dashboard",    icon: "⊞",  badge: null },
-  { href: "/dashboard/properties",           label: "Portfólio",    icon: "🏢", badge: null },
-  { href: "/dashboard/tax",                  label: "IR",           icon: "📊", badge: null },
-  { href: "/dashboard/whatsapp",            label: "WhatsApp",     icon: "💬", badge: null },
-  { href: "/dashboard/profile",              label: "Perfil",       icon: "⚙️", badge: null },
+  { href: "/dashboard",                      label: "Dashboard",    icon: "dashboard", badge: null },
+  { href: "/dashboard/properties",           label: "Portfólio",    icon: "portfolio", badge: null },
+  { href: "/dashboard/tax",                  label: "IR",           icon: "tax", badge: null },
+  { href: "/dashboard/whatsapp",            label: "WhatsApp",     icon: "whatsapp", badge: null },
+  { href: "/dashboard/profile",              label: "Perfil",       icon: "profile", badge: null },
 ];
 
 const DASHBOARD_ANCHORS = [
@@ -238,7 +283,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                 onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.backgroundColor = "rgba(255,255,255,0.05)"; }}
                 onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.backgroundColor = "transparent"; }}
               >
-                <span style={{ fontSize: 18, flexShrink: 0, width: 24, textAlign: "center" }}>{item.icon}</span>
+                <span style={{ flexShrink: 0, width: 24, display: "flex", justifyContent: "center", color: isActive ? "#C4A96B" : "#6B7280" }}>{NAV_ICONS[item.icon]}</span>
                 {sidebarOpen && (
                   <span style={{ display: "flex", alignItems: "center", gap: 8, flex: 1 }}>
                     <span style={{ fontSize: 14, fontWeight: isActive ? 700 : 500, color: isActive ? "#fff" : "#9CA3AF", letterSpacing: "0.01em" }}>
@@ -280,7 +325,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
             onMouseEnter={e => { if (!isPlanActive) (e.currentTarget as HTMLElement).style.backgroundColor = "rgba(255,255,255,0.05)"; }}
             onMouseLeave={e => { if (!isPlanActive) (e.currentTarget as HTMLElement).style.backgroundColor = "transparent"; }}
           >
-            <span style={{ fontSize: 18, flexShrink: 0, width: 24, textAlign: "center" }}>💎</span>
+            <span style={{ flexShrink: 0, width: 24, display: "flex", justifyContent: "center", color: isPlanActive ? "#C4A96B" : "#6B7280" }}>{NAV_ICONS.plan}</span>
             {sidebarOpen && (
               <span style={{ display: "flex", alignItems: "center", gap: 8, flex: 1 }}>
                 <span style={{ fontSize: 14, fontWeight: isPlanActive ? 700 : 500, color: isPlanActive ? "#fff" : "#9CA3AF" }}>
@@ -352,7 +397,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
               overflow: "hidden",
             }}
           >
-            <span style={{ fontSize: 18, flexShrink: 0, width: 24, textAlign: "center" }}>🔔</span>
+            <span style={{ flexShrink: 0, width: 24, display: "flex", justifyContent: "center", color: panelOpen ? "#C4A96B" : "#6B7280" }}>{NAV_ICONS.bell}</span>
             {sidebarOpen && (
               <>
                 <span style={{ fontSize: 14, fontWeight: 500, color: panelOpen ? "#fff" : "#9CA3AF", flex: 1, textAlign: "left" }}>
@@ -421,7 +466,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
               onMouseEnter={e => (e.currentTarget as HTMLElement).style.backgroundColor = "rgba(255,255,255,0.05)"}
               onMouseLeave={e => (e.currentTarget as HTMLElement).style.backgroundColor = "transparent"}
             >
-              <span style={{ fontSize: 18, flexShrink: 0, width: 24, textAlign: "center" }}>🚪</span>
+              <span style={{ flexShrink: 0, width: 24, display: "flex", justifyContent: "center", color: "#6B7280" }}>{NAV_ICONS.exit}</span>
               {sidebarOpen && <span style={{ fontSize: 14, fontWeight: 500, color: "#9CA3AF" }}>Sair</span>}
             </button>
           </form>
