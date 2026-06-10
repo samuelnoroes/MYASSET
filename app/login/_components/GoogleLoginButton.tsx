@@ -1,13 +1,31 @@
 "use client";
 
+import { useState } from "react";
+import { createClient } from "@/utils/supabase/client";
+
 export default function GoogleLoginButton() {
-  const handleClick = () => {
-    alert("Login com Google em breve. Por enquanto, use e-mail e senha.");
+  const [loading, setLoading] = useState(false);
+
+  const handleClick = async () => {
+    setLoading(true);
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        queryParams: { access_type: "offline", prompt: "select_account" },
+      },
+    });
+    if (error) {
+      setLoading(false);
+      window.location.href = "/error?message=" + encodeURIComponent(error.message);
+    }
   };
 
   return (
     <button
       onClick={handleClick}
+      disabled={loading}
       className="w-full py-3 bg-white border border-ink/20 text-ink font-medium tracking-wider uppercase text-xs hover:border-forest hover:text-forest transition-colors flex items-center justify-center gap-3"
     >
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -28,7 +46,7 @@ export default function GoogleLoginButton() {
           fill="#EA4335"
         />
       </svg>
-      Continuar com Google
+      {loading ? "Redirecionando..." : "Continuar com Google"}
     </button>
   );
 }
