@@ -41,8 +41,6 @@ const NAV_ITEMS = [
   { href: "/dashboard",                      label: "Dashboard",    icon: "⊞",  badge: null },
   { href: "/dashboard/properties",           label: "Portfólio",    icon: "🏢", badge: null },
   { href: "/dashboard/tax",                  label: "IR",           icon: "📊", badge: null },
-  { href: "/dashboard/open-finance",         label: "Open Finance", icon: "🔗", badge: "EM BREVE" },
-  { href: "/dashboard/billing/bank-account", label: "Financeiro",   icon: "🏦", badge: null },
   { href: "/dashboard/whatsapp",            label: "WhatsApp",     icon: "💬", badge: null },
   { href: "/dashboard/profile",              label: "Perfil",       icon: "⚙️", badge: null },
 ];

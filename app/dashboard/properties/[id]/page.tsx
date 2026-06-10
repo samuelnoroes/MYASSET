@@ -89,22 +89,6 @@ export default async function PropertyDetailPage({ params }: Props) {
     .eq("user_id", user.id)
     .single();
 
-  const { data: recentCharges } = await supabase
-    .from("rent_charges")
-    .select("*")
-    .eq("property_id", params.id)
-    .order("due_date", { ascending: false })
-    .limit(6);
-
-  // Verificar se proprietário tem conta bancária configurada
-  const { data: profile } = await supabase
-    .from("user_profiles")
-    .select("asaas_account_id")
-    .eq("id", user.id)
-    .single();
-
-  const hasBankAccount = !!profile?.asaas_account_id;
-
   // Parent property (se for unidade)
   const { data: parentProperty } = property.parent_property_id
     ? await supabase
@@ -123,7 +107,6 @@ export default async function PropertyDetailPage({ params }: Props) {
     .order("unit_identifier", { ascending: true });
 
   const propertyUnits = units || [];
-  const charges = recentCharges ?? [];
 
   const allTxs = transactions ?? [];
   const now = new Date();
@@ -156,13 +139,6 @@ export default async function PropertyDetailPage({ params }: Props) {
 
   const showInstallmentAlert = nextInstallmentDays !== null && nextInstallmentDays <= 5;
   const showBalloonAlert = balloonDays !== null && balloonDays >= 0 && balloonDays <= 30;
-
-  const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-    pending:  { label: "Pendente",  color: "#D97706", bg: "#FFFBEB" },
-    paid:     { label: "Pago",      color: "#16A34A", bg: "#F0FDF4" },
-    overdue:  { label: "Atrasado",  color: "#DC2626", bg: "#FEF2F2" },
-    canceled: { label: "Cancelado", color: "#6B7280", bg: "#F9FAFB" },
-  };
 
   return (
     <main className="min-h-screen bg-surface">
@@ -377,181 +353,6 @@ export default async function PropertyDetailPage({ params }: Props) {
               <div className="card"><p className="kpi-label">Renovação{property.adjustment_index ? ` · ${ADJUSTMENT_LABELS[property.adjustment_index] || property.adjustment_index}` : ""}</p><p className="text-base font-semibold text-ink">{property.lease_renewal_date ? formatDate(property.lease_renewal_date) : "—"}</p></div>
             </div>
           </>
-        )}
-
-        {/* ── BANNER CTA COBRANÇA (annual_lease sem cobrança ativa) ── */}
-        {isAnnual && !property.rent_collection_enabled && (
-          <div className="flex items-center justify-between gap-4 px-5 py-4 rounded-card border border-blue-200 bg-blue-50">
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">🏦</span>
-              <div>
-                <p className="text-sm font-bold text-blue-800">
-                  Ative a cobrança automática
-                </p>
-                <p className="text-xs text-blue-600 mt-0.5">
-                  O MyAsset cobra o aluguel do inquilino todo mês e deposita 95% direto na sua conta em D+1.
-                </p>
-              </div>
-            </div>
-            <a
-              href="#cobranca-automatica"
-              className="shrink-0 px-4 py-2 rounded text-white text-xs font-bold uppercase tracking-wider transition-colors"
-              style={{ backgroundColor: "#1B3564" }}
-            >
-              Configurar
-            </a>
-          </div>
-        )}
-
-        {/* ── COBRANÇA AUTOMÁTICA (só annual_lease) ────── */}
-        {isAnnual && (
-          <div id="cobranca-automatica" className="card">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <p className="section-title" style={{ marginBottom: 0 }}>Cobrança automática</p>
-                <p className="text-xs text-ink-3 mt-1">
-                  O MyAsset cobra o aluguel do inquilino todo mês e deposita 95% direto na sua conta.
-                </p>
-              </div>
-              {property.rent_collection_enabled && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-700 text-xs font-bold rounded-full border border-green-200">
-                  ✓ Ativa
-                </span>
-              )}
-            </div>
-
-            {/* Sem conta bancária */}
-            {!hasBankAccount && (
-              <div className="flex items-start gap-3 px-4 py-4 bg-amber-50 border border-amber-200 rounded">
-                <span className="text-amber-600 text-lg mt-0.5">⚠️</span>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-amber-800">Configure sua conta bancária primeiro</p>
-                  <p className="text-xs text-amber-700 mt-1">Para receber os aluguéis automaticamente, você precisa informar seus dados bancários.</p>
-                </div>
-                <Link
-                  href="/dashboard/billing/bank-account"
-                  className="shrink-0 px-3 py-2 bg-amber-600 text-white text-xs font-bold uppercase tracking-wider rounded hover:bg-amber-700 transition-colors"
-                >
-                  Configurar
-                </Link>
-              </div>
-            )}
-
-            {/* Sem inquilino cadastrado */}
-            {hasBankAccount && !tenant && (
-              <div className="flex items-start gap-3 px-4 py-4 bg-surface border border-border rounded">
-                <span className="text-ink-3 text-lg mt-0.5">👤</span>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-ink">Nenhum inquilino cadastrado</p>
-                  <p className="text-xs text-ink-3 mt-1">Cadastre o inquilino para ativar a cobrança automática.</p>
-                </div>
-                <Link
-                  href={`/dashboard/properties/${params.id}/tenant/new`}
-                  className="shrink-0 px-3 py-2 bg-forest text-white text-xs font-bold uppercase tracking-wider rounded hover:bg-forest-light transition-colors"
-                >
-                  + Inquilino
-                </Link>
-              </div>
-            )}
-
-            {/* Inquilino cadastrado */}
-            {hasBankAccount && tenant && (
-              <div className="space-y-4">
-                {/* Card do inquilino */}
-                <div className="flex items-center justify-between px-4 py-3 bg-surface border border-border rounded">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-forest/10 flex items-center justify-center">
-                      <span className="text-forest text-sm font-bold">
-                        {tenant.name.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-ink">{tenant.name}</p>
-                      <p className="text-xs text-ink-3">{tenant.email} · {tenant.phone || "Sem telefone"}</p>
-                    </div>
-                  </div>
-                  <Link
-                    href={`/dashboard/properties/${params.id}/tenant/new`}
-                    className="text-xs text-ink-3 hover:text-forest transition-colors"
-                  >
-                    Editar
-                  </Link>
-                </div>
-
-                {/* Botão ativar/desativar */}
-                {!property.rent_collection_enabled ? (
-                  <Link
-                    href={`/dashboard/properties/${params.id}/rent-collection/activate`}
-                    className="flex items-center justify-center gap-2 w-full py-3 bg-forest text-white text-sm font-bold uppercase tracking-wider rounded hover:bg-forest-light transition-colors"
-                  >
-                    ⚡ Ativar cobrança automática
-                  </Link>
-                ) : (
-                  <div className="flex items-center justify-between px-4 py-3 bg-green-50 border border-green-200 rounded">
-                    <div>
-                      <p className="text-sm font-semibold text-green-800">Cobrança ativa</p>
-                      <p className="text-xs text-green-600 mt-0.5">
-                        Próxima cobrança: dia {property.lease_due_day || 5} do mês · {formatCurrency(property.monthly_rent)}
-                      </p>
-                    </div>
-                    <Link
-                      href={`/dashboard/properties/${params.id}/rent-collection/deactivate`}
-                      className="text-xs text-red-500 hover:text-red-700 font-semibold transition-colors"
-                    >
-                      Desativar
-                    </Link>
-                  </div>
-                )}
-
-                {/* Histórico de cobranças */}
-                {charges.length > 0 && (
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-wider text-ink-3 mb-2">Histórico de cobranças</p>
-                    <div className="divide-y divide-border">
-                      {charges.map(charge => {
-                        const cfg = STATUS_CONFIG[charge.status] || STATUS_CONFIG.pending;
-                        return (
-                          <div key={charge.id} className="flex items-center justify-between py-3">
-                            <div className="flex items-center gap-3">
-                              <span className="text-sm text-ink-3 w-20">
-                                {formatDateShort(charge.due_date)}
-                              </span>
-                              <span
-                                className="text-xs font-bold px-2 py-0.5 rounded-full"
-                                style={{ color: cfg.color, backgroundColor: cfg.bg }}
-                              >
-                                {cfg.label}
-                              </span>
-                              {charge.payment_method && (
-                                <span className="text-xs text-ink-3 uppercase">
-                                  {charge.payment_method === "PIX" ? "Pix" : "Cartão"}
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <span className="text-sm font-bold text-positive">
-                                {formatCurrency(Number(charge.amount))}
-                              </span>
-                              {charge.invoice_url && charge.status === "pending" && (
-                                <a
-                                  href={charge.invoice_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-xs text-blue-600 hover:underline"
-                                >
-                                  Ver boleto
-                                </a>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
         )}
 
         {/* ── TRANSAÇÕES ──────────────────────────────── */}
