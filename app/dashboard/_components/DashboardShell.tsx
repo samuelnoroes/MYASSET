@@ -449,19 +449,19 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           top: 0,
           right: 0,
           height: "100vh",
-          backgroundColor: "#fff",
+          backgroundColor: "#141618",
           borderLeft: "1px solid #2A2D33",
           display: "flex",
           flexDirection: "column",
           transform: panelOpen ? "translateX(0)" : `translateX(${PANEL_WIDTH}px)`,
           transition: "transform 0.3s ease",
           zIndex: 40,
-          boxShadow: panelOpen ? "-4px 0 16px rgba(0,0,0,0.06)" : "none",
+          boxShadow: panelOpen ? "-12px 0 32px rgba(0,0,0,0.5)" : "none",
         }}
       >
         <div style={{
           padding: "20px 16px 14px",
-          borderBottom: "1px solid #1C1E22",
+          borderBottom: "1px solid #2A2D33",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -557,7 +557,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           )}
         </div>
 
-        <div style={{ padding: "12px 16px", borderTop: "1px solid #1C1E22", flexShrink: 0 }}>
+        <div style={{ padding: "12px 16px", borderTop: "1px solid #2A2D33", flexShrink: 0 }}>
           <a
             href={`https://wa.me/${WA_PHONE}?text=${WA_MESSAGE}`}
             target="_blank"

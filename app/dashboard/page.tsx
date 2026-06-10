@@ -438,7 +438,7 @@ export default async function DashboardPage() {
         {/* Footer A5 */}
         <div className="flex items-center justify-center gap-3 py-4 opacity-50">
           <span className="text-xs text-ink-3 uppercase tracking-wider">Uma solução</span>
-          <A5Logo height={18} />
+          <A5Logo light height={18} />
         </div>
       </div>
     </main>

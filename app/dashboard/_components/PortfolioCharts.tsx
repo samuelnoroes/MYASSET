@@ -56,7 +56,7 @@ const CustomBarTooltip = ({ active, payload, label }: any) => {
     return (
       <div
         style={{
-          background: "white",
+          background: "#141618",
           border: "1px solid #2A2D33",
           borderRadius: 6,
           padding: "10px 14px",
@@ -87,7 +87,7 @@ const CustomPieTooltip = ({ active, payload }: any) => {
     return (
       <div
         style={{
-          background: "white",
+          background: "#141618",
           border: "1px solid #2A2D33",
           borderRadius: 6,
           padding: "8px 12px",
@@ -243,7 +243,7 @@ export default function PortfolioCharts({
                   />
                   <Bar
                     dataKey="despesas"
-                    fill="#FCA5A5"
+                    fill="#E0686C"
                     radius={[3, 3, 0, 0]}
                   />
                 </BarChart>

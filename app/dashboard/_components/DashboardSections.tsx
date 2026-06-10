@@ -65,7 +65,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
       {payload.map((p: any) => (
         <div key={p.name} style={{ display: "flex", justifyContent: "space-between", gap: 16, marginBottom: 4 }}>
           <span style={{ color: p.color, fontSize: 12 }}>{p.name}</span>
-          <span style={{ color: "#141618", fontSize: 12, fontWeight: 700 }}>{fmtFull(p.value)}</span>
+          <span style={{ color: "#F5F3EF", fontSize: 12, fontWeight: 700 }}>{fmtFull(p.value)}</span>
         </div>
       ))}
     </div>
