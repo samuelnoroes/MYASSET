@@ -3,6 +3,16 @@ import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
+    // Validação do webhook — configure o mesmo token em Asaas > Webhooks > Auth Token
+    const expected = process.env.ASAAS_WEBHOOK_TOKEN;
+    if (expected) {
+      const got = req.headers.get("asaas-access-token");
+      if (got !== expected) {
+        console.warn("Webhook Asaas rejeitado: token inválido");
+        return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+      }
+    }
+
     const payload = await req.json();
     const supabase = createClient();
     const { event, payment, subscription } = payload;
