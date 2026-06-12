@@ -1,123 +1,68 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 
-const ASAAS_BASE_URL = process.env.ASAAS_BASE_URL!;
-const ASAAS_API_KEY = process.env.ASAAS_API_KEY!;
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY!;
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.myasset.tech";
 
-const PLAN_VALUES: Record<string, number> = {
-  essencial: 24.99,
-  plus: 37.99,
-  pro: 54.99,
+// IDs do Stripe (TEST). Trocar pelos IDs LIVE ao migrar para producao.
+const PLAN_PRICE: Record<string, string> = {
+  essencial: "price_1ThKIwE8nvqjK40ToNXmxOSn",
+  plus: "price_1ThKJ5E8nvqjK40THlcXT1uR",
+  pro: "price_1ThKJ6E8nvqjK40TBX6oN32y",
 };
 
-async function asaasFetch(path: string, method: string, body?: object) {
-  const res = await fetch(`${ASAAS_BASE_URL}${path}`, {
+// Promocao de junho: 1o mes ao preco do Essencial (cupom duration=once)
+const PLAN_COUPON: Record<string, string> = {
+  plus: "cVOMZLQO",
+  pro: "kz9tq1Fd",
+};
+
+async function stripeFetch(path: string, method: string, form?: Record<string, string>) {
+  const res = await fetch(`https://api.stripe.com/v1${path}`, {
     method,
     headers: {
- "access_token": ASAAS_API_KEY,
- "Content-Type": "application/json",
+      Authorization: `Bearer ${STRIPE_SECRET_KEY}`,
+      "Content-Type": "application/x-www-form-urlencoded",
     },
-    body: body ? JSON.stringify(body) : undefined,
+    body: form ? new URLSearchParams(form).toString() : undefined,
   });
-
   const text = await res.text();
-  if (!res.ok) throw new Error(`Asaas error ${res.status}: ${text}`);
-
-  try {
-    return JSON.parse(text);
-  } catch {
-    throw new Error(`Asaas parse error: ${text}`);
-  }
+  if (!res.ok) throw new Error(`Stripe ${res.status}: ${text}`);
+  return JSON.parse(text);
 }
 
-// Retorna { url } ou { error } em vez de redirect()
-// Assim o redirect fica no componente cliente, sem conflito com NEXT_REDIRECT
+// Retorna { url } ou { error } — o redirect acontece no componente cliente.
 export async function createCheckout(formData: FormData): Promise<{ url?: string; error?: string }> {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) return { error: "Usuário não autenticado" };
+  if (!user) return { error: "Usuario nao autenticado" };
 
   const plan = formData.get("plan") as string;
-  if (!["essencial", "plus", "pro"].includes(plan)) return { error: "Plano inválido" };
-
-  const { data: profile } = await supabase
-    .from("user_profiles")
-    .select("full_name, phone, asaas_customer_id")
-    .eq("id", user.id)
-    .single();
-
-  if (!profile) return { error: "Perfil não encontrado" };
+  if (!["essencial", "plus", "pro"].includes(plan)) return { error: "Plano invalido" };
 
   try {
-    let asaasCustomerId = profile.asaas_customer_id;
+    const form: Record<string, string> = {
+      mode: "subscription",
+      "line_items[0][price]": PLAN_PRICE[plan],
+      "line_items[0][quantity]": "1",
+      customer_email: user.email ?? "",
+      client_reference_id: user.id,
+      "metadata[plan]": plan,
+      "subscription_data[metadata][plan]": plan,
+      success_url: `${SITE_URL}/dashboard/plans?upgraded=true`,
+      cancel_url: `${SITE_URL}/dashboard/plans?canceled=true`,
+    };
+    if (PLAN_COUPON[plan]) form["discounts[0][coupon]"] = PLAN_COUPON[plan];
 
-    // 1. Criar customer se não existir
-    if (!asaasCustomerId) {
-      const customer = await asaasFetch("/customers", "POST", {
-        name: profile.full_name || user.email,
-        email: user.email,
-        mobilePhone: profile.phone?.replace(/\D/g, "") || "",
-        externalReference: user.id,
-        notificationDisabled: false,
-      });
+    const session = await stripeFetch("/checkout/sessions", "POST", form);
+    if (!session.url) return { error: "Link de pagamento nao gerado. Tente novamente." };
 
-      asaasCustomerId = customer.id;
-      await supabase
-        .from("user_profiles")
-        .update({ asaas_customer_id: asaasCustomerId })
-        .eq("id", user.id);
-    }
+    // plan_pending so para UX ("aguardando confirmacao"); plan/status sao definidos pelo webhook.
+    await supabase.from("user_profiles").update({ plan_pending: plan }).eq("id", user.id);
 
-    // 2. Criar assinatura
-    const value = PLAN_VALUES[plan];
-    const nextDueDate = new Date();
-    nextDueDate.setDate(nextDueDate.getDate() + 1);
-    const dueDateStr = nextDueDate.toISOString().split("T")[0];
-
-    const subscription = await asaasFetch("/subscriptions", "POST", {
-      customer: asaasCustomerId,
-      billingType: "CREDIT_CARD",
-      value,
-      nextDueDate: dueDateStr,
-      cycle: "MONTHLY",
-      description: `MyAsset ${plan === "pro" ? "Pro" : plan === "plus" ? "Plus" : "Essencial"} — assinatura mensal`,
-      externalReference: `${user.id}:${plan}`,
-    });
-
-    await supabase
-      .from("user_profiles")
-      .update({ asaas_subscription_id: subscription.id, plan_pending: plan })
-      .eq("id", user.id);
-
-    // 3. Buscar primeira cobrança da assinatura
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    const paymentsResponse = await asaasFetch(
-      `/subscriptions/${subscription.id}/payments`,
- "GET"
-    );
-
-    const firstPayment = paymentsResponse?.data?.[0];
-
-    const checkoutUrl =
-      firstPayment?.invoiceUrl ||
-      firstPayment?.bankSlipUrl ||
-      subscription.invoiceUrl ||
-      subscription.url ||
-      null;
-
-    console.log("checkoutUrl:", checkoutUrl);
-    console.log("subscription:", JSON.stringify(subscription));
-    console.log("firstPayment:", JSON.stringify(firstPayment));
-
-    if (!checkoutUrl) return { error: "Link de pagamento não gerado. Tente novamente." };
-
-    return { url: checkoutUrl };
-
+    return { url: session.url };
   } catch (err) {
     console.error("createCheckout error:", err);
     return { error: err instanceof Error ? err.message : "Erro inesperado" };
@@ -127,30 +72,21 @@ export async function createCheckout(formData: FormData): Promise<{ url?: string
 export async function cancelPlan() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-
   if (!user) redirect("/login");
 
   const { data: profile } = await supabase
     .from("user_profiles")
-    .select("asaas_subscription_id")
+    .select("stripe_subscription_id")
     .eq("id", user.id)
     .single();
 
-  if (profile?.asaas_subscription_id) {
+  if (profile?.stripe_subscription_id) {
     try {
-      await asaasFetch(`/subscriptions/${profile.asaas_subscription_id}`, "DELETE");
+      await stripeFetch(`/subscriptions/${profile.stripe_subscription_id}`, "DELETE");
     } catch (err) {
       console.error("cancelPlan error:", err);
     }
   }
-
-  await supabase.from("user_profiles").update({
-    plan: "trial",
-    asaas_subscription_id: null,
-    plan_started_at: null,
-    plan_pending: null,
-  }).eq("id", user.id);
-
-  revalidatePath("/dashboard/plans");
+  // O webhook (customer.subscription.deleted) define account_status = suspended.
   redirect("/dashboard/plans?canceled=true");
 }
