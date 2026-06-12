@@ -8,17 +8,14 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // 2. Só verificar plano em rotas do dashboard
+  // 2. Gate apenas em rotas do dashboard
   const isDashboardRoute = pathname.startsWith("/dashboard");
+  if (!isDashboardRoute) return response;
+
   const isPlansPage = pathname === "/dashboard/plans";
   const isBillingPage = pathname.startsWith("/dashboard/billing");
 
-  // Deixar passar: fora do dashboard, página de planos, billing
-  if (!isDashboardRoute || isPlansPage || isBillingPage) {
-    return response;
-  }
-
-  // 3. Buscar dados do usuário e plano
+  // 3. Buscar estado da conta (pay-first)
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -27,54 +24,46 @@ export async function middleware(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            request.cookies.set(name, value)
-          );
+        setAll(
+          cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]
+        ) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
         },
       },
     }
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
-
-  // Sem usuário logado → deixa o updateSession lidar (vai redirecionar pra /login)
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  // Sem usuário → updateSession já cuida do redirect pra /login
   if (!user) return response;
 
   const { data: profile } = await supabase
     .from("user_profiles")
-    .select("plan, trial_started_at")
+    .select("account_status")
     .eq("id", user.id)
     .single();
 
-  // Sem perfil → deixa passar (evitar loop em casos edge)
+  // Sem perfil → deixa passar (evita loop em casos edge)
   if (!profile) return response;
 
-  const plan = profile.plan ?? "trial";
+  const status = profile.account_status ?? "pending_payment";
 
-  // 4. Verificar se trial expirou
-  if (plan === "trial") {
-    const trialStarted = profile.trial_started_at
-      ? new Date(profile.trial_started_at)
-      : null;
-
-    if (trialStarted) {
-      const daysSinceStart = Math.floor(
-        (Date.now() - trialStarted.getTime()) / (1000 * 60 * 60 * 24)
-      );
-
-      if (daysSinceStart >= 30) {
-        // Trial expirou → redirecionar pra tela de planos
-        return NextResponse.redirect(new URL("/dashboard/plans", request.url));
-      }
-    }
-  }
-
-  // 5. Verificar acesso ao WhatsApp (só plano Pro)
-  if (pathname.startsWith("/dashboard/whatsapp") && plan !== "pro") {
+  // 4. WhatsApp/bot: TOTALMENTE proibido até a conta estar 'active'
+  if (pathname.startsWith("/dashboard/whatsapp") && status !== "active") {
     return NextResponse.redirect(new URL("/dashboard/plans", request.url));
   }
 
+  // 5. Planos e billing sempre liberados (para escolher plano e pagar)
+  if (isPlansPage || isBillingPage) return response;
+
+  // 6. Pay-first: sem pagamento (ou suspenso) → só Planos/Billing
+  if (status === "pending_payment" || status === "suspended") {
+    return NextResponse.redirect(new URL("/dashboard/plans", request.url));
+  }
+
+  // pending_onboarding e active seguem normalmente
   return response;
 }
 
