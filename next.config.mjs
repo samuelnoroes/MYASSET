@@ -14,19 +14,18 @@ const nextConfig = {
     return [
       { source: "/(.*)", headers: securityHeaders },
       // Páginas autenticadas: nunca cachear (evita vazar dados de sessão anterior)
-      {
-        source: "/dashboard/:path*",
-        headers: [{ key: "Cache-Control", value: "no-store, max-age=0" }],
-      },
-      {
-        source: "/admin/:path*",
-        headers: [{ key: "Cache-Control", value: "no-store, max-age=0" }],
-      },
-      {
-        source: "/auth/:path*",
-        headers: [{ key: "Cache-Control", value: "no-store, max-age=0" }],
-      },
+      { source: "/dashboard/:path*", headers: [{ key: "Cache-Control", value: "no-store, max-age=0" }] },
+      { source: "/admin/:path*", headers: [{ key: "Cache-Control", value: "no-store, max-age=0" }] },
+      { source: "/auth/:path*", headers: [{ key: "Cache-Control", value: "no-store, max-age=0" }] },
     ];
+  },
+  // Home: serve a landing estática (public/lp.html) na raiz, antes do app router.
+  async rewrites() {
+    return {
+      beforeFiles: [
+        { source: "/", destination: "/lp.html" },
+      ],
+    };
   },
 };
 
