@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyAsset — Sua IA imobiliária no WhatsApp para investidores</title>
+<meta name="description" content="Um app completo para o seu portfólio de imóveis — comandado por uma IA imobiliária no seu WhatsApp. Saiba, antes de decidir, se vale a pena. Nunca mais invista no escuro. Garantia de 7 dias.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0F1C17;
+  --forest:#16271F;
+  --forest-2:#1C3329;
+  --brand:#2D4A3E;
+  --mint:#6BA68A;
+  --mint-bright:#9BDcB9;
+  --brass:#C9A86A;
+  --brass-deep:#A8854B;
+  --cream:#F2EEE3;
+  --cream-2:#FBF9F3;
+  --muted:#A9BBB1;
+  --ink-text:#16241D;
+  --line:rgba(155,178,166,.16);
+  --radius:14px;
+  --maxw:1180px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--ink);
+  color:var(--cream);
+  font-family:'Hanken Grotesk',system-ui,sans-serif;
+  font-size:17px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+.serif{font-family:'Spectral',Georgia,serif}
+.mono{font-family:'JetBrains Mono',monospace}
+.eyebrow{
+  font-family:'JetBrains Mono',monospace;
+  font-size:12px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--brass);
+}
+h1,h2,h3{font-family:'Spectral',Georgia,serif;font-weight:600;line-height:1.08;letter-spacing:-.01em}
+.section{padding:96px 0}
+.btn{
+  display:inline-flex;align-items:center;gap:.5em;
+  font-weight:600;font-size:16px;
+  padding:15px 26px;border-radius:999px;
+  border:1px solid transparent;cursor:pointer;
+  transition:transform .18s ease, background .18s ease, color .18s ease, border-color .18s ease;
+}
+.btn-primary{background:var(--brass);color:#1a1304}
+.btn-primary:hover{background:var(--mint-bright);color:#0c2017;transform:translateY(-2px)}
+.btn-ghost{border-color:var(--line);color:var(--cream)}
+.btn-ghost:hover{border-color:var(--mint);color:var(--mint-bright)}
+.btn-dark{background:var(--brand);color:var(--cream)}
+.btn-dark:hover{background:#234034;transform:translateY(-2px)}
+:focus-visible{outline:2px solid var(--mint-bright);outline-offset:3px;border-radius:6px}
+
+/* NAV */
+.nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(10px);
+  background:rgba(15,28,23,.78);border-bottom:1px solid var(--line)}
+.nav-in{display:flex;align-items:center;justify-content:space-between;height:68px}
+.brandmark{font-family:'Spectral',serif;font-style:italic;font-size:25px;font-weight:600;letter-spacing:-.01em}
+.brandmark b{color:var(--mint);font-weight:600}
+.nav-links{display:flex;align-items:center;gap:30px}
+.nav-links a{font-size:15px;color:var(--muted)}
+.nav-links a:hover{color:var(--cream)}
+.nav-cta{padding:10px 20px;font-size:15px}
+.burger{display:none;background:none;border:0;color:var(--cream);font-size:24px;cursor:pointer}
+
+/* HERO */
+.hero{position:relative;padding:84px 0 70px}
+.hero::before{content:"";position:absolute;inset:0;z-index:-1;
+  background:
+   radial-gradient(60% 50% at 78% 18%, rgba(107,166,138,.22), transparent 70%),
+   radial-gradient(40% 40% at 10% 90%, rgba(201,168,106,.10), transparent 70%);}
+.hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center}
+.hero h1{font-size:clamp(38px,5.4vw,66px);margin:18px 0 22px}
+.hero h1 em{font-style:italic;color:var(--mint-bright)}
+.hero p.lead{font-size:19px;color:#D8E0DA;max-width:33em;margin-bottom:30px}
+.hero-ctas{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:22px}
+.hero-trust{font-size:14px;color:var(--muted);display:flex;gap:18px;flex-wrap:wrap}
+.hero-trust span{display:inline-flex;align-items:center;gap:7px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--mint)}
+
+/* WHATSAPP CHAT (layout padrão) */
+.wa{max-width:392px;margin:0 auto;border-radius:20px;overflow:hidden;border:1px solid rgba(0,0,0,.25);box-shadow:0 34px 90px -32px rgba(0,0,0,.85);font-family:'Hanken Grotesk',-apple-system,sans-serif}
+.wa-head{display:flex;align-items:center;gap:10px;padding:11px 14px;background:#f7f6f4;border-bottom:1px solid rgba(0,0,0,.06)}
+.wa-back{color:#34b7f1;font-size:22px;line-height:1;font-weight:600}
+.wa-av{width:38px;height:38px;border-radius:50%;background:#25d366;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-family:'Spectral',serif;font-style:italic;flex:none}
+.wa-name{font-size:15px;font-weight:700;color:#111b21;line-height:1.15}
+.wa-sub{font-size:11.5px;color:#667781}
+.wa-icons{margin-left:auto;display:flex;gap:16px;color:#34b7f1;font-size:15px}
+.wa-body{background:#e5ddd4;padding:16px 12px 14px;display:flex;flex-direction:column;gap:7px}
+.wa-day{align-self:center;background:#fff;color:#54656f;font-size:11px;font-weight:600;padding:4px 12px;border-radius:8px;box-shadow:0 1px 1px rgba(0,0,0,.08);margin-bottom:4px}
+.wa-msg{max-width:85%;padding:7px 9px 5px;border-radius:9px;font-size:14px;line-height:1.42;color:#111b21;box-shadow:0 1px .6px rgba(0,0,0,.15)}
+.wa-in{align-self:flex-start;background:#fff;border-top-left-radius:1px}
+.wa-out{align-self:flex-end;background:#d9fdd3;border-top-right-radius:1px}
+.wa-t{display:block;text-align:right;font-size:10px;color:#667781;margin-top:3px}
+.wa-t b{color:#53bdeb;font-weight:400}
+.wa-data{font-family:'JetBrains Mono',monospace;font-size:11.5px;background:#f4f7f5;border:1px solid rgba(0,0,0,.07);border-radius:8px;padding:9px 10px;margin-top:7px;line-height:1.7;color:#1d2b23}
+.wa-data .k{color:#7d8a82}
+.wa-data .v{color:#0a6b4d;font-weight:500}
+.wa-data .neg{color:#c0392b}
+.wa-data .pos{color:#0a8a4f}
+.wa-input{display:flex;align-items:center;gap:9px;padding:8px 12px;background:#f7f6f4;border-top:1px solid rgba(0,0,0,.06)}
+.wa-field{flex:1;background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:999px;height:34px}
+.wa-input .ic{color:#8696a0;font-size:17px}
+.wa .wa-msg{transition:opacity .3s ease}
+.wa-msg.pop{animation:rise .34s}
+.wa-typing{align-self:flex-start;background:#fff;border-radius:9px;border-top-left-radius:1px;padding:11px 13px;display:flex;gap:4px;box-shadow:0 1px .6px rgba(0,0,0,.15)}
+.wa-typing span{width:7px;height:7px;border-radius:50%;background:#9aa6a0;animation:blink 1.2s infinite both}
+.wa-typing span:nth-child(2){animation-delay:.18s}
+.wa-typing span:nth-child(3){animation-delay:.36s}
+@keyframes blink{0%,62%,100%{opacity:.3;transform:translateY(0)}31%{opacity:1;transform:translateY(-3px)}}
+
+/* POSITIONING BAND */
+.band{background:var(--brand);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.band .wrap{padding:38px 24px}
+.band p{font-family:'Spectral',serif;font-size:clamp(20px,2.4vw,27px);line-height:1.35;max-width:32em;color:var(--cream)}
+.band b{color:var(--brass)}
+
+/* PAIN */
+.pain{background:var(--forest)}
+.pain h2{font-size:clamp(27px,3.6vw,40px);max-width:16em}
+.pain-list{display:grid;grid-template-columns:1fr 1fr;gap:18px 40px;max-width:920px}
+.pain-item{display:flex;gap:14px;align-items:flex-start;font-size:17px;color:#D3DDD7;padding-bottom:18px;border-bottom:1px solid var(--line)}
+.pain-item .x{color:var(--brass);font-family:'JetBrains Mono',monospace;font-size:13px;margin-top:3px}
+.pain-kicker{margin-top:30px;font-family:'Spectral',serif;font-style:italic;font-size:22px;color:var(--mint-bright)}
+
+/* BENEFITS */
+.ben h2{font-size:clamp(27px,3.6vw,40px);max-width:14em;margin-bottom:14px}
+.ben .sub{color:var(--muted);max-width:38em;margin-bottom:46px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.card{background:var(--forest);border:1px solid var(--line);border-radius:var(--radius);padding:26px 24px;transition:transform .2s ease,border-color .2s ease}
+.card:hover{transform:translateY(-4px);border-color:rgba(107,166,138,.45)}
+.card .num{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--brass);letter-spacing:.1em}
+.card h3{font-size:21px;margin:14px 0 9px}
+.card p{font-size:15.5px;color:#C3D0C8}
+
+/* HOW */
+.how{background:var(--cream);color:var(--ink-text)}
+.how .eyebrow{color:var(--brass-deep)}
+.how h2{font-size:clamp(27px,3.6vw,40px);color:#16241D;margin-bottom:46px}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
+.step{position:relative;padding-top:26px;border-top:2px solid var(--brand)}
+.step .n{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--brass-deep);letter-spacing:.15em}
+.step h3{font-size:22px;color:#16241D;margin:12px 0 8px}
+.step p{font-size:15.5px;color:#445149}
+.how-result{margin-top:40px;font-family:'Spectral',serif;font-style:italic;font-size:clamp(19px,2.2vw,24px);color:#16241D;max-width:24em}
+
+/* OFFER */
+.offer{background:linear-gradient(160deg,#1d1605,#241a08 55%,#16271F);border-top:1px solid rgba(201,168,106,.35)}
+.offer-in{display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:center}
+.offer .eyebrow{color:var(--brass)}
+.offer h2{font-size:clamp(26px,3.3vw,38px);margin:14px 0 16px;max-width:13em}
+.offer h2 em{color:var(--brass);font-style:italic}
+.offer p{color:#E5DEC9;max-width:34em;margin-bottom:26px}
+.guarantees{list-style:none;display:grid;gap:14px}
+.guarantees li{display:flex;gap:13px;align-items:flex-start;background:rgba(255,255,255,.03);border:1px solid rgba(201,168,106,.25);border-radius:12px;padding:15px 17px}
+.guarantees .g-ic{color:var(--brass);font-family:'JetBrains Mono',monospace;margin-top:2px}
+.guarantees b{color:var(--cream)}
+.guarantees span{color:#C9C2AE;font-size:14.5px}
+
+/* PRICING */
+.price h2{font-size:clamp(27px,3.6vw,40px);max-width:12em;margin-bottom:12px}
+.price .sub{color:var(--muted);max-width:40em;margin-bottom:46px}
+.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:stretch}
+.plan{background:var(--forest);border:1px solid var(--line);border-radius:18px;padding:30px 26px;display:flex;flex-direction:column}
+.plan.feat{border-color:var(--brass);background:linear-gradient(180deg,#1d3127,#15271e);box-shadow:0 24px 60px -30px rgba(201,168,106,.4);position:relative}
+.plan .tag{position:absolute;top:-12px;left:26px;background:var(--brass);color:#1a1304;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:5px 12px;border-radius:999px;font-weight:700}
+.plan .pname{font-family:'Spectral',serif;font-size:23px;font-weight:600}
+.plan .pprice{font-family:'Spectral',serif;font-size:40px;font-weight:700;margin:10px 0 2px}
+.plan .pprice small{font-size:15px;color:var(--muted);font-family:'Hanken Grotesk',sans-serif;font-weight:500}
+.plan .pfor{font-size:14px;color:var(--muted);min-height:40px;margin-bottom:18px}
+.plan ul{list-style:none;display:grid;gap:11px;margin-bottom:26px;flex:1}
+.plan li{font-size:15px;color:#D3DDD7;display:flex;gap:10px}
+.plan li .c{color:var(--mint)}
+.plan .btn{width:100%;justify-content:center}
+.price-note{text-align:center;color:var(--muted);font-size:14px;margin-top:26px}
+
+/* FAQ */
+.faq{background:var(--forest)}
+.faq h2{font-size:clamp(27px,3.6vw,40px);margin-bottom:34px}
+.faq details{border-bottom:1px solid var(--line);padding:6px 0}
+.faq summary{cursor:pointer;list-style:none;padding:18px 4px;font-family:'Spectral',serif;font-size:20px;display:flex;justify-content:space-between;align-items:center;gap:20px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";color:var(--brass);font-family:'JetBrains Mono',monospace;font-size:22px;transition:transform .2s}
+.faq details[open] summary::after{content:"–"}
+.faq p{padding:0 4px 20px;color:#C3D0C8;max-width:52em}
+
+/* FINAL */
+.final{position:relative;text-align:center;padding:110px 0}
+.final::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(50% 70% at 50% 0%,rgba(107,166,138,.18),transparent 70%)}
+.final h2{font-size:clamp(30px,4.4vw,52px);max-width:16em;margin:0 auto 18px}
+.final p{color:#D8E0DA;max-width:34em;margin:0 auto 30px;font-size:19px}
+.final .hero-trust{justify-content:center}
+
+/* FOOTER */
+footer{border-top:1px solid var(--line);padding:46px 0;color:var(--muted);font-size:14px}
+.foot-in{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
+.foot-links{display:flex;gap:24px}
+.foot-links a:hover{color:var(--cream)}
+
+/* PRODUCT PREVIEW */
+.preview{background:var(--ink)}
+.preview .eyebrow{color:var(--brass)}
+.preview h2{font-size:clamp(27px,3.6vw,40px);max-width:13em;margin:14px 0 12px}
+.preview .sub{color:var(--muted);max-width:42em;margin-bottom:42px}
+.pv-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+.pv-card{background:var(--forest);border:1px solid var(--line);border-radius:18px;padding:24px;box-shadow:0 24px 60px -34px rgba(0,0,0,.7)}
+.pv-label{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.pv-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.pv-net{display:flex;gap:22px;align-items:center;margin-bottom:20px}
+.donut{width:130px;height:130px;border-radius:50%;flex:none;
+  background:conic-gradient(var(--brass) 0 55%, #5B8FB0 55% 82%, var(--mint) 82% 100%);
+  -webkit-mask:radial-gradient(circle 39px at 50% 50%, transparent 98%, #000 100%);
+          mask:radial-gradient(circle 39px at 50% 50%, transparent 98%, #000 100%)}
+.pv-total{font-family:'Spectral',serif;font-size:40px;font-weight:700;line-height:1}
+.pv-total small{display:block;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:500;color:var(--muted);margin-top:5px}
+.legend{display:grid;gap:9px}
+.legend div{display:flex;align-items:center;gap:9px;font-size:14px;color:#D3DDD7}
+.legend .sw{width:10px;height:10px;border-radius:3px}
+.legend b{margin-left:auto;font-family:'JetBrains Mono',monospace;color:var(--cream)}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
+.kpi{background:#11221a;border:1px solid var(--line);border-radius:12px;padding:15px}
+.kpi .pv-label{font-size:10px}
+.kpi .val{font-family:'JetBrains Mono',monospace;font-size:25px;margin-top:7px;color:var(--mint-bright)}
+.proprow{display:flex;align-items:center;gap:14px;padding:15px 0;border-bottom:1px solid var(--line)}
+.proprow:last-child{border-bottom:0;padding-bottom:0}
+.ring{width:44px;height:44px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;
+  background:conic-gradient(var(--mint) calc(var(--p)*1%), rgba(255,255,255,.08) 0)}
+.ring i{width:34px;height:34px;border-radius:50%;background:var(--forest);display:flex;align-items:center;justify-content:center;font-style:normal;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--cream)}
+.prop-main{flex:1;min-width:0}
+.prop-main .tagmod{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--brass)}
+.prop-main .t{font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prop-main .m{font-size:12px;color:var(--muted)}
+.prop-val{text-align:right;flex:none}
+.prop-val .v{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--cream)}
+.prop-val .r{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--mint)}
+.pv-foot{margin-top:26px;text-align:center;color:var(--muted);font-size:13px}
+
+/* CTAs intermediários */
+.cta-inline{display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;margin-top:50px}
+.cta-inline p{font-family:'Spectral',serif;font-style:italic;font-size:clamp(19px,2.2vw,25px);color:var(--cream);max-width:24em}
+.how .cta-inline p{color:#16241D}
+.cta-left{align-items:flex-start;text-align:left}
+
+/* CTA flutuante fixo */
+.sticky-cta{position:fixed;left:50%;bottom:20px;z-index:60;transform:translate(-50%,150%);transition:transform .4s cubic-bezier(.2,.8,.2,1);
+  background:rgba(15,28,23,.92);border:1px solid rgba(201,168,106,.4);backdrop-filter:blur(8px);
+  border-radius:999px;padding:8px 8px 8px 22px;display:flex;align-items:center;gap:16px;box-shadow:0 18px 50px -18px rgba(0,0,0,.75)}
+.sticky-cta.show{transform:translate(-50%,0)}
+.sticky-cta span{font-size:14px;color:var(--cream);font-weight:600;white-space:nowrap}
+.sticky-cta .btn{padding:11px 20px;font-size:15px}
+
+@media (max-width:900px){
+  .section{padding:72px 0}
+  .hero-grid,.offer-in{grid-template-columns:1fr;gap:40px}
+  .grid3,.steps,.plans,.pv-grid{grid-template-columns:1fr}
+  .pain-list{grid-template-columns:1fr}
+  .nav-links{display:none}
+  .burger{display:block}
+  .nav-links.open{display:flex;position:absolute;top:68px;left:0;right:0;flex-direction:column;background:var(--ink);padding:22px 24px;border-bottom:1px solid var(--line);gap:18px}
+  .plan.feat{order:-1}
+}
+@media (max-width:560px){.sticky-cta span{display:none}.sticky-cta{padding:7px}}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+  .wa .wa-msg{opacity:1;transform:none}
+}
+.reveal{opacity:0;transform:translateY(22px);transition:opacity .6s ease,transform .6s ease}
+.reveal.in{opacity:1;transform:none}
+@keyframes rise{to{opacity:1;transform:none}}
+/* MARQUEE credibilidade */
+.marquee{overflow:hidden;background:var(--ink);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:16px 0;
+  -webkit-mask:linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent);mask:linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent)}
+.marquee-track{display:flex;gap:44px;width:max-content;animation:scrollx 34s linear infinite}
+.marquee:hover .marquee-track{animation-play-state:paused}
+.mi{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--muted);white-space:nowrap}
+.mi b{color:var(--cream);font-weight:600}
+.mi .d{color:var(--brass);font-size:9px}
+@keyframes scrollx{to{transform:translateX(-50%)}}
+
+/* PHONE frame */
+.phone{max-width:414px;margin:0 auto;background:#0a0f0c;border:1px solid rgba(255,255,255,.07);border-radius:34px;padding:12px 10px 18px;position:relative;box-shadow:0 50px 110px -45px #000, inset 0 0 0 1px rgba(255,255,255,.03)}
+.phone::after{content:"";position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:112px;height:4px;border-radius:3px;background:rgba(255,255,255,.18)}
+.phone .wa{border-radius:26px;box-shadow:none;border:1px solid rgba(0,0,0,.25);max-width:none}
+
+/* WINDOW frame (dashboard) */
+.window{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#0e1d16;box-shadow:0 36px 90px -44px #000}
+.window-bar{display:flex;align-items:center;gap:7px;padding:12px 15px;background:#11221a;border-bottom:1px solid var(--line)}
+.window-bar i{width:11px;height:11px;border-radius:50%;background:#3a4d44;display:inline-block}
+.window-url{margin-left:12px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)}
+.window-body{padding:22px}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap nav-in">
+    <a href="#top" class="brandmark">My<b>Asset</b></a>
+    <div class="nav-links" id="navlinks">
+      <a href="#produto">O app</a>
+      <a href="#beneficios">Recursos</a>
+      <a href="#como">Como funciona</a>
+      <a href="#planos">Planos</a>
+      <a href="https://www.myasset.tech/dashboard/plans" class="btn btn-primary nav-cta">Quero entrar</a>
+    </div>
+    <button class="burger" aria-label="Abrir menu" id="burger">≡</button>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap hero-grid">
+    <div class="reveal in">
+      <span class="eyebrow">Sua IA imobiliária — no seu WhatsApp</span>
+      <h1>Você, sempre <em>um passo à frente</em> do mercado.</h1>
+      <p class="lead">O MyAsset é um app completo para o seu portfólio — e você comanda tudo conversando com a sua IA imobiliária no WhatsApp. Ela conhece o mercado, analisa cada decisão e te diz, na hora, se o negócio vale a pena. <strong style="color:#fff;font-weight:600">Nunca mais invista no escuro.</strong></p>
+      <div class="hero-ctas">
+        <a href="https://www.myasset.tech/dashboard/plans" class="btn btn-primary">Quero minha vantagem agora →</a>
+        <a href="#produto" class="btn btn-ghost">Ver por dentro</a>
+      </div>
+      <div class="hero-trust">
+        <span><i class="dot"></i> Funciona no WhatsApp que você já usa</span>
+        <span><i class="dot"></i> 7 dias de garantia — o risco é nosso</span>
+      </div>
+    </div>
+
+    <div class="reveal in phone" aria-hidden="true">
+      <div class="wa">
+        <div class="wa-head">
+          <span class="wa-back">‹</span>
+          <div class="wa-av">M</div>
+          <div><div class="wa-name">MyAsset</div><div class="wa-sub">IA imobiliária • <span class="wa-status">online</span></div></div>
+          <div class="wa-icons"><span>▢</span><span>☏</span></div>
+        </div>
+        <div class="wa-body">
+          <div class="wa-day">HOJE</div>
+          <div class="wa-msg wa-out d1">Vale a pena o Beach Class Iracema? 63 m², R$ 690 mil, para render como short stay.<span class="wa-t">9:14 <b>✓✓</b></span></div>
+          <div class="wa-msg wa-in d2">Rodei os números. Nesse preço, como short stay, não compensa — o líquido fica abaixo da renda fixa:
+            <div class="wa-data">
+              <div><span class="k">preço/m²…</span> <span class="v">R$ 10.952</span> <span class="neg">acima da média</span></div>
+              <div><span class="k">receita…</span> <span class="v">~R$ 61 mil/ano</span></div>
+              <div><span class="k">custos…</span> <span class="neg">−R$ 35 mil/ano</span></div>
+              <div><span class="k">líquido…</span> <span class="v">3,8% a.a.</span> · CDI <span class="pos">10,5%</span></div>
+              <div><span class="k">veredito</span> <span class="neg">▼ destrói valor</span></div>
+            </div>
+            <span class="wa-t">9:14</span>
+          </div>
+          <div class="wa-msg wa-in d3">Só faria sentido ~20% mais barato, ou como locação anual. Quer comparar com outra unidade?<span class="wa-t">9:14</span></div>
+          <div class="wa-msg wa-out d4">Que bom que perguntei. Eu já ia assinar.<span class="wa-t">9:15 <b>✓✓</b></span></div>
+        </div>
+        <div class="wa-input"><span class="ic">＋</span><div class="wa-field"></div><span class="ic">☺</span><span class="ic">▤</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section class="band">
+  <div class="wrap reveal">
+    <p>Um app completo para o seu portfólio. Uma IA imobiliária no seu WhatsApp para comandar tudo por mensagem. <b>Nunca mais decida um investimento no escuro.</b></p>
+  </div>
+</section>
+
+<section class="marquee" aria-label="Credibilidade">
+  <div class="marquee-track">
+    <span class="mi"><span class="d">◆</span> Dados de fontes oficiais: <b>FipeZAP · IVAR · IGP-M · CBIC</b></span>
+    <span class="mi"><span class="d">◆</span> IA especialista no <b>mercado imobiliário brasileiro</b></span>
+    <span class="mi"><span class="d">◆</span> <b>Conta isolada e protegida</b></span>
+    <span class="mi"><span class="d">◆</span> <b>7 dias de garantia</b></span>
+    <span class="mi"><span class="d">◆</span> <b>Cancele quando quiser</b></span>
+    <span class="mi"><span class="d">◆</span> <b>Junho: 1º mês por R$ 24,99</b></span>
+    <span class="mi"><span class="d">◆</span> Dados de fontes oficiais: <b>FipeZAP · IVAR · IGP-M · CBIC</b></span>
+    <span class="mi"><span class="d">◆</span> IA especialista no <b>mercado imobiliário brasileiro</b></span>
+    <span class="mi"><span class="d">◆</span> <b>Conta isolada e protegida</b></span>
+    <span class="mi"><span class="d">◆</span> <b>7 dias de garantia</b></span>
+    <span class="mi"><span class="d">◆</span> <b>Cancele quando quiser</b></span>
+    <span class="mi"><span class="d">◆</span> <b>Junho: 1º mês por R$ 24,99</b></span>
+  </div>
+</section>
+
+<section class="section pain">
+  <div class="wrap">
+    <span class="eyebrow reveal">Responda com sinceridade</span>
+    <div class="pain-list reveal" style="margin-top:26px">
+      <div class="pain-item"><span class="x">01</span> Você sabe, agora, se o seu aluguel está no preço de mercado — ou abaixo dele?</div>
+      <div class="pain-item"><span class="x">02</span> Consegue dizer, sem abrir planilha, quanto cada imóvel seu rendeu este mês?</div>
+      <div class="pain-item"><span class="x">03</span> Aquele imóvel parado ainda vale a pena — ou já era hora de trocar por um mais rentável?</div>
+      <div class="pain-item"><span class="x">04</span> O lançamento que te ofereceram é mesmo um bom negócio — ou só um bom discurso?</div>
+    </div>
+    <h2 class="reveal" style="margin:40px 0 0;max-width:18em">As respostas te incomodaram? É exatamente aí que a gente entra.</h2>
+    <p class="pain-kicker reveal">A IA imobiliária no seu WhatsApp responde todas elas — antes de você decidir.</p>
+  </div>
+</section>
+
+<section class="section" style="background:linear-gradient(180deg,var(--forest-2),var(--ink))">
+  <div class="wrap hero-grid">
+    <div class="reveal">
+      <span class="eyebrow" style="color:var(--brass)">O dinheiro que estava na mesa</span>
+      <h2 style="font-size:clamp(28px,3.6vw,42px);margin:14px 0 20px">Seu aluguel estava 11% abaixo do mercado. Você descobriu em segundos.</h2>
+      <p style="color:#D8E0DA;max-width:30em;margin-bottom:18px">Pergunte e a resposta vem na hora, com o número na frente. <strong style="color:#fff;font-weight:600">Você vai saber, antes de qualquer decisão, se vale manter o ativo — ou trocar por um mais rentável.</strong></p>
+      <p style="color:var(--muted);max-width:32em">Esse dinheiro escorria em silêncio, contrato após contrato. Agora não escapa mais nada.</p>
+      <div class="cta-inline cta-left reveal" style="margin-top:30px"><a href="https://www.myasset.tech/dashboard/plans" class="btn btn-primary">Quero parar de perder dinheiro →</a></div>
+    </div>
+    <div class="reveal phone" aria-hidden="true">
+      <div class="wa">
+        <div class="wa-head">
+          <span class="wa-back">‹</span>
+          <div class="wa-av">M</div>
+          <div><div class="wa-name">MyAsset</div><div class="wa-sub">IA imobiliária • <span class="wa-status">online</span></div></div>
+          <div class="wa-icons"><span>▢</span><span>☏</span></div>
+        </div>
+        <div class="wa-body">
+          <div class="wa-day">HOJE</div>
+          <div class="wa-msg wa-out d1">Meu aluguel do Meireles está no preço de mercado?<span class="wa-t">8:02 <b>✓✓</b></span></div>
+          <div class="wa-msg wa-in d2">Não. Está 11% abaixo do praticado na região agora:
+            <div class="wa-data">
+              <div><span class="k">seu valor…</span> <span class="v">R$ 2.700</span></div>
+              <div><span class="k">mercado……</span> <span class="v">R$ 3.010</span> <span class="pos">▲ +11%</span></div>
+              <div><span class="k">você perde</span> <span class="neg">R$ 310/mês · R$ 3.720/ano</span></div>
+              <div><span class="k">fonte………</span> <span class="v">FipeZAP · IVAR</span></div>
+            </div>
+            <span class="wa-t">8:02</span>
+          </div>
+          <div class="wa-msg wa-in d3">Quer que eu gere a carta de reajuste para o próximo ciclo?<span class="wa-t">8:02</span></div>
+          <div class="wa-msg wa-out d4">Quero. Não sabia que estava perdendo isso todo mês.<span class="wa-t">8:03 <b>✓✓</b></span></div>
+        </div>
+        <div class="wa-input"><span class="ic">＋</span><div class="wa-field"></div><span class="ic">☺</span><span class="ic">▤</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section preview" id="produto">
+  <div class="wrap">
+    <span class="eyebrow reveal">Veja por dentro</span>
+    <h2 class="reveal">Seu império imobiliário inteiro. Numa tela.</h2>
+    <p class="sub reveal">Tudo isso vive num app completo — e você atualiza por mensagem, sem abrir nada. Esta é a carteira de uma conta de demonstração: 12 imóveis, R$ 6,2M.</p>
+    <div class="window"><div class="window-bar"><i></i><i></i><i></i><span class="window-url">app.myasset.tech/dashboard</span></div><div class="window-body"><div class="pv-grid">
+      <div class="pv-card reveal">
+        <div class="pv-top"><span class="pv-label">Distribuição do portfólio</span><span class="tagmod" style="color:var(--mint);font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.12em">● AO VIVO</span></div>
+        <div class="pv-net">
+          <div class="donut"></div>
+          <div><div class="pv-total">R$ 6,2M<small>patrimônio · 12 imóveis</small></div></div>
+        </div>
+        <div class="legend">
+          <div><span class="sw" style="background:var(--brass)"></span> Locação anual <b>55%</b></div>
+          <div><span class="sw" style="background:#5B8FB0"></span> Temporada / Airbnb <b>27%</b></div>
+          <div><span class="sw" style="background:var(--mint)"></span> Na planta <b>18%</b></div>
+        </div>
+        <div class="kpis">
+          <div class="kpi"><div class="pv-label">Valorização</div><div class="val">+8,9%</div></div>
+          <div class="kpi"><div class="pv-label">Yield médio</div><div class="val">9,5%</div></div>
+        </div>
+      </div>
+      <div class="pv-card reveal">
+        <div class="pv-top"><span class="pv-label">Portfólio · 12 imóveis</span></div>
+        <div class="proprow">
+          <div class="ring" style="--p:50"><i>7,2%</i></div>
+          <div class="prop-main"><div class="tagmod">Locação anual</div><div class="t">Apartamento Aldeota Tower</div><div class="m">Fortaleza · CE</div></div>
+          <div class="prop-val"><div class="v">R$ 920.000</div><div class="r">R$ 5.500/mês</div></div>
+        </div>
+        <div class="proprow">
+          <div class="ring" style="--p:53"><i>7,6%</i></div>
+          <div class="prop-main"><div class="tagmod">Locação anual</div><div class="t">Cobertura Varjota</div><div class="m">Fortaleza · CE</div></div>
+          <div class="prop-val"><div class="v">R$ 1.550.000</div><div class="r">R$ 9.800/mês</div></div>
+        </div>
+        <div class="proprow">
+          <div class="ring" style="--p:88"><i>12,4%</i></div>
+          <div class="prop-main"><div class="tagmod">Temporada</div><div class="t">Flat Beira Mar Fortaleza</div><div class="m">Fortaleza · CE</div></div>
+          <div class="prop-val"><div class="v">R$ 680.000</div><div class="r">R$ 7.000/mês</div></div>
+        </div>
+        <div class="proprow">
+          <div class="ring" style="--p:56"><i>8,0%</i></div>
+          <div class="prop-main"><div class="tagmod">Locação anual</div><div class="t">Studio Meireles Premium</div><div class="m">Fortaleza · CE</div></div>
+          <div class="prop-val"><div class="v">R$ 480.000</div><div class="r">R$ 3.200/mês</div></div>
+        </div>
+      </div>
+    </div></div></div>
+    <p class="pv-foot reveal">Réplica fiel da interface do MyAsset · dados da conta de demonstração</p>
+    <div class="cta-inline reveal"><p>Seu portfólio pode estar assim ainda hoje.</p><a href="https://www.myasset.tech/dashboard/plans" class="btn btn-primary">Quero ver o meu assim →</a></div>
+  </div>
+</section>
+
+<section class="section ben" id="beneficios">
+  <div class="wrap">
+    <span class="eyebrow reveal">O que muda na sua vida</span>
+    <h2 class="reveal">Tudo o que te faz sair na frente — numa conversa.</h2>
+    <p class="sub reveal">Depois da sua IA imobiliária no WhatsApp, você nunca mais decide um investimento no achismo.</p>
+    <div class="grid3">
+      <div class="card reveal"><div class="num">01</div><h3>Sua IA imobiliária no WhatsApp</h3><p>Seu assistente pessoal que conhece o mercado. "Vale comprar essa unidade?", "como está meu yield?", "cadastra esse imóvel". Ela analisa e responde com número, na hora.</p></div>
+      <div class="card reveal"><div class="num">02</div><h3>Manter ou trocar? Você sabe.</h3><p>A IA te diz se aquele imóvel ainda vale a pena ou se existe um mais rentável para colocar no lugar. Manter ou vender deixa de ser aposta.</p></div>
+      <div class="card reveal"><div class="num">03</div><h3>Você chega sabendo mais</h3><p>Preço real do metro quadrado, valorização do bairro, teto do aluguel — na palma da mão. O outro lado da mesa ainda está no achismo. Você não.</p></div>
+      <div class="card reveal"><div class="num">04</div><h3>Acabou o escuro</h3><p>Patrimônio, rentabilidade e ocupação numa tela só. Você abre e sabe exatamente onde está cada real do seu portfólio.</p></div>
+      <div class="card reveal"><div class="num">05</div><h3>Abril sem pânico</h3><p>Enquanto todo mundo corre atrás de papel, o seu Imposto de Renda já está organizado. Você respira.</p></div>
+      <div class="card reveal"><div class="num">06</div><h3>Você sabe antes dos outros</h3><p>O MyAsset te avisa quando um imóvel valoriza, um aluguel sai do mercado ou aparece uma oportunidade que cabe na sua carteira. Você age primeiro.</p></div>
+    </div>
+    <div class="cta-inline reveal"><p>Tudo isso numa conversa. A partir de hoje.</p><a href="https://www.myasset.tech/dashboard/plans" class="btn btn-primary">Quero meu acesso →</a></div>
+  </div>
+</section>
+
+<section class="section how" id="como">
+  <div class="wrap">
+    <span class="eyebrow">O caminho</span>
+    <h2 class="reveal">Em 5 minutos você está dentro.</h2>
+    <div class="steps">
+      <div class="step reveal"><div class="n">PASSO 01</div><h3>Escolha seu plano</h3><p>Paga e entra. O app completo é seu na hora.</p></div>
+      <div class="step reveal"><div class="n">PASSO 02</div><h3>Conecte seu WhatsApp</h3><p>Confirma o número e ativa sua IA imobiliária. É por aqui que você comanda tudo.</p></div>
+      <div class="step reveal"><div class="n">PASSO 03</div><h3>Cadastre pela conversa</h3><p>"Cadastra meu apê na Aldeota, R$ 920 mil, alugado por R$ 5.500." Pronto — já está no seu portfólio. Sem formulário, sem planilha.</p></div>
+    </div>
+    <p class="how-result reveal">A partir daqui, você nunca mais decide um investimento no escuro.</p>
+    <div class="cta-inline reveal"><p>Cinco minutos te separam disso.</p><a href="https://www.myasset.tech/dashboard/plans" class="btn btn-primary">Começar agora →</a></div>
+  </div>
+</section>
+
+<section class="section offer">
+  <div class="wrap offer-in">
+    <div class="reveal">
+      <span class="eyebrow">Promoção de junho</span>
+      <h2>O sistema que o investidor de alta performance usa — <em>e não divide com o concorrente.</em></h2>
+      <p>O MyAsset não é "uma planilha mais bonita". É a vantagem que você não divide com quem disputa o mesmo imóvel que você. E cada mês que você adia é aluguel abaixo do mercado, decisão no escuro, dinheiro na mesa. Promoção de junho: comece em qualquer plano pagando só R$ 24,99 no primeiro mês — o preço do Essencial, mesmo no Plus ou no Pro. Seja um dos primeiros investidores do Brasil a comandar o portfólio por uma IA imobiliária, antes que vire padrão.</p>
+      <a href="https://www.myasset.tech/dashboard/plans" class="btn btn-primary">Quero a promoção de junho</a>
+    </div>
+    <ul class="guarantees reveal">
+      <li><span class="g-ic">✓</span><span><b>Garantia de 7 dias.</b> Não sentiu a diferença? Devolvemos. Risco zero.</span></li>
+      <li><span class="g-ic">✓</span><span><b>Cancele quando quiser.</b> Sem multa, sem letra miúda.</span></li>
+      <li><span class="g-ic">✓</span><span><b>Promoção de junho.</b> Comece em qualquer plano pelo preço do Essencial (R$ 24,99) no 1º mês.</span></li>
+    </ul>
+  </div>
+</section>
+
+<section class="section price" id="planos">
+  <div class="wrap">
+    <span class="eyebrow reveal">Planos</span>
+    <h2 class="reveal">Escolha o tamanho da sua operação.</h2>
+    <p class="sub reveal">Todos incluem a IA imobiliária no WhatsApp, o app completo, dados de mercado e apoio ao Imposto de Renda. Promoção de junho: o primeiro mês de qualquer plano sai por R$ 24,99 — o preço do Essencial.</p>
+    <div class="plans">
+      <div class="plan reveal">
+        <div class="pname">Essencial</div>
+        <div class="pprice">R$ 24,99<small>/mês</small></div>
+        <div class="pfor">Você para de improvisar e começa a operar como profissional.</div>
+        <ul>
+          <li><span class="c">✓</span> Até 5 imóveis</li>
+          <li><span class="c">✓</span> 60 mensagens/mês</li>
+          <li><span class="c">✓</span> Dados de mercado trimestrais</li>
+          <li><span class="c">✓</span> Imposto de Renda organizado</li>
+        </ul>
+        <a href="https://www.myasset.tech/dashboard/plans" class="btn btn-dark">Quero o Essencial</a>
+      </div>
+      <div class="plan feat reveal">
+        <span class="tag">Mais popular</span>
+        <div class="pname">Plus</div>
+        <div class="pprice">R$ 37,99<small>/mês</small></div>
+        <div class="mono" style="font-size:11px;color:var(--brass);margin:-4px 0 14px;letter-spacing:.04em">1º mês por R$ 24,99 · junho</div>
+        <div class="pfor">Seu portfólio crescendo — sem você perder o controle.</div>
+        <ul>
+          <li><span class="c">✓</span> Até 10 imóveis</li>
+          <li><span class="c">✓</span> 150 mensagens/mês</li>
+          <li><span class="c">✓</span> Dados de mercado trimestrais</li>
+          <li><span class="c">✓</span> Análise de compra e venda</li>
+        </ul>
+        <a href="https://www.myasset.tech/dashboard/plans" class="btn btn-primary">Quero o Plus</a>
+      </div>
+      <div class="plan reveal">
+        <div class="pname">Pro</div>
+        <div class="pprice">R$ 54,99<small>/mês</small></div>
+        <div class="mono" style="font-size:11px;color:var(--brass);margin:-4px 0 14px;letter-spacing:.04em">1º mês por R$ 24,99 · junho</div>
+        <div class="pfor">Você no controle total, com o mercado atualizado todo mês.</div>
+        <ul>
+          <li><span class="c">✓</span> Até 20 imóveis</li>
+          <li><span class="c">✓</span> 300 mensagens/mês</li>
+          <li><span class="c">✓</span> Dados de mercado <b>mensais</b></li>
+          <li><span class="c">✓</span> Tudo do Plus, no limite</li>
+        </ul>
+        <a href="https://www.myasset.tech/dashboard/plans" class="btn btn-dark">Quero o Pro</a>
+      </div>
+    </div>
+    <p class="price-note">Garantia de 7 dias em qualquer plano · Cancele quando quiser</p>
+  </div>
+</section>
+
+<section class="section faq" id="faq">
+  <div class="wrap">
+    <h2 class="reveal">Antes de você perguntar.</h2>
+    <div class="reveal">
+      <details><summary>Preciso instalar alguma coisa?</summary><p>Você tem um app completo com tudo dentro — mas no dia a dia comanda tudo pelo WhatsApp que já usa. Sem curva de aprendizado.</p></details>
+      <details><summary>Como cadastro meus imóveis?</summary><p>Pela conversa. Você manda "cadastra meu apê na Aldeota, R$ 920 mil" e a IA já coloca no seu portfólio. O que preferir, também faz pelo app.</p></details>
+      <details><summary>Meus dados ficam seguros?</summary><p>Total. Sua conta é isolada e só você enxerga o seu portfólio. Ponto.</p></details>
+      <details><summary>E se eu não gostar?</summary><p>7 dias de garantia. Não sentiu a diferença, devolvemos — e você cancela quando quiser. O risco é todo nosso.</p></details>
+      <details><summary>O MyAsset dá dica de investimento?</summary><p>Ele te entrega o número e a clareza para você decidir como profissional: se vale manter um ativo ou trocar por um mais rentável. A decisão é sua — agora com a informação que o resto não tem.</p></details>
+    </div>
+  </div>
+</section>
+
+<section class="final">
+  <div class="wrap">
+    <h2 class="serif reveal">Daqui a 6 meses, você vai estar à frente — ou ainda na planilha, vendo o outro sair na frente.</h2>
+    <p class="reveal">A decisão que mais compõe o seu patrimônio é a que você toma agora.</p>
+    <div class="reveal">
+      <a href="https://www.myasset.tech/dashboard/plans" class="btn btn-primary">Quero a promoção de junho</a>
+    </div>
+    <div class="hero-trust" style="margin-top:22px">
+      <span><i class="dot"></i> Garantia de 7 dias</span>
+      <span><i class="dot"></i> Cancele quando quiser</span>
+      <span><i class="dot"></i> 1º mês por R$ 24,99 · junho</span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-in">
+    <a href="#top" class="brandmark">My<b>Asset</b></a>
+    <div class="foot-links">
+      <a href="#produto">O app</a>
+      <a href="#beneficios">Recursos</a>
+      <a href="#planos">Planos</a>
+      <a href="https://www.myasset.tech">myasset.tech</a>
+    </div>
+    <div>© 2026 MyAsset</div>
+  </div>
+</footer>
+
+<div class="sticky-cta" id="stickyCta">
+  <span>Pronto para sair na frente?</span>
+  <a href="https://www.myasset.tech/dashboard/plans" class="btn btn-primary">Quero entrar</a>
+</div>
+
+<script>
+  document.getElementById('burger').addEventListener('click',function(){
+    document.getElementById('navlinks').classList.toggle('open');
+  });
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(e){ if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);} });
+  },{threshold:.14});
+  document.querySelectorAll('.reveal').forEach(function(el){io.observe(el);});
+
+  var sc=document.getElementById('stickyCta');
+  var hero=document.getElementById('top');
+  function toggleSticky(){
+    var past=window.scrollY>(hero?hero.offsetHeight-80:520);
+    var nearBottom=(window.innerHeight+window.scrollY)>(document.body.offsetHeight-720);
+    if(past&&!nearBottom){sc.classList.add('show');}else{sc.classList.remove('show');}
+  }
+  window.addEventListener('scroll',toggleSticky,{passive:true});
+  window.addEventListener('resize',toggleSticky,{passive:true});
+
+  function playChat(wa){
+    var msgs=[].slice.call(wa.querySelectorAll('.wa-msg'));
+    var status=wa.querySelector('.wa-status');
+    var body=wa.querySelector('.wa-body');
+    if(!msgs.length||!body) return;
+    msgs.forEach(function(m){m.style.display='none';});
+    var typing=document.createElement('div');
+    typing.className='wa-typing';typing.innerHTML='<span></span><span></span><span></span>';
+    var i=0;
+    function step(){
+      if(i>=msgs.length){ if(status)status.textContent='online'; return; }
+      var m=msgs[i];
+      if(m.classList.contains('wa-in')){
+        if(status)status.textContent='digitando…';
+        body.appendChild(typing);
+        setTimeout(function(){
+          if(typing.parentNode)typing.parentNode.removeChild(typing);
+          if(status)status.textContent='online';
+          m.style.display='';m.classList.add('pop');
+          i++; setTimeout(step,650);
+        },1250);
+      } else {
+        m.style.display='';m.classList.add('pop');
+        i++; setTimeout(step,750);
+      }
+    }
+    setTimeout(step,500);
+  }
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+  if(!reduce){
+    var chatObs=new IntersectionObserver(function(es){
+      es.forEach(function(e){ if(e.isIntersecting){ playChat(e.target); chatObs.unobserve(e.target);} });
+    },{threshold:.45});
+    document.querySelectorAll('.wa').forEach(function(w){chatObs.observe(w);});
+  }
+</script>
+</body>
+</html>
