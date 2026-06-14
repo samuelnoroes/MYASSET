@@ -1,21 +1,12 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { updateSession } from "@/utils/supabase/middleware";
 import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
+
+const BILLING_PATH = "/dashboard/plans";
+const WHATSAPP_PREFIX = "/dashboard/whatsapp";
 
 export async function middleware(request: NextRequest) {
-  // 1. Atualizar sessão (comportamento original)
-  const response = await updateSession(request);
+  let response = NextResponse.next({ request });
 
-  const pathname = request.nextUrl.pathname;
-
-  // 2. Gate apenas em rotas do dashboard
-  const isDashboardRoute = pathname.startsWith("/dashboard");
-  if (!isDashboardRoute) return response;
-
-  const isPlansPage = pathname === "/dashboard/plans";
-  const isBillingPage = pathname.startsWith("/dashboard/billing");
-
-  // 3. Buscar estado da conta (pay-first)
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -24,57 +15,80 @@ export async function middleware(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(
-          cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]
-        ) {
+        setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          response = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          );
         },
       },
     }
   );
 
+  // ÚNICO getUser do middleware — o refresh de token (e a rotação) acontece aqui.
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  // Sem usuário → updateSession já cuida do redirect pra /login
-  if (!user) return response;
 
-  const { data: profile } = await supabase
-    .from("user_profiles")
-    .select("account_status")
-    .eq("id", user.id)
-    .single();
+  const path = request.nextUrl.pathname;
 
-  // Sem perfil → deixa passar (evita loop em casos edge)
-  if (!profile) return response;
+  // Redirect que PRESERVA os cookies de sessão atualizados (senão derruba a sessão).
+  const redirectTo = (pathname: string) => {
+    const url = request.nextUrl.clone();
+    url.pathname = pathname;
+    url.search = "";
+    const r = NextResponse.redirect(url);
+    response.cookies.getAll().forEach((c) => r.cookies.set(c));
+    return r;
+  };
 
-  const status = profile.account_status ?? "pending_payment";
+  const isPublic =
+    path.startsWith("/login") ||
+    path.startsWith("/error") ||
+    path.startsWith("/auth") ||
+    path.startsWith("/termos") ||
+    path.startsWith("/forgot-password") ||
+    path.startsWith("/reset-password") ||
+    path === "/";
 
-  // 4. WhatsApp/bot: TOTALMENTE proibido até a conta estar 'active'
-  if (pathname.startsWith("/dashboard/whatsapp") && status !== "active") {
-    return NextResponse.redirect(new URL("/dashboard/plans", request.url));
+  // Não logado em rota protegida -> /login
+  if (!user && !isPublic) {
+    return redirectTo("/login");
   }
 
-  // 5. Planos e billing sempre liberados (para escolher plano e pagar)
-  if (isPlansPage || isBillingPage) return response;
+  // Gate pay-first (apenas /dashboard, com usuário logado).
+  if (user && path.startsWith("/dashboard")) {
+    const { data: profile } = await supabase
+      .from("user_profiles")
+      .select("account_status")
+      .eq("id", user.id)
+      .single();
 
-  // 6. Pay-first: sem pagamento (ou suspenso) → só Planos/Billing
-  if (status === "pending_payment" || status === "suspended") {
-    return NextResponse.redirect(new URL("/dashboard/plans", request.url));
+    // Sem perfil: não trava (evita lockout em casos edge).
+    if (profile) {
+      const status = profile.account_status ?? "pending_payment";
+
+      // WhatsApp/bot: só com conta active.
+      if (path.startsWith(WHATSAPP_PREFIX) && status !== "active") {
+        return redirectTo(BILLING_PATH);
+      }
+
+      // Sem pagamento (ou suspenso): só Planos/Billing.
+      const onAllowed = path === BILLING_PATH || path.startsWith("/dashboard/billing");
+      if (!onAllowed && (status === "pending_payment" || status === "suspended")) {
+        return redirectTo(BILLING_PATH);
+      }
+    }
   }
 
-  // pending_onboarding e active seguem normalmente
   return response;
 }
 
 export const config = {
   matcher: [
     /*
-     * Roda em todas as rotas exceto:
-     * - _next/static (arquivos estáticos)
-     * - _next/image (otimização de imagens)
-     * - favicon.ico
-     * - imagens públicas
+     * Roda em todas as rotas exceto estáticos e imagens.
      */
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
