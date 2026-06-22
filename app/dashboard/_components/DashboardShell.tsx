@@ -87,146 +87,154 @@ const NAV_ITEMS = [
   { href: "/dashboard",                      label: "Dashboard",    icon: "dashboard", badge: null },
   { href: "/dashboard/properties",           label: "Portfólio",    icon: "portfolio", badge: null },
   { href: "/dashboard/tax",                  label: "IR",           icon: "tax", badge: null },
-  { href: "/dashboard/whatsapp",            label: "WhatsApp",     icon: "whatsapp", badge: null },
-  { href: "/dashboard/profile",              label: "Perfil",       icon: "profile", badge: null },
-];
-
-const DASHBOARD_ANCHORS = [
-  { href: "#visao-geral", label: "Visão geral"  },
-  { href: "#mes-atual",   label: "Mês atual"    },
-  { href: "#historico",   label: "Histórico"    },
-  { href: "#graficos",    label: "Gráficos"     },
-  { href: "#imoveis",     label: "Imóveis"      },
-];
-
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  const now = new Date();
-  const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-  if (diffDays === 0) return "Hoje";
-  if (diffDays === 1) return "Ontem";
-  if (diffDays < 7) return `${diffDays} dias atrás`;
-  return new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "short" }).format(date);
-}
-
-export default function DashboardShell({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const [mounted, setMounted]         = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [panelOpen, setPanelOpen]     = useState(true);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [dismissed, setDismissed]     = useState<Set<string>>(new Set());
-  const [loading, setLoading]         = useState(true);
-  const [isAdmin, setIsAdmin]         = useState(false);
-  const [userPlan, setUserPlan]       = useState<string>("trial");
-
-  useEffect(() => {
-    const savedSidebar = localStorage.getItem("sidebar-open");
-    setSidebarOpen(savedSidebar === null ? true : savedSidebar === "true");
-
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return;
-      supabase
-        .from("user_profiles")
-        .select("is_admin, plan")
-        .eq("id", user.id)
-        .single()
-        .then(({ data }) => {
-          if (data?.is_admin) setIsAdmin(true);
-          if (data?.plan) setUserPlan(data.plan);
-        });
-      supabase
-        .from("user_profiles")
-        .update({ last_login_at: new Date().toISOString() })
-        .eq("id", user.id);
-    });
-
-    const savedPanel = sessionStorage.getItem("notif-panel-open");
-    setPanelOpen(savedPanel === null ? true : savedPanel === "true");
-
-    const savedDismissed = sessionStorage.getItem("notif-dismissed");
-    if (savedDismissed) {
-      try { setDismissed(new Set(JSON.parse(savedDismissed))); } catch {}
-    }
-
-    setMounted(true);
-
-    const supabaseNotif = createClient();
-    supabaseNotif
-      .from("notifications")
-      .select("id, title, body, type, created_at, contact_label, contact_url")
-      .eq("active", true)
-      .order("created_at", { ascending: false })
-      .limit(30)
-      .then(({ data }) => {
-        setNotifications(data ?? []);
-        setLoading(false);
+{(status === "pending_onboarding" || status === "active") && (
+    { href: "/dashboard/whatsapp",            label: "WhatsApp",     icon: "whatsapp", badge: null },
+    { href: "/dashboard/profile",              label: "Perfil",       icon: "profile", badge: null },
+  ];
+  
+  const DASHBOARD_ANCHORS = [
+    { href: "#visao-geral", label: "Visão geral"  },
+    { href: "#mes-atual",   label: "Mês atual"    },
+    { href: "#historico",   label: "Histórico"    },
+    { href: "#graficos",    label: "Gráficos"     },
+    { href: "#imoveis",     label: "Imóveis"      },
+  ];
+  
+  function formatDate(dateStr: string): string {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+    if (diffDays === 0) return "Hoje";
+    if (diffDays === 1) return "Ontem";
+    if (diffDays < 7) return `${diffDays} dias atrás`;
+    return new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "short" }).format(date);
+  }
+  
+  export default function DashboardShell({ children }: { children: React.ReactNode }) {
+    const pathname = usePathname();
+    const [mounted, setMounted]         = useState(false);
+    const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [panelOpen, setPanelOpen]     = useState(true);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [dismissed, setDismissed]     = useState<Set<string>>(new Set());
+    const [loading, setLoading]         = useState(true);
+    const [isAdmin, setIsAdmin]         = useState(false);
+    const [userPlan, setUserPlan]       = useState<string>("trial");
+  
+    useEffect(() => {
+      const savedSidebar = localStorage.getItem("sidebar-open");
+      setSidebarOpen(savedSidebar === null ? true : savedSidebar === "true");
+  
+      const supabase = createClient();
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (!user) return;
+        supabase
+          .from("user_profiles")
+          .select("is_admin, plan")
+          .eq("id", user.id)
+          .single()
+          .then(({ data }) => {
+            if (data?.is_admin) setIsAdmin(true);
+            if (data?.plan) setUserPlan(data.plan);
+          });
+        supabase
+          .from("user_profiles")
+          .update({ last_login_at: new Date().toISOString() })
+          .eq("id", user.id);
       });
-  }, []);
-
-  function toggleSidebar() {
-    const next = !sidebarOpen;
-    setSidebarOpen(next);
-    localStorage.setItem("sidebar-open", String(next));
-  }
-
-  function togglePanel(open: boolean) {
-    setPanelOpen(open);
-    sessionStorage.setItem("notif-panel-open", String(open));
-  }
-
-  function dismissNotification(id: string) {
-    const next = new Set(dismissed);
-    next.add(id);
-    setDismissed(next);
-    sessionStorage.setItem("notif-dismissed", JSON.stringify([...next]));
-  }
-
-  if (!mounted) return <>{children}</>;
-
-  const sidebarWidth = sidebarOpen ? SIDEBAR_EXPANDED : SIDEBAR_COLLAPSED;
-  const visibleNotifs = notifications.filter(n => !dismissed.has(n.id));
-  const planCfg = PLAN_CONFIG[userPlan] ?? PLAN_CONFIG.trial;
-  const isPlanActive = pathname === "/dashboard/plans";
-
-  return (
-    <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "#0C0D0F" }}>
-
-      <aside
-        style={{
-          width: sidebarWidth,
-          minWidth: sidebarWidth,
-          backgroundColor: "#141618",
-          borderRight: "1px solid #2A2D33",
-          display: "flex",
-          flexDirection: "column",
-          transition: "width 0.25s ease, min-width 0.25s ease",
-          position: "fixed",
-          top: 0,
-          left: 0,
-          height: "100vh",
-          zIndex: 50,
-          overflow: "hidden",
-        }}
-      >
-        <div
+  
+      const savedPanel = sessionStorage.getItem("notif-panel-open");
+      setPanelOpen(savedPanel === null ? true : savedPanel === "true");
+  
+      const savedDismissed = sessionStorage.getItem("notif-dismissed");
+      if (savedDismissed) {
+        try { setDismissed(new Set(JSON.parse(savedDismissed))); } catch {}
+      }
+  
+      setMounted(true);
+  
+      const supabaseNotif = createClient();
+      supabaseNotif
+        .from("notifications")
+        .select("id, title, body, type, created_at, contact_label, contact_url")
+        .eq("active", true)
+        .order("created_at", { ascending: false })
+        .limit(30)
+        .then(({ data }) => {
+          setNotifications(data ?? []);
+          setLoading(false);
+        });
+    }, []);
+  
+    function toggleSidebar() {
+      const next = !sidebarOpen;
+      setSidebarOpen(next);
+      localStorage.setItem("sidebar-open", String(next));
+    }
+  
+    function togglePanel(open: boolean) {
+      setPanelOpen(open);
+      sessionStorage.setItem("notif-panel-open", String(open));
+    }
+  
+    function dismissNotification(id: string) {
+      const next = new Set(dismissed);
+      next.add(id);
+      setDismissed(next);
+      sessionStorage.setItem("notif-dismissed", JSON.stringify([...next]));
+    }
+  
+    if (!mounted) return <>{children}</>;
+  
+    const sidebarWidth = sidebarOpen ? SIDEBAR_EXPANDED : SIDEBAR_COLLAPSED;
+    const visibleNotifs = notifications.filter(n => !dismissed.has(n.id));
+    const planCfg = PLAN_CONFIG[userPlan] ?? PLAN_CONFIG.trial;
+    const isPlanActive = pathname === "/dashboard/plans";
+  
+    return (
+      <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "#0C0D0F" }}>
+  
+        <aside
           style={{
-            padding: sidebarOpen ? "20px 12px 16px 20px" : "20px 0 16px",
-            borderBottom: "1px solid rgba(255,255,255,0.08)",
+            width: sidebarWidth,
+            minWidth: sidebarWidth,
+            backgroundColor: "#141618",
+            borderRight: "1px solid #2A2D33",
             display: "flex",
-            alignItems: "center",
-            justifyContent: sidebarOpen ? "space-between" : "center",
-            whiteSpace: "nowrap",
+            flexDirection: "column",
+            transition: "width 0.25s ease, min-width 0.25s ease",
+            position: "fixed",
+            top: 0,
+            left: 0,
+            height: "100vh",
+            zIndex: 50,
             overflow: "hidden",
           }}
         >
-          {sidebarOpen && (
-            <Link href="/dashboard" style={{ textDecoration: "none" }}>
-              <span style={{ fontFamily: "var(--font-display, serif)", fontSize: 22, fontStyle: "italic", fontWeight: 700, color: "#fff", letterSpacing: "-0.5px" }}>
-                My<span style={{ color: "#C4A96B" }}>Asset</span>
-              </span>
-            </Link>
+          <div
+            style={{
+              padding: sidebarOpen ? "20px 12px 16px 20px" : "20px 0 16px",
+              borderBottom: "1px solid rgba(255,255,255,0.08)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: sidebarOpen ? "space-between" : "center",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+            }}
+          >
+            {sidebarOpen && (
+              <Link href="/dashboard" style={{ textDecoration: "none" }}>
+                <span style={{ fontFamily: "var(--font-display, serif)", fontSize: 22, fontStyle: "italic", fontWeight: 700, color: "#fff", letterSpacing: "-0.5px" }}>
+                  My<span style={{ color: "#C4A96B" }}>Asset</span>
+                </span>
+              
+                {status === "pending_onboarding" && (
+                  <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-warning/15 text-warning">
+                    Ativar
+                  </span>
+                )}
+              </Link>
+))}
           )}
           <button
             onClick={toggleSidebar}
