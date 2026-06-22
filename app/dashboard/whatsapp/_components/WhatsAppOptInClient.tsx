@@ -8,7 +8,7 @@ interface Props {
   pairedAt: string | null
 }
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
+// --- Helpers ----------------------------------------------------------------
 
 function formatDisplayPhone(raw: string | null): string {
   if (!raw) return ""
@@ -34,7 +34,7 @@ function formatDate(iso: string): string {
   })
 }
 
-// ─── Typewriter hook ─────────────────────────────────────────────────────────
+// --- Typewriter hook ---------------------------------------------------------
 
 function useTypewriter(target: string, active: boolean, speed = 55) {
   const [displayed, setDisplayed] = useState("")
@@ -59,7 +59,7 @@ function useTypewriter(target: string, active: boolean, speed = 55) {
   return { displayed, done }
 }
 
-// ─── Chat bubble component ────────────────────────────────────────────────────
+// --- Chat bubble component ----------------------------------------------------
 
 function Bubble({ role, text, delay }: { role: "user" | "bot"; text: string; delay: number }) {
   const [visible, setVisible] = useState(false)
@@ -94,7 +94,7 @@ const EXAMPLES = [
   { role: "bot"  as const, text: "Sim — Carlos Silva, R$ 2.800, 14 dias de atraso. Quer que eu mande uma mensagem?" },
 ]
 
-// ─── Main component ──────────────────────────────────────────────────────────
+// --- Main component ----------------------------------------------------------
 
 export default function WhatsAppOptInClient({ accountStatus, whatsappNumber, pairedAt }: Props) {
   const alreadyActive = accountStatus === "active" && !!whatsappNumber
@@ -145,7 +145,7 @@ export default function WhatsAppOptInClient({ accountStatus, whatsappNumber, pai
     }
   }
 
-  // ── Estado de sucesso ────────────────────────────────────────────────────
+  // -- Estado de sucesso ----------------------------------------------------
 
   if (success) {
     return (
@@ -196,7 +196,7 @@ export default function WhatsAppOptInClient({ accountStatus, whatsappNumber, pai
           </div>
           <div className="mt-5 pt-4 border-t border-border flex items-center justify-between">
             <p className="text-xs text-ink-3">
-              Fale com o assistente:&nbsp;
+              Fale com o assistente:{' '}
               <a
                 href="https://wa.me/5511987266842"
                 target="_blank"
@@ -218,7 +218,7 @@ export default function WhatsAppOptInClient({ accountStatus, whatsappNumber, pai
     )
   }
 
-  // ── Estado de ativação ───────────────────────────────────────────────────
+  // -- Estado de ativação ---------------------------------------------------
 
   return (
     <div className="rounded-2xl overflow-hidden border border-border shadow-sm">
