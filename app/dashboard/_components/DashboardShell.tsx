@@ -87,7 +87,6 @@ const NAV_ITEMS = [
   { href: "/dashboard",                      label: "Dashboard",    icon: "dashboard", badge: null },
   { href: "/dashboard/properties",           label: "Portfólio",    icon: "portfolio", badge: null },
   { href: "/dashboard/tax",                  label: "IR",           icon: "tax", badge: null },
-{(status === "pending_onboarding" || status === "active") && (
     { href: "/dashboard/whatsapp",            label: "WhatsApp",     icon: "whatsapp", badge: null },
     { href: "/dashboard/profile",              label: "Perfil",       icon: "profile", badge: null },
   ];
