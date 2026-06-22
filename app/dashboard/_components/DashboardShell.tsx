@@ -226,15 +226,8 @@ const NAV_ITEMS = [
                 <span style={{ fontFamily: "var(--font-display, serif)", fontSize: 22, fontStyle: "italic", fontWeight: 700, color: "#fff", letterSpacing: "-0.5px" }}>
                   My<span style={{ color: "#C4A96B" }}>Asset</span>
                 </span>
-              
-                {status === "pending_onboarding" && (
-                  <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-warning/15 text-warning">
-                    Ativar
-                  </span>
-                )}
-              </Link>
-))}
-          )}
+                            </Link>
+            )}
           <button
             onClick={toggleSidebar}
             title={sidebarOpen ? "Recolher menu" : "Expandir menu"}
