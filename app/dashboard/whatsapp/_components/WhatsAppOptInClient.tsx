@@ -88,9 +88,9 @@ function Bubble({ role, text, delay }: { role: "user" | "bot"; text: string; del
 }
 
 const EXAMPLES = [
-  { role: "user" as const, text: "Quanto rende meu portfólio?" },
-  { role: "bot"  as const, text: "Seu yield médio está em 9,3% a.a. O Apt Leblon puxa mais: 11,2%." },
-  { role: "user" as const, text: "Tem cobrança em atraso?" },
+  { role: "user" as const, text: "Quanto rende meu portfolio?" },
+  { role: "bot"  as const, text: "Seu yield medio esta em 9,3% a.a. O Apt Leblon puxa mais: 11,2%." },
+  { role: "user" as const, text: "Tem cobranca em atraso?" },
   { role: "bot"  as const, text: "Sim — Carlos Silva, R$ 2.800, 14 dias de atraso. Quer que eu mande uma mensagem?" },
 ]
 
@@ -112,7 +112,6 @@ export default function WhatsAppOptInClient({ accountStatus, whatsappNumber, pai
   const displayPhone = formatDisplayPhone(linkedPhone)
   const { displayed: typedPhone, done: typeDone } = useTypewriter(displayPhone, success)
 
-  // Trigger bubbles after typewriter finishes
   useEffect(() => {
     if (typeDone) {
       const t = setTimeout(() => setShowBubbles(true), 300)
@@ -139,19 +138,18 @@ export default function WhatsAppOptInClient({ accountStatus, whatsappNumber, pai
       setLinkedAt(new Date().toISOString())
       setSuccess(true)
     } catch {
-      setError("Erro de conexão. Verifique sua internet.")
+      setError("Erro de conexao. Verifique sua internet.")
     } finally {
       setLoading(false)
     }
   }
 
-  // -- Estado de sucesso ----------------------------------------------------
+  // Estado de sucesso
 
   if (success) {
     return (
       <div className="rounded-2xl overflow-hidden border border-border shadow-sm">
 
-        {/* Header forest */}
         <div className="bg-forest px-6 py-8">
           <div className="flex items-start justify-between mb-6">
             <div>
@@ -162,7 +160,6 @@ export default function WhatsAppOptInClient({ accountStatus, whatsappNumber, pai
                 Conectado.
               </p>
             </div>
-            {/* Checkmark animado */}
             <div className="w-10 h-10 rounded-full border-2 border-positive bg-positive/20 flex items-center justify-center shrink-0 mt-1">
               <svg className="w-5 h-5 text-positive" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -170,7 +167,6 @@ export default function WhatsAppOptInClient({ accountStatus, whatsappNumber, pai
             </div>
           </div>
 
-          {/* Número — typewriter */}
           <div className="font-mono text-2xl text-white tracking-tight min-h-[36px]">
             {typedPhone}
             {!typeDone && (
@@ -184,7 +180,6 @@ export default function WhatsAppOptInClient({ accountStatus, whatsappNumber, pai
           )}
         </div>
 
-        {/* Chat bubbles — preview do assistente */}
         <div className="bg-surface px-5 py-5">
           <p className="text-xs font-medium text-ink-3 uppercase tracking-widest mb-4">
             Veja como funciona
@@ -196,7 +191,7 @@ export default function WhatsAppOptInClient({ accountStatus, whatsappNumber, pai
           </div>
           <div className="mt-5 pt-4 border-t border-border flex items-center justify-between">
             <p className="text-xs text-ink-3">
-              Fale com o assistente:{' '}
+              Fale com o assistente:{" "}
               <a
                 href="https://wa.me/5511987266842"
                 target="_blank"
@@ -207,10 +202,15 @@ export default function WhatsAppOptInClient({ accountStatus, whatsappNumber, pai
               </a>
             </p>
             <button
-              onClick={() => { setSuccess(false); setPhone(""); setError(null); setTimeout(() => inputRef.current?.focus(), 100) }}
+              onClick={() => {
+                setSuccess(false)
+                setPhone("")
+                setError(null)
+                setTimeout(() => inputRef.current?.focus(), 100)
+              }}
               className="text-xs text-ink-3 hover:text-ink transition-colors underline underline-offset-2"
             >
-              Trocar número
+              Trocar numero
             </button>
           </div>
         </div>
@@ -218,31 +218,28 @@ export default function WhatsAppOptInClient({ accountStatus, whatsappNumber, pai
     )
   }
 
-  // -- Estado de ativação ---------------------------------------------------
+  // Estado de ativacao
 
   return (
     <div className="rounded-2xl overflow-hidden border border-border shadow-sm">
 
-      {/* Header — proposta de valor */}
       <div className="bg-forest px-6 py-8">
         <p className="text-moss text-xs font-medium tracking-widest uppercase mb-3">
-          Último passo
+          Ultimo passo
         </p>
         <h2 className="text-white text-2xl font-bold leading-tight">
-          Seu portfólio,<br />agora no WhatsApp.
+          Seu portfolio,<br />agora no WhatsApp.
         </h2>
         <p className="text-moss text-sm mt-3 leading-relaxed">
-          Digite o número, receba a boas-vindas e comece a consultar seu patrimônio em segundos.
+          Digite o numero, receba a boas-vindas e comece a consultar seu patrimonio em segundos.
         </p>
       </div>
 
-      {/* Formulário */}
       <div className="bg-white px-6 py-6">
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Input com prefixo */}
           <div>
             <label htmlFor="phone" className="block text-xs font-medium text-ink-2 uppercase tracking-wide mb-2">
-              Número WhatsApp
+              Numero WhatsApp
             </label>
             <div className="flex items-center border border-border rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-forest/30 focus-within:border-forest transition-all">
               <span className="px-4 py-3.5 text-ink-2 font-mono text-sm bg-surface border-r border-border select-none shrink-0">
@@ -260,7 +257,7 @@ export default function WhatsAppOptInClient({ accountStatus, whatsappNumber, pai
                 autoFocus
               />
             </div>
-            <p className="text-xs text-ink-3 mt-1.5">Apenas Brasil. Use o número com WhatsApp ativo.</p>
+            <p className="text-xs text-ink-3 mt-1.5">Apenas Brasil. Use o numero com WhatsApp ativo.</p>
           </div>
 
           {error && (
@@ -280,13 +277,24 @@ export default function WhatsAppOptInClient({ accountStatus, whatsappNumber, pai
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                 </svg>
-                Conectando…
+                Conectando...
               </span>
             ) : "Conectar"}
           </button>
         </form>
       </div>
 
-      {/* Preview — o que você vai poder perguntar */}
       <div className="bg-surface border-t border-border px-6 py-5">
-        <p className="text-xs font-medium text-ink-3 uppercase 
+        <p className="text-xs font-medium text-ink-3 uppercase tracking-widest mb-4">
+          Veja como funciona
+        </p>
+        <div className="space-y-2">
+          {EXAMPLES.map((ex, i) => (
+            <Bubble key={i} role={ex.role} text={ex.text} delay={i * 120} />
+          ))}
+        </div>
+      </div>
+
+    </div>
+  )
+}
