@@ -70,7 +70,8 @@ export async function middleware(request: NextRequest) {
       const status = profile.account_status ?? "pending_payment";
 
       // WhatsApp/bot: só com conta active.
-      if (path.startsWith(WHATSAPP_PREFIX) && status !== "active") {
+      if (path.startsWith(WHATSAPP_PREFIX) &&
+    (status === "pending_payment" || status === "suspended")) {
         return redirectTo(BILLING_PATH);
       }
 
