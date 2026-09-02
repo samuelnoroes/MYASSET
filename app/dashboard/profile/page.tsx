@@ -13,7 +13,7 @@ export default async function ProfilePage() {
 
   const { data: profile } = await supabase
     .from("user_profiles")
-    .select("full_name, phone")
+    .select("full_name, phone, creci, agency_name")
     .eq("id", user.id)
     .single();
 
@@ -42,6 +42,8 @@ export default async function ProfilePage() {
             email={user.email || ""}
             defaultFullName={profile?.full_name || ""}
             defaultPhone={profile?.phone || ""}
+            defaultCreci={profile?.creci || ""}
+            defaultAgencyName={profile?.agency_name || ""}
           />
         </div>
       </div>

@@ -8,15 +8,19 @@ type Props = {
   email: string;
   defaultFullName: string;
   defaultPhone: string;
+  defaultCreci: string;
+  defaultAgencyName: string;
 };
 
-export default function ProfileForm({ email, defaultFullName, defaultPhone }: Props) {
+export default function ProfileForm({ email, defaultFullName, defaultPhone, defaultCreci, defaultAgencyName }: Props) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [fullName, setFullName] = useState(defaultFullName);
   const [phone, setPhone] = useState(defaultPhone);
+  const [creci, setCreci] = useState(defaultCreci);
+  const [agencyName, setAgencyName] = useState(defaultAgencyName);
 
   const inputBase = "w-full px-4 py-3 border rounded text-sm transition-colors";
   const inputEditing = `${inputBase} bg-surface border-border focus:border-forest focus:outline-none text-ink`;
@@ -27,6 +31,8 @@ export default function ProfileForm({ email, defaultFullName, defaultPhone }: Pr
     const formData = new FormData();
     formData.append("full_name", fullName);
     formData.append("phone", phone);
+    formData.append("creci", creci);
+    formData.append("agency_name", agencyName);
     await updateProfile(formData);
     router.refresh();
     setSaving(false);
@@ -38,6 +44,8 @@ export default function ProfileForm({ email, defaultFullName, defaultPhone }: Pr
   function handleCancel() {
     setFullName(defaultFullName);
     setPhone(defaultPhone);
+    setCreci(defaultCreci);
+    setAgencyName(defaultAgencyName);
     setEditing(false);
     setSaved(false);
   }
@@ -99,7 +107,44 @@ export default function ProfileForm({ email, defaultFullName, defaultPhone }: Pr
         />
         {editing && (
           <p className="text-xs text-ink-3 mt-1">
-            Para alertas de aluguel e oportunidades do portfólio.
+            Para lembretes de visitas e novidades da sua carteira.
+          </p>
+        )}
+      </div>
+
+      {/* CRECI */}
+      <div>
+        <label htmlFor="creci" className="block text-xs font-semibold uppercase tracking-wider text-ink-2 mb-2">
+          CRECI
+        </label>
+        <input
+          id="creci"
+          type="text"
+          value={creci}
+          onChange={(e) => setCreci(e.target.value)}
+          readOnly={!editing}
+          placeholder={editing ? "Ex: CRECI-CE 12345" : "—"}
+          className={editing ? inputEditing : inputReadonly}
+        />
+      </div>
+
+      {/* Imobiliária */}
+      <div>
+        <label htmlFor="agency_name" className="block text-xs font-semibold uppercase tracking-wider text-ink-2 mb-2">
+          Imobiliária
+        </label>
+        <input
+          id="agency_name"
+          type="text"
+          value={agencyName}
+          onChange={(e) => setAgencyName(e.target.value)}
+          readOnly={!editing}
+          placeholder={editing ? "Nome da sua imobiliária (ou vazio se autônomo)" : "—"}
+          className={editing ? inputEditing : inputReadonly}
+        />
+        {editing && (
+          <p className="text-xs text-ink-3 mt-1">
+            Aparece na aba Metas junto da meta geral do time.
           </p>
         )}
       </div>

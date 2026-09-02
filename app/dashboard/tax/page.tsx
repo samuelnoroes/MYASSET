@@ -131,9 +131,8 @@ export default async function TaxPage({
   // Busca imóveis
   const { data: properties } = await supabase
     .from("properties")
-    .select("id, name, modality, monthly_rent")
-    .eq("user_id", user.id)
-    .neq("modality", "under_construction");
+    .select("id, name, listing_purpose, monthly_rent")
+    .eq("user_id", user.id);
 
   const props = properties ?? [];
 
@@ -197,7 +196,7 @@ export default async function TaxPage({
   const economiaEstimada = totalCarneLeao * 0.35; // estimativa de 35% de economia
 
   const WA_MSG = encodeURIComponent(
-    `Olá! Sou cliente do MyAsset e vi que paguei estimados ${formatCurrency(totalCarneLeao)} em Carnê-Leão em ${selectedYear}. Quero entender se estou no caminho mais eficiente para o meu portfólio imobiliário.`
+    `Olá! Sou cliente do MyAsset e vi que paguei estimados ${formatCurrency(totalCarneLeao)} em Carnê-Leão em ${selectedYear}. Quero entender se estou no caminho mais eficiente para a minha atividade imobiliária.`
   );
   const WA_URL = `https://wa.me/5511987266842?text=${WA_MSG}`;
 
@@ -371,7 +370,7 @@ export default async function TaxPage({
                   <div>
                     <p className="font-semibold text-ink">{p.name}</p>
                     <p className="text-xs text-ink-3 uppercase tracking-wider mt-0.5">
-                      {p.modality === "annual_lease" ? "Locação anual" : "Temporada"}
+                      {p.listing_purpose === "sale" ? "Venda" : "Locação"}
                     </p>
                   </div>
                   <div className="flex gap-8 text-right">
@@ -421,7 +420,7 @@ export default async function TaxPage({
                   Você pagou {formatCurrency(totalCarneLeao)} em IR em {selectedYear}.
                 </h3>
                 <p className="text-sm text-white/80 leading-relaxed max-w-lg">
-                  Investidores com portfólio similar ao seu pagam em média{" "}
+                  Corretores com carteira similar à sua pagam em média{" "}
                   <strong className="text-white">30–40% menos</strong> com planejamento tributário adequado.
                   Isso representa uma economia potencial de{" "}
                   <strong className="text-yellow-300">{formatCurrency(economiaEstimada)}/ano</strong> no seu caso.

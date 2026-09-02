@@ -1,6 +1,6 @@
 # MyAsset
 
-Plataforma de gestão de portfólio imobiliário para investidores.
+Plataforma de gestão de carteira imobiliária para corretores — visitas, metas de VGV e ficha de imóvel compartilhável. (A versão anterior, focada em investidores, está preservada na branch `versao-investidor`.)
 
 ## Stack
 

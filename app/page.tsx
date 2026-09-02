@@ -32,14 +32,14 @@ export default async function Home() {
       {/* Hero */}
       <section className="flex-1 flex flex-col items-center justify-center px-6 py-24 text-center">
         <p className="text-xs tracking-[0.3em] uppercase text-gray-400 mb-8">
-          Gestão de portfólio imobiliário
+          Gestão de carteira para corretores
         </p>
         <h2 className="font-display text-6xl md:text-8xl italic mb-8 leading-tight">
           My<span style={{ color: "#C4A96B" }}>Asset</span>
         </h2>
         <p className="text-base md:text-lg text-gray-400 max-w-lg mx-auto leading-relaxed mb-12">
-          A clareza que o investidor imobiliário sempre quis sobre o próprio patrimônio.
-          Dashboard completo, gráficos reais, alertas automáticos.
+          A carteira inteira, as visitas da semana e a meta do mês — numa tela só.
+          Ficha do imóvel pronta para mandar pro cliente em um clique.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link href="/login" className="px-8 py-4 bg-forest text-white font-bold tracking-wider uppercase text-sm hover:bg-forest-light transition-colors rounded">
@@ -57,26 +57,26 @@ export default async function Home() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
               <p className="text-xs tracking-[0.25em] uppercase mb-3" style={{ color: "#C4A96B" }}>01</p>
-              <h3 className="text-lg font-bold text-white mb-3">Dashboard completo</h3>
+              <h3 className="text-lg font-bold text-white mb-3">Carteira numa tela</h3>
               <p className="text-sm text-gray-400 leading-relaxed">
-                Yield, ROI, valorização e fluxo de caixa. Donut chart de distribuição
-                e histórico de 6 meses — tudo numa tela.
+                Venda e locação, disponíveis e reservados, VGV total, IPTU e condomínio
+                de cada imóvel — com a ficha pronta para compartilhar com o cliente.
               </p>
             </div>
             <div>
               <p className="text-xs tracking-[0.25em] uppercase mb-3" style={{ color: "#C4A96B" }}>02</p>
-              <h3 className="text-lg font-bold text-white mb-3">Alertas inteligentes</h3>
+              <h3 className="text-lg font-bold text-white mb-3">Agenda de visitas</h3>
               <p className="text-sm text-gray-400 leading-relaxed">
-                Cobrança 5 dias antes do vencimento. Alerta de inadimplência no dia.
-                Quite com um clique — o saldo atualiza automaticamente.
+                Visitas de hoje em destaque, lembrete das próximas e o WhatsApp
+                do interessado a um clique. Marcou, visitou, fechou.
               </p>
             </div>
             <div>
               <p className="text-xs tracking-[0.25em] uppercase mb-3" style={{ color: "#C4A96B" }}>03</p>
-              <h3 className="text-lg font-bold text-white mb-3">3 perfis de investidor</h3>
+              <h3 className="text-lg font-bold text-white mb-3">Metas de VGV</h3>
               <p className="text-sm text-gray-400 leading-relaxed">
-                Locação anual, temporada/Airbnb ou na planta. Cada perfil com
-                KPIs e fluxos específicos — sem campo desnecessário.
+                Sua meta do mês e a meta geral da imobiliária, com o progresso
+                calculado a cada fechamento. Você sabe sua posição — sempre.
               </p>
             </div>
           </div>

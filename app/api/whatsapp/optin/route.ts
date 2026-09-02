@@ -20,13 +20,13 @@ function formatPhone(raw: string): string {
 
 const WELCOME_MESSAGE = `Olá! Seja bem-vindo(a) ao *MyAsset* 🏠
 
-Sou seu assistente de gestão imobiliária e estou aqui para te ajudar com tudo sobre o seu portfólio.
+Sou seu assistente de corretagem e estou aqui para te ajudar com tudo sobre a sua carteira de imóveis.
 
 Você pode me perguntar coisas como:
-• "Qual o yield do meu portfólio?"
-• "Tem alguma cobrança em atraso?"
-• "Quanto vale meu imóvel hoje comparado ao mercado?"
-• "Quero cadastrar um imóvel novo"
+• "Quais visitas tenho essa semana?"
+• "Me manda a ficha do apartamento da Aldeota"
+• "Quanto vale esse imóvel comparado ao mercado?"
+• "Quero captar um imóvel novo"
 
 É só mandar uma mensagem quando quiser. Estou por aqui! 👋`
 

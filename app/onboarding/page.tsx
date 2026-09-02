@@ -61,27 +61,40 @@ export default async function OnboardingPage() {
                 className="w-full px-4 py-3 bg-surface border border-border rounded focus:border-forest focus:outline-none transition-colors text-ink text-sm"
               />
               <p className="text-xs text-ink-3 mt-1">
-                Para alertas de aluguel e oportunidades do portfólio.
+                Para lembretes de visitas e novidades da sua carteira.
               </p>
             </div>
             <div>
               <label
-                htmlFor="buying_intent"
+                htmlFor="creci"
                 className="block text-xs font-semibold uppercase tracking-wider text-ink-2 mb-2"
               >
-                Pretende comprar outro imóvel nos próximos 12 meses?
+                CRECI
               </label>
-              <select
-                id="buying_intent"
-                name="buying_intent"
-                defaultValue=""
+              <input
+                id="creci"
+                name="creci"
+                type="text"
+                placeholder="Ex: CRECI-CE 12345"
                 className="w-full px-4 py-3 bg-surface border border-border rounded focus:border-forest focus:outline-none transition-colors text-ink text-sm"
+              />
+              <p className="text-xs text-ink-3 mt-1">Opcional — aparece na sua identificação profissional.</p>
+            </div>
+            <div>
+              <label
+                htmlFor="agency_name"
+                className="block text-xs font-semibold uppercase tracking-wider text-ink-2 mb-2"
               >
-                <option value="" disabled>Selecione</option>
-                <option value="yes">Sim</option>
-                <option value="maybe">Talvez</option>
-                <option value="no">Não por enquanto</option>
-              </select>
+                Imobiliária
+              </label>
+              <input
+                id="agency_name"
+                name="agency_name"
+                type="text"
+                placeholder="Ex: A5 Imóveis (ou deixe em branco se autônomo)"
+                className="w-full px-4 py-3 bg-surface border border-border rounded focus:border-forest focus:outline-none transition-colors text-ink text-sm"
+              />
+              <p className="text-xs text-ink-3 mt-1">Opcional — usada na aba Metas para a meta geral do time.</p>
             </div>
 
             {/* Aceite dos Termos */}

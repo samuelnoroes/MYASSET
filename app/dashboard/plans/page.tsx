@@ -127,11 +127,11 @@ export default function PlansPage() {
             const isCurrent = plan === pid;
             const featured = pid === "plus";
             const features = [
-              `Até ${cfg.maxProperties} imóveis no portfólio`,
+              `Até ${cfg.maxProperties} imóveis na carteira`,
               `${cfg.monthlyMessages} mensagens/mês no WhatsApp`,
               "Dashboard completo com gráficos",
               "Relatório IR (Carnê-Leão)",
-              "Alertas de vencimento e renovação",
+              "Agenda de visitas e metas de VGV",
               "Inteligência de mercado (MarketDataCard)",
               `Agente WhatsApp inteligente (${cfg.monthlyMessages} msgs/mês)`,
               ...(cfg.marketRefresh === "mensal"
@@ -158,7 +158,7 @@ export default function PlansPage() {
                 <div className="mb-4">
                   <h2 className="text-xl font-bold text-ink mb-1">{cfg.label}</h2>
                   <p className="text-sm text-ink-3">
-                    {pid === "essencial" ? "Para começar com clareza" : pid === "plus" ? "Para portfólios em crescimento" : "Para investidores ativos"}
+                    {pid === "essencial" ? "Para começar com clareza" : pid === "plus" ? "Para carteiras em crescimento" : "Para corretores de alto volume"}
                   </p>
                 </div>
                 <div className="mb-6">

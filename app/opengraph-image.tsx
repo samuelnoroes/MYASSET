@@ -39,7 +39,7 @@ export default function OGImage() {
           maxWidth: 700,
         }}
       >
-        Gestão de portfólio imobiliário para investidores
+        Gestão de carteira imobiliária para corretores
       </div>
     </div>
   );

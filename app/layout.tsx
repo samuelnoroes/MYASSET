@@ -23,13 +23,13 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MyAsset — Gestão de portfólio imobiliário",
+  title: "MyAsset — Gestão de carteira para corretores",
   description:
- "Acompanhe yield, ROI e fluxo de caixa dos seus imóveis com clareza. Cadastre ativos, lance receitas e despesas, e veja o desempenho do seu portfólio em tempo real.",
+ "A carteira de imóveis do corretor numa tela só: visitas agendadas, metas de VGV, ficha pronta para compartilhar com o cliente e dados de mercado na palma da mão.",
   openGraph: {
-    title: "MyAsset — Gestão de portfólio imobiliário",
+    title: "MyAsset — Gestão de carteira para corretores",
     description:
- "A clareza que o investidor imobiliário sempre quis sobre o próprio patrimônio.",
+ "A ferramenta que o corretor de alta performance usa para gerir a carteira, as visitas e as metas.",
     siteName: "MyAsset",
     locale: "pt_BR",
     type: "website",
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "MyAsset",
-    description: "Gestão de portfólio imobiliário para investidores.",
+    description: "Gestão de carteira imobiliária para corretores.",
   },
 };
 

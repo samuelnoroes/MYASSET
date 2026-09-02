@@ -10,10 +10,10 @@ const STEPS = [
   {
     id: "tax_person_type",
     question: "Como você declara seus rendimentos imobiliários?",
-    hint: "Isso define qual regime tributário se aplica ao seu portfólio.",
+    hint: "Isso define qual regime tributário se aplica à sua atividade.",
     options: [
-      { value: "pf", label: "Pessoa Física", desc: "Declaro no IRPF — modelo mais comum entre investidores individuais" },
-      { value: "pj", label: "Pessoa Jurídica", desc: "Tenho CNPJ e os imóveis estão na empresa" },
+      { value: "pf", label: "Pessoa Física", desc: "Declaro no IRPF — modelo mais comum entre corretores autônomos" },
+      { value: "pj", label: "Pessoa Jurídica", desc: "Tenho CNPJ e a atividade está na empresa" },
     ],
   },
   {
@@ -33,7 +33,7 @@ const STEPS = [
     options: [
       { value: "pf", label: "Pessoa Física (PF)", desc: "Inquilinos individuais — gera obrigação de Carnê-Leão" },
       { value: "pj", label: "Pessoa Jurídica (PJ)", desc: "Empresas locatárias — retêm IR na fonte" },
-      { value: "mixed", label: "Misto — PF e PJ", desc: "Tenho dos dois tipos no portfólio" },
+      { value: "mixed", label: "Misto — PF e PJ", desc: "Tenho dos dois tipos na carteira" },
     ],
   },
   {
@@ -48,7 +48,7 @@ const STEPS = [
   },
   {
     id: "tax_has_planning",
-    question: "Você já fez planejamento tributário para o seu portfólio imobiliário?",
+    question: "Você já fez planejamento tributário para a sua atividade imobiliária?",
     hint: "Planejamento adequado pode reduzir significativamente a carga de IR.",
     options: [
       { value: "true", label: "Sim, tenho acompanhamento", desc: "Trabalho com contador especializado em imóveis" },

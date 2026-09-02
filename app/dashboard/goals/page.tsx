@@ -32,12 +32,20 @@ export default async function GoalsPage() {
   const periodMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
   const monthLabel = new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(now);
 
-  const { data: goal } = await supabase
-    .from("broker_goals")
-    .select("agency_target, personal_target")
-    .eq("user_id", user.id)
-    .eq("period_month", periodMonth)
-    .maybeSingle();
+  const [{ data: goal }, { data: profile }] = await Promise.all([
+    supabase
+      .from("broker_goals")
+      .select("agency_target, personal_target")
+      .eq("user_id", user.id)
+      .eq("period_month", periodMonth)
+      .maybeSingle(),
+    supabase
+      .from("user_profiles")
+      .select("agency_name")
+      .eq("id", user.id)
+      .single(),
+  ]);
+  const agencyName = profile?.agency_name || null;
 
   const { data: monthDeals } = await supabase
     .from("deals")
@@ -108,7 +116,9 @@ export default async function GoalsPage() {
         {/* ── Meta geral da imobiliária ──────────────── */}
         <div className="card">
           <div className="flex items-center justify-between mb-4">
-            <p className="section-title" style={{ marginBottom: 0 }}>Meta geral da imobiliária</p>
+            <p className="section-title" style={{ marginBottom: 0 }}>
+              Meta geral · {agencyName || "sua imobiliária"}
+            </p>
             <span className="text-xs text-ink-3 uppercase tracking-wider">Sua posição</span>
           </div>
 
