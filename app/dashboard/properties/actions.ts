@@ -12,27 +12,21 @@ function err(message: string): never {
 type PropertyInput = {
   name: string;
   nickname: string;
-  modality: string;
   property_type: string;
   address: string | null;
   city: string | null;
   state: string | null;
-  acquisition_value: number | null;
-  acquisition_date: string | null;
+  listing_purpose: string;
+  listing_status: string;
   current_value: number | null;
   monthly_rent: number | null;
-  lease_due_day: number | null;
-  lease_renewal_date: string | null;
-  adjustment_index: string | null;
-  daily_rate: number | null;
-  target_occupancy: number | null;
-  delivery_date: string | null;
-  total_investment: number | null;
-  next_installment_date: string | null;
-  installment_amount: number | null;
-  balloon_date: string | null;
-  balloon_amount: number | null;
-  payment_notes: string | null;
+  iptu_amount: number | null;
+  condo_fee: number | null;
+  owner_name: string | null;
+  owner_phone: string | null;
+  listed_at: string | null;
+  acquisition_value: number | null;
+  acquisition_date: string | null;
   parent_property_id: string | null;
   unit_identifier: string | null;
 };
@@ -40,8 +34,9 @@ type PropertyInput = {
 function parsePropertyForm(formData: FormData): PropertyInput {
   const name = String(formData.get("name") || "").trim();
   const nickname = String(formData.get("nickname") || "").trim().toLowerCase();
-  const modality = String(formData.get("modality") || "annual_lease");
   const propertyType = String(formData.get("property_type") || "");
+  const listingPurpose = String(formData.get("listing_purpose") || "sale");
+  const listingStatus = String(formData.get("listing_status") || "available");
   const address = String(formData.get("address") || "").trim() || null;
   const city = String(formData.get("city") || "").trim() || null;
   const stateField = String(formData.get("state") || "").trim().toUpperCase() || null;
@@ -51,7 +46,8 @@ function parsePropertyForm(formData: FormData): PropertyInput {
   if (!name) err("Nome do imóvel é obrigatório.");
   if (!nickname) err("Apelido do imóvel é obrigatório.");
   if (!/^[a-z0-9]+$/.test(nickname)) err("Apelido deve conter apenas letras minúsculas e números.");
-  if (!["annual_lease", "short_stay", "under_construction"].includes(modality)) err("Modalidade inválida.");
+  if (!["sale", "rent"].includes(listingPurpose)) err("Finalidade inválida.");
+  if (!["available", "reserved", "closed"].includes(listingStatus)) err("Status inválido.");
   if (!["residential", "commercial", "land", "mixed"].includes(propertyType)) err("Tipo de imóvel inválido.");
 
   const n = (key: string): number | null => {
@@ -71,47 +67,37 @@ function parsePropertyForm(formData: FormData): PropertyInput {
   };
 
   return {
-    name, nickname, modality, property_type: propertyType,
+    name, nickname, property_type: propertyType,
     address, city, state: stateField,
-    acquisition_value: n("acquisition_value"),
-    acquisition_date: d("acquisition_date"),
+    listing_purpose: listingPurpose,
+    listing_status: listingStatus,
     current_value: n("current_value"),
     monthly_rent: n("monthly_rent"),
-    lease_due_day: n("lease_due_day"),
-    lease_renewal_date: d("lease_renewal_date"),
-    adjustment_index: t("adjustment_index"),
-    daily_rate: n("daily_rate"),
-    target_occupancy: n("target_occupancy"),
-    delivery_date: d("delivery_date"),
-    total_investment: n("total_investment"),
-    next_installment_date: d("next_installment_date"),
-    installment_amount: n("installment_amount"),
-    balloon_date: d("balloon_date"),
-    balloon_amount: n("balloon_amount"),
-    payment_notes: t("payment_notes"),
+    iptu_amount: n("iptu_amount"),
+    condo_fee: n("condo_fee"),
+    owner_name: t("owner_name"),
+    owner_phone: t("owner_phone"),
+    listed_at: d("listed_at"),
+    acquisition_value: n("acquisition_value"),
+    acquisition_date: d("acquisition_date"),
     parent_property_id: parentPropertyId,
     unit_identifier: unitIdentifier,
   };
 }
 
 export async function createProperty(formData: FormData) {
-  {
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const [{ data: profile }, { count }] = await Promise.all([
-        supabase.from("user_profiles").select("plan").eq("id", user.id).single(),
-        supabase.from("properties").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("is_active", true),
-      ]);
-      const limits = getPlanLimits(profile?.plan);
-      if ((count ?? 0) >= limits.maxProperties) {
-        err(`Seu plano ${limits.label} permite até ${limits.maxProperties} imóveis. Faça upgrade em Meu Plano para cadastrar mais.`);
-      }
-    }
-  }
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+
+  const [{ data: profile }, { count }] = await Promise.all([
+    supabase.from("user_profiles").select("plan").eq("id", user.id).single(),
+    supabase.from("properties").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("is_active", true),
+  ]);
+  const limits = getPlanLimits(profile?.plan);
+  if ((count ?? 0) >= limits.maxProperties) {
+    err(`Seu plano ${limits.label} permite até ${limits.maxProperties} imóveis. Faça upgrade em Meu Plano para cadastrar mais.`);
+  }
 
   const property = { user_id: user.id, ...parsePropertyForm(formData) };
   const { error } = await supabase.from("properties").insert(property);
@@ -163,17 +149,19 @@ export async function deleteProperty(formData: FormData) {
   revalidatePath("/dashboard/properties");
 }
 
-export async function toggleAvailableForSale(formData: FormData) {
+export async function setListingStatus(formData: FormData) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
   const id = String(formData.get("id") || "");
-  const current = formData.get("current") === "true";
+  const status = String(formData.get("status") || "");
+  if (!id) err("ID do imóvel não fornecido.");
+  if (!["available", "reserved", "closed"].includes(status)) err("Status inválido.");
 
   const { error } = await supabase
     .from("properties")
-    .update({ available_for_sale: !current })
+    .update({ listing_status: status, updated_at: new Date().toISOString() })
     .eq("id", id)
     .eq("user_id", user.id);
 

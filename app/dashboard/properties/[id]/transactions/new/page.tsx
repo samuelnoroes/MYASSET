@@ -17,11 +17,6 @@ const EXPENSE_CATEGORIES = [
   { value: "other", label: "Outros" },
 ];
 
-const INVESTMENT_CATEGORIES = [
-  { value: "investment", label: "Parcela / Aporte" },
-  { value: "other", label: "Outros custos" },
-];
-
 type Props = {
   params: { id: string };
   searchParams: { type?: string };
@@ -37,7 +32,7 @@ export default async function NewTransactionPage({ params, searchParams }: Props
 
   const { data: property, error } = await supabase
     .from("properties")
-    .select("id, name, nickname, modality")
+    .select("id, name, nickname")
     .eq("id", params.id)
     .eq("user_id", user.id)
     .single();
@@ -46,28 +41,14 @@ export default async function NewTransactionPage({ params, searchParams }: Props
 
   const transactionType = searchParams.type === "expense" ? "expense" : "income";
   const isIncome = transactionType === "income";
-  const isPlanta = property.modality === "under_construction";
 
-  // Para imóveis na planta: despesas são aportes/parcelas
-  const categories = isIncome
-    ? INCOME_CATEGORIES
-    : isPlanta
-    ? INVESTMENT_CATEGORIES
-    : EXPENSE_CATEGORIES;
+  const categories = isIncome ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
 
   const today = new Date().toISOString().split("T")[0];
 
-  const accentColor = isIncome ? "#C4A96B" : isPlanta ? "#3B82F6" : "#141618";
-  const typeLabel = isIncome
-    ? "Nova receita"
-    : isPlanta
-    ? "Novo aporte"
-    : "Nova despesa";
-  const actionLabel = isIncome
-    ? "Lançar receita"
-    : isPlanta
-    ? "Registrar aporte"
-    : "Lançar despesa";
+  const accentColor = isIncome ? "#C4A96B" : "#141618";
+  const typeLabel = isIncome ? "Nova receita" : "Nova despesa";
+  const actionLabel = isIncome ? "Lançar receita" : "Lançar despesa";
 
   return (
     <main className="min-h-screen bg-surface">
@@ -105,19 +86,17 @@ export default async function NewTransactionPage({ params, searchParams }: Props
           <div
             className="flex items-center gap-3 px-4 py-3 rounded mb-6 text-sm font-semibold"
             style={{
-              backgroundColor: isIncome ? "#13201A" : isPlanta ? "#16202B" : "#141618",
+              backgroundColor: isIncome ? "#13201A" : "#141618",
               color: accentColor,
-              border: `1px solid ${isIncome ? "#BBF7D0" : isPlanta ? "#BFDBFE" : "#2A2D33"}`,
+              border: `1px solid ${isIncome ? "#BBF7D0" : "#2A2D33"}`,
             }}
           >
             <span style={{ fontSize: 18 }}>
-              {isIncome ? "💰" : isPlanta ? "🏗️" : "📋"}
+              {isIncome ? "💰" : "📋"}
             </span>
             <span>
               {isIncome
                 ? "Registrando uma entrada de valor"
-                : isPlanta
-                ? "Registrando aporte em imóvel na planta"
                 : "Registrando uma saída de valor"}
             </span>
           </div>
@@ -204,8 +183,6 @@ export default async function NewTransactionPage({ params, searchParams }: Props
                 placeholder={
                   isIncome
                     ? "Ex: aluguel de junho"
-                    : isPlanta
-                    ? "Ex: parcela #31 — Residencial Cocó"
                     : "Ex: conserto do ar condicionado"
                 }
                 className="w-full px-4 py-3 bg-surface border border-border rounded text-sm text-ink focus:border-forest focus:outline-none transition-colors"

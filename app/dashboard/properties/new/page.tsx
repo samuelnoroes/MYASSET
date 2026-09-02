@@ -16,7 +16,7 @@ export default async function NewPropertyPage({
   // Fetch all properties to populate parent select
   const { data: allProperties } = await supabase
     .from("properties")
-    .select("id, name, nickname, address, city, state, property_type, modality")
+    .select("id, name, nickname, address, city, state, property_type")
     .eq("user_id", user.id)
     .order("name", { ascending: true });
 
@@ -49,10 +49,10 @@ export default async function NewPropertyPage({
             {preSelectedParent ? `Nova unidade · ${preSelectedParent.name}` : "Novo imóvel"}
           </p>
           <h1 className="text-3xl font-bold text-ink">
-            {preSelectedParent ? "Cadastre a unidade" : "Cadastre um ativo"}
+            {preSelectedParent ? "Cadastre a unidade" : "Capte um imóvel para a carteira"}
           </h1>
           <p className="text-sm text-ink-2 mt-2">
-            Selecione a modalidade correta para ver os campos relevantes.
+            Informe finalidade, valores e proprietário — a ficha do imóvel fica pronta para compartilhar.
           </p>
         </div>
 

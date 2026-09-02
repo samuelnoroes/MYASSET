@@ -15,7 +15,7 @@ export default async function EditPropertyPage({ params }: Props) {
     supabase.from("properties").select("*").eq("id", params.id).eq("user_id", user.id).single(),
     supabase
       .from("properties")
-      .select("id, name, nickname, address, city, state, property_type, modality")
+      .select("id, name, nickname, address, city, state, property_type")
       .eq("user_id", user.id)
       .neq("id", params.id) // exclude self from parent list
       .order("name", { ascending: true }),
@@ -57,22 +57,21 @@ export default async function EditPropertyPage({ params }: Props) {
             defaults={{
               name: property.name,
               nickname: property.nickname,
-              modality: property.modality || "annual_lease",
               property_type: property.property_type,
               address: property.address,
               city: property.city,
               state: property.state,
-              acquisition_value: property.acquisition_value,
-              acquisition_date: property.acquisition_date,
+              listing_purpose: property.listing_purpose,
+              listing_status: property.listing_status,
               current_value: property.current_value,
               monthly_rent: property.monthly_rent,
-              lease_due_day: property.lease_due_day,
-              lease_renewal_date: property.lease_renewal_date,
-              adjustment_index: property.adjustment_index,
-              daily_rate: property.daily_rate,
-              target_occupancy: property.target_occupancy,
-              delivery_date: property.delivery_date,
-              total_investment: property.total_investment,
+              iptu_amount: property.iptu_amount,
+              condo_fee: property.condo_fee,
+              owner_name: property.owner_name,
+              owner_phone: property.owner_phone,
+              listed_at: property.listed_at,
+              acquisition_value: property.acquisition_value,
+              acquisition_date: property.acquisition_date,
               parent_property_id: property.parent_property_id,
               unit_identifier: property.unit_identifier,
             }}

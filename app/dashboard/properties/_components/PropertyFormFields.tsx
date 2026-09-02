@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from "react";
 
-type Modality = "annual_lease" | "short_stay" | "under_construction";
-
 type ParentProperty = {
   id: string;
   name: string;
@@ -12,33 +10,26 @@ type ParentProperty = {
   city: string | null;
   state: string | null;
   property_type: string;
-  modality: string;
 };
 
 type DefaultValues = {
   name?: string;
   nickname?: string;
-  modality?: string;
   property_type?: string;
   address?: string;
   city?: string;
   state?: string;
-  acquisition_value?: number | null;
-  acquisition_date?: string | null;
+  listing_purpose?: string | null;
+  listing_status?: string | null;
   current_value?: number | null;
   monthly_rent?: number | null;
-  lease_due_day?: number | null;
-  lease_renewal_date?: string | null;
-  adjustment_index?: string | null;
-  daily_rate?: number | null;
-  target_occupancy?: number | null;
-  delivery_date?: string | null;
-  total_investment?: number | null;
-  next_installment_date?: string | null;
-  installment_amount?: number | null;
-  balloon_date?: string | null;
-  balloon_amount?: number | null;
-  payment_notes?: string | null;
+  iptu_amount?: number | null;
+  condo_fee?: number | null;
+  owner_name?: string | null;
+  owner_phone?: string | null;
+  listed_at?: string | null;
+  acquisition_value?: number | null;
+  acquisition_date?: string | null;
   parent_property_id?: string | null;
   unit_identifier?: string | null;
 };
@@ -60,9 +51,7 @@ export default function PropertyFormFields({
   defaults?: DefaultValues;
   parentProperties?: ParentProperty[];
 }) {
-  const [modality, setModality] = useState<Modality>(
-    (defaults.modality as Modality) || "annual_lease"
-  );
+  const [purpose, setPurpose] = useState<string>(defaults.listing_purpose || "sale");
   const [isUnit, setIsUnit] = useState<boolean>(!!defaults.parent_property_id);
   const [parentId, setParentId] = useState<string>(defaults.parent_property_id || "");
   const [unitIdentifier, setUnitIdentifier] = useState<string>(defaults.unit_identifier || "");
@@ -80,7 +69,6 @@ export default function PropertyFormFields({
     if (!city) setCity(parent.city || "");
     if (!stateUF) setStateUF(parent.state || "");
     setPropertyType(parent.property_type || "residential");
-    setModality((parent.modality as Modality) || "annual_lease");
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [parentId]);
 
@@ -191,27 +179,6 @@ export default function PropertyFormFields({
         </div>
 
         <div>
-          <label htmlFor="modality" className={labelClass}>
-            Modalidade <span className="text-forest">*</span>
-          </label>
-          <select
-            id="modality" name="modality" required
-            value={modality}
-            onChange={(e) => setModality(e.target.value as Modality)}
-            className={selectClass}
-          >
-            <option value="annual_lease">Locação anual (contrato)</option>
-            <option value="short_stay">Temporada / Airbnb</option>
-            <option value="under_construction">Na planta / em construção</option>
-          </select>
-          <p className={hintClass}>
-            {modality === "annual_lease" && "Contrato de locação fixo. Aluguel mensal previsível."}
-            {modality === "short_stay" && "Aluguel por período curto (diárias). Receita variável."}
-            {modality === "under_construction" && "Imóvel ainda não entregue. Sem receita por enquanto."}
-          </p>
-        </div>
-
-        <div>
           <label htmlFor="property_type" className={labelClass}>
             Tipo <span className="text-forest">*</span>
           </label>
@@ -226,6 +193,137 @@ export default function PropertyFormFields({
             <option value="land">Terreno</option>
             <option value="mixed">Misto</option>
           </select>
+        </div>
+      </div>
+
+      {/* ── NEGÓCIO ───────────────────────────────────── */}
+      <div className="card space-y-5">
+        <p className={sectionTitleClass}>Negócio</p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label htmlFor="listing_purpose" className={labelClass}>
+              Finalidade <span className="text-forest">*</span>
+            </label>
+            <select
+              id="listing_purpose" name="listing_purpose" required
+              value={purpose}
+              onChange={(e) => setPurpose(e.target.value)}
+              className={selectClass}
+            >
+              <option value="sale">Venda</option>
+              <option value="rent">Locação</option>
+            </select>
+          </div>
+          <div>
+            <label htmlFor="listing_status" className={labelClass}>
+              Status <span className="text-forest">*</span>
+            </label>
+            <select
+              id="listing_status" name="listing_status" required
+              defaultValue={defaults.listing_status || "available"}
+              className={selectClass}
+            >
+              <option value="available">Disponível</option>
+              <option value="reserved">Reservado</option>
+              <option value="closed">Fechado</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label htmlFor="current_value" className={labelClass}>
+              Valor de venda (R$){purpose === "sale" && <span className="text-forest"> *</span>}
+            </label>
+            <input
+              id="current_value" name="current_value"
+              type="number" step="0.01" min="0" placeholder="0,00"
+              required={purpose === "sale"}
+              defaultValue={defaults.current_value ?? ""}
+              className={inputClass}
+            />
+            <p className={hintClass}>
+              {purpose === "sale" ? "Valor anunciado do imóvel" : "Valor de referência do imóvel (opcional)"}
+            </p>
+          </div>
+          <div>
+            <label htmlFor="monthly_rent" className={labelClass}>
+              Aluguel pretendido (R$/mês){purpose === "rent" && <span className="text-forest"> *</span>}
+            </label>
+            <input
+              id="monthly_rent" name="monthly_rent"
+              type="number" step="0.01" min="0" placeholder="0,00"
+              required={purpose === "rent"}
+              defaultValue={defaults.monthly_rent ?? ""}
+              className={inputClass}
+            />
+            <p className={hintClass}>
+              {purpose === "rent" ? "Valor anunciado da locação" : "Preencha se o imóvel também gera renda"}
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <label htmlFor="listed_at" className={labelClass}>Na carteira desde</label>
+          <input
+            id="listed_at" name="listed_at" type="date"
+            defaultValue={defaults.listed_at || new Date().toISOString().slice(0, 10)}
+            className={inputClass}
+          />
+          <p className={hintClass}>Data de captação — usada no indicador de dias na carteira</p>
+        </div>
+      </div>
+
+      {/* ── CUSTOS ────────────────────────────────────── */}
+      <div className="card space-y-5">
+        <p className={sectionTitleClass}>Custos do imóvel</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label htmlFor="iptu_amount" className={labelClass}>IPTU (R$/mês)</label>
+            <input
+              id="iptu_amount" name="iptu_amount"
+              type="number" step="0.01" min="0" placeholder="0,00"
+              defaultValue={defaults.iptu_amount ?? ""}
+              className={inputClass}
+            />
+            <p className={hintClass}>Se souber só o valor anual, divida por 12</p>
+          </div>
+          <div>
+            <label htmlFor="condo_fee" className={labelClass}>Condomínio (R$/mês)</label>
+            <input
+              id="condo_fee" name="condo_fee"
+              type="number" step="0.01" min="0" placeholder="0,00"
+              defaultValue={defaults.condo_fee ?? ""}
+              className={inputClass}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* ── PROPRIETÁRIO ──────────────────────────────── */}
+      <div className="card space-y-5">
+        <p className={sectionTitleClass}>Proprietário</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label htmlFor="owner_name" className={labelClass}>Nome</label>
+            <input
+              id="owner_name" name="owner_name" type="text"
+              placeholder="Dono do imóvel"
+              defaultValue={defaults.owner_name || ""}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label htmlFor="owner_phone" className={labelClass}>WhatsApp</label>
+            <input
+              id="owner_phone" name="owner_phone" type="tel"
+              placeholder="(85) 99999-9999"
+              defaultValue={defaults.owner_phone || ""}
+              className={inputClass}
+            />
+            <p className={hintClass}>Para falar com o proprietário direto pela página do imóvel</p>
+          </div>
         </div>
       </div>
 
@@ -258,182 +356,32 @@ export default function PropertyFormFields({
         </div>
       </div>
 
-      {/* ── FINANCEIRO BASE ───────────────────────────── */}
+      {/* ── DADOS DE INVESTIDOR (opcional) ────────────── */}
       <div className="card space-y-5">
-        <p className={sectionTitleClass}>Financeiro</p>
+        <p className={sectionTitleClass}>Dados de investidor (opcional)</p>
+        <p className="text-sm text-ink-2 -mt-2">
+          Imóvel de cliente investidor? Preencha para acompanhar o rendimento (yield) dele no app.
+        </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
-            <label htmlFor="acquisition_value" className={labelClass}>
-              {modality === "under_construction" ? "Valor já pago (R$)" : "Valor de compra (R$)"}
-            </label>
+            <label htmlFor="acquisition_value" className={labelClass}>Valor de compra (R$)</label>
             <input
               id="acquisition_value" name="acquisition_value"
               type="number" step="0.01" min="0" placeholder="0,00"
               defaultValue={defaults.acquisition_value ?? ""}
               className={inputClass}
             />
-            {modality === "under_construction" && (
-              <p className={hintClass}>Valor já desembolsado até hoje</p>
-            )}
           </div>
           <div>
-            <label htmlFor="acquisition_date" className={labelClass}>
-              {modality === "under_construction" ? "Data de assinatura" : "Data de compra"}
-            </label>
+            <label htmlFor="acquisition_date" className={labelClass}>Data de compra</label>
             <input id="acquisition_date" name="acquisition_date" type="date"
               defaultValue={defaults.acquisition_date || ""} className={inputClass} />
           </div>
         </div>
-
-        {modality !== "under_construction" && (
-          <div>
-            <label htmlFor="current_value" className={labelClass}>
-              Valor atual de mercado (R$)
-            </label>
-            <input id="current_value" name="current_value"
-              type="number" step="0.01" min="0" placeholder="0,00"
-              defaultValue={defaults.current_value ?? ""}
-              className={inputClass}
-            />
-            <p className={hintClass}>Estimativa do valor de mercado hoje</p>
-          </div>
-        )}
+        <p className={hintClass}>
+          O yield é calculado com o aluguel pretendido ÷ valor de venda. Sem esses dados, o indicador fica em branco.
+        </p>
       </div>
-
-      {/* ── LOCAÇÃO ANUAL ─────────────────────────────── */}
-      {modality === "annual_lease" && (
-        <div className="card space-y-5">
-          <p className={sectionTitleClass}>Contrato de locação</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-              <label htmlFor="monthly_rent" className={labelClass}>
-                Aluguel contratual (R$/mês) <span className="text-forest">*</span>
-              </label>
-              <input id="monthly_rent" name="monthly_rent"
-                type="number" step="0.01" min="0" placeholder="0,00"
-                defaultValue={defaults.monthly_rent ?? ""} className={inputClass} />
-              <p className={hintClass}>Valor fixo do contrato</p>
-            </div>
-            <div>
-              <label htmlFor="lease_due_day" className={labelClass}>Dia de vencimento</label>
-              <input id="lease_due_day" name="lease_due_day"
-                type="number" min="1" max="31" placeholder="Ex: 5"
-                defaultValue={defaults.lease_due_day ?? ""} className={inputClass} />
-              <p className={hintClass}>Dia do mês em que o aluguel vence</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-              <label htmlFor="lease_renewal_date" className={labelClass}>Data de renovação</label>
-              <input id="lease_renewal_date" name="lease_renewal_date" type="date"
-                defaultValue={defaults.lease_renewal_date || ""} className={inputClass} />
-            </div>
-            <div>
-              <label htmlFor="adjustment_index" className={labelClass}>Índice de reajuste</label>
-              <select id="adjustment_index" name="adjustment_index"
-                defaultValue={defaults.adjustment_index || ""} className={selectClass}>
-                <option value="">Não definido</option>
-                <option value="igpm">IGP-M</option>
-                <option value="ipca">IPCA</option>
-                <option value="ivar">IVAR</option>
-                <option value="inpc">INPC</option>
-                <option value="other">Outro</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── TEMPORADA ─────────────────────────────────── */}
-      {modality === "short_stay" && (
-        <div className="card space-y-5">
-          <p className={sectionTitleClass}>Temporada</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-              <label htmlFor="daily_rate" className={labelClass}>Diária média (R$)</label>
-              <input id="daily_rate" name="daily_rate"
-                type="number" step="0.01" min="0" placeholder="0,00"
-                defaultValue={defaults.daily_rate ?? ""} className={inputClass} />
-            </div>
-            <div>
-              <label htmlFor="target_occupancy" className={labelClass}>Ocupação esperada (%)</label>
-              <input id="target_occupancy" name="target_occupancy"
-                type="number" min="0" max="100" step="1" placeholder="Ex: 70"
-                defaultValue={defaults.target_occupancy ?? ""} className={inputClass} />
-              <p className={hintClass}>% médio de dias ocupados no mês</p>
-            </div>
-          </div>
-          <div>
-            <label htmlFor="monthly_rent" className={labelClass}>Receita mensal estimada (R$)</label>
-            <input id="monthly_rent" name="monthly_rent"
-              type="number" step="0.01" min="0" placeholder="0,00"
-              defaultValue={defaults.monthly_rent ?? ""} className={inputClass} />
-            <p className={hintClass}>Estimativa de receita mensal média para cálculo de yield</p>
-          </div>
-        </div>
-      )}
-
-      {/* ── NA PLANTA ─────────────────────────────────── */}
-      {modality === "under_construction" && (
-        <>
-          <div className="card space-y-5">
-            <p className={sectionTitleClass}>Contrato</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div>
-                <label htmlFor="total_investment" className={labelClass}>Valor total do contrato (R$)</label>
-                <input id="total_investment" name="total_investment"
-                  type="number" step="0.01" min="0" placeholder="0,00"
-                  defaultValue={defaults.total_investment ?? ""} className={inputClass} />
-                <p className={hintClass}>VGV ou valor total a pagar</p>
-              </div>
-              <div>
-                <label htmlFor="delivery_date" className={labelClass}>Previsão de entrega</label>
-                <input id="delivery_date" name="delivery_date" type="date"
-                  defaultValue={defaults.delivery_date || ""} className={inputClass} />
-              </div>
-            </div>
-            <div>
-              <label htmlFor="payment_notes" className={labelClass}>Modelo de pagamento</label>
-              <input id="payment_notes" name="payment_notes" type="text"
-                placeholder="Ex: 30% entrada + 60x mensais + 10% nas chaves"
-                defaultValue={defaults.payment_notes || ""} className={inputClass} />
-              <p className={hintClass}>Descreva a estrutura do contrato em texto livre</p>
-            </div>
-          </div>
-
-          <div className="card space-y-5">
-            <p className={sectionTitleClass}>Parcelas</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div>
-                <label htmlFor="installment_amount" className={labelClass}>Valor da parcela mensal (R$)</label>
-                <input id="installment_amount" name="installment_amount"
-                  type="number" step="0.01" min="0" placeholder="0,00"
-                  defaultValue={defaults.installment_amount ?? ""} className={inputClass} />
-              </div>
-              <div>
-                <label htmlFor="next_installment_date" className={labelClass}>Data da próxima parcela</label>
-                <input id="next_installment_date" name="next_installment_date" type="date"
-                  defaultValue={defaults.next_installment_date || ""} className={inputClass} />
-                <p className={hintClass}>Gera lembrete de pagamento quando estiver próxima</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div>
-                <label htmlFor="balloon_amount" className={labelClass}>Valor do balão / parcela especial (R$)</label>
-                <input id="balloon_amount" name="balloon_amount"
-                  type="number" step="0.01" min="0" placeholder="0,00"
-                  defaultValue={defaults.balloon_amount ?? ""} className={inputClass} />
-                <p className={hintClass}>Opcional — ex: parcela das chaves</p>
-              </div>
-              <div>
-                <label htmlFor="balloon_date" className={labelClass}>Data do balão</label>
-                <input id="balloon_date" name="balloon_date" type="date"
-                  defaultValue={defaults.balloon_date || ""} className={inputClass} />
-              </div>
-            </div>
-          </div>
-        </>
-      )}
     </>
   );
 }
