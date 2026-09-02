@@ -18,6 +18,7 @@ export async function saveProfile(formData: FormData) {
   const phone = String(formData.get("phone") || "").trim();
   const creci = String(formData.get("creci") || "").trim() || null;
   const agencyName = String(formData.get("agency_name") || "").trim() || null;
+  const inviteCode = String(formData.get("invite_code") || "").trim() || null;
   const termsAccepted = formData.get("terms_accepted") === "on";
 
   if (!fullName) {
@@ -53,6 +54,14 @@ export async function saveProfile(formData: FormData) {
 
   if (error) {
     redirect("/error?message=" + encodeURIComponent(error.message));
+  }
+
+  // Vínculo com a imobiliária via código de convite (opcional)
+  if (inviteCode) {
+    const { error: joinError } = await supabase.rpc("join_agency", { code: inviteCode });
+    if (joinError) {
+      redirect("/error?message=" + encodeURIComponent(`Perfil salvo, mas o código de convite falhou: ${joinError.message}`));
+    }
   }
 
   revalidatePath("/dashboard");

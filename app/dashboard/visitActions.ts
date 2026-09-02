@@ -19,11 +19,11 @@ export async function createVisit(formData: FormData) {
     redirect("/error?message=" + encodeURIComponent("Preencha imóvel, nome do interessado e data da visita."));
   }
 
+  // Visível = próprio ou da mesma imobiliária (RLS decide)
   const { data: property } = await supabase
     .from("properties")
     .select("id")
     .eq("id", propertyId)
-    .eq("user_id", user.id)
     .single();
 
   if (!property) {

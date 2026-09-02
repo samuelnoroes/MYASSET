@@ -28,11 +28,11 @@ export async function createDeal(formData: FormData) {
   }
 
   if (propertyId) {
+    // Visível = próprio ou da mesma imobiliária (RLS decide)
     const { data: property } = await supabase
       .from("properties")
       .select("id")
       .eq("id", propertyId)
-      .eq("user_id", user.id)
       .single();
     if (!property) {
       redirect("/error?message=" + encodeURIComponent("Imóvel não encontrado."));
@@ -53,11 +53,11 @@ export async function createDeal(formData: FormData) {
   }
 
   if (propertyId && markClosed) {
-    await supabase
-      .from("properties")
-      .update({ listing_status: "closed", updated_at: new Date().toISOString() })
-      .eq("id", propertyId)
-      .eq("user_id", user.id);
+    // RPC cobre imóvel próprio e de colega da mesma imobiliária
+    await supabase.rpc("set_listing_status_shared", {
+      p_property: propertyId,
+      p_status: "closed",
+    });
   }
 
   revalidatePath("/dashboard");

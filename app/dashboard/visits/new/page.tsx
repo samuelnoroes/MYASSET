@@ -12,10 +12,10 @@ export default async function NewVisitPage({
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  // Sem filtro de user_id: inclui imóveis da imobiliária (RLS controla a visibilidade)
   const { data: properties } = await supabase
     .from("properties")
     .select("id, name, city, listing_status")
-    .eq("user_id", user.id)
     .eq("is_active", true)
     .order("name");
 

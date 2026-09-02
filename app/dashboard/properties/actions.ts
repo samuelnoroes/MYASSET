@@ -159,11 +159,11 @@ export async function setListingStatus(formData: FormData) {
   if (!id) err("ID do imóvel não fornecido.");
   if (!["available", "reserved", "closed"].includes(status)) err("Status inválido.");
 
-  const { error } = await supabase
-    .from("properties")
-    .update({ listing_status: status, updated_at: new Date().toISOString() })
-    .eq("id", id)
-    .eq("user_id", user.id);
+  // RPC permite dono, gestor e colegas da mesma imobiliária (ex.: colega que fechou o negócio)
+  const { error } = await supabase.rpc("set_listing_status_shared", {
+    p_property: id,
+    p_status: status,
+  });
 
   if (error) err(error.message);
 

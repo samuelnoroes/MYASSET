@@ -133,11 +133,11 @@ const NAV_ITEMS = [
         if (!user) return;
         supabase
           .from("user_profiles")
-          .select("is_admin, plan")
+          .select("is_admin, plan, agency_role")
           .eq("id", user.id)
           .single()
           .then(({ data }) => {
-            if (data?.is_admin) setIsAdmin(true);
+            if (data?.is_admin || data?.agency_role === "gestor") setIsAdmin(true);
             if (data?.plan) setUserPlan(data.plan);
           });
         supabase
@@ -425,7 +425,7 @@ const NAV_ITEMS = [
           <div style={{ padding: sidebarOpen ? "0 12px 8px" : "0 0 8px" }}>
             <Link
               href="/admin"
-              title={!sidebarOpen ? "Admin" : undefined}
+              title={!sidebarOpen ? "Gestão" : undefined}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -443,7 +443,7 @@ const NAV_ITEMS = [
             >
               <span style={{ fontSize: 18, flexShrink: 0, width: 24, textAlign: "center" }}>🛡️</span>
               {sidebarOpen && (
-                <span style={{ fontSize: 14, fontWeight: 700, color: "#C4A96B" }}>Admin</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: "#C4A96B" }}>Gestão</span>
               )}
             </Link>
           </div>

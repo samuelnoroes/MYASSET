@@ -39,6 +39,7 @@ function visitLabel(iso: string): string {
 
 type Property = {
   id: string;
+  user_id: string;
   name: string;
   nickname: string;
   property_type: string;
@@ -59,10 +60,14 @@ function PropertyRow({
   property,
   nextVisit,
   isChild = false,
+  captadorName,
+  canEdit = true,
 }: {
   property: Property;
   nextVisit?: string;
   isChild?: boolean;
+  captadorName?: string;
+  canEdit?: boolean;
 }) {
   const purpose = property.listing_purpose === "rent" ? "rent" : "sale";
   const status = STATUS_CONFIG[property.listing_status || "available"] ?? STATUS_CONFIG.available;
@@ -90,6 +95,11 @@ function PropertyRow({
           {property.unit_identifier && (
             <span className="text-[10px] font-bold uppercase tracking-wider bg-border text-ink-2 px-2 py-0.5 rounded">
               {property.unit_identifier}
+            </span>
+          )}
+          {captadorName && (
+            <span className="text-[10px] font-bold uppercase tracking-wider text-ink-3 border border-border px-2 py-0.5 rounded-full">
+              👤 {captadorName}
             </span>
           )}
         </div>
@@ -136,21 +146,25 @@ function PropertyRow({
         >
           Visita
         </Link>
-        <Link
-          href={`/dashboard/properties/${property.id}/edit`}
-          className="text-xs text-ink-3 hover:text-forest transition-colors uppercase tracking-wider"
-        >
-          Editar
-        </Link>
-        <form action={deleteProperty}>
-          <input type="hidden" name="id" value={property.id} />
-          <button
-            type="submit"
-            className="text-xs text-ink-3 hover:text-negative transition-colors uppercase tracking-wider"
-          >
-            Remover
-          </button>
-        </form>
+        {canEdit && (
+          <>
+            <Link
+              href={`/dashboard/properties/${property.id}/edit`}
+              className="text-xs text-ink-3 hover:text-forest transition-colors uppercase tracking-wider"
+            >
+              Editar
+            </Link>
+            <form action={deleteProperty}>
+              <input type="hidden" name="id" value={property.id} />
+              <button
+                type="submit"
+                className="text-xs text-ink-3 hover:text-negative transition-colors uppercase tracking-wider"
+              >
+                Remover
+              </button>
+            </form>
+          </>
+        )}
       </div>
     </div>
   );
@@ -168,30 +182,58 @@ const FILTERS: { key: string; label: string; match: (p: Property) => boolean }[]
 export default async function PropertiesPage({
   searchParams,
 }: {
-  searchParams: { filtro?: string };
+  searchParams: { filtro?: string; escopo?: string };
 }) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: properties, error } = await supabase
+  const { data: myProfile } = await supabase
+    .from("user_profiles")
+    .select("agency_id, agency_role")
+    .eq("id", user.id)
+    .single();
+
+  const hasAgency = !!myProfile?.agency_id;
+  const isGestor = myProfile?.agency_role === "gestor";
+  const agencyScope = hasAgency && searchParams.escopo === "imob";
+
+  const baseSelect = supabase
     .from("properties")
-    .select("id, name, nickname, property_type, city, state, current_value, monthly_rent, acquisition_value, iptu_amount, condo_fee, listing_purpose, listing_status, parent_property_id, unit_identifier")
-    .eq("user_id", user.id)
+    .select("id, user_id, name, nickname, property_type, city, state, current_value, monthly_rent, acquisition_value, iptu_amount, condo_fee, listing_purpose, listing_status, parent_property_id, unit_identifier")
     .order("created_at", { ascending: false });
+
+  // No escopo "imobiliária", a RLS libera os imóveis de todos os colegas
+  const { data: properties, error } = agencyScope
+    ? await baseSelect
+    : await baseSelect.eq("user_id", user.id);
 
   if (error) redirect("/error?message=" + encodeURIComponent(error.message));
 
   const allProps = (properties || []) as Property[];
 
-  // Próxima visita agendada por imóvel
-  const { data: upcomingVisits } = await supabase
+  // Nomes dos captadores (colegas da imobiliária)
+  const captadorById = new Map<string, string>();
+  if (agencyScope) {
+    const { data: colleagues } = await supabase
+      .from("user_profiles")
+      .select("id, full_name")
+      .eq("agency_id", myProfile!.agency_id);
+    for (const c of colleagues ?? []) {
+      captadorById.set(c.id, (c.full_name || "").split(" ")[0] || "Colega");
+    }
+  }
+
+  // Próxima visita agendada por imóvel (no escopo imobiliária, inclui as dos colegas via RLS)
+  const visitsQuery = supabase
     .from("property_visits")
     .select("property_id, scheduled_at")
-    .eq("user_id", user.id)
     .eq("status", "scheduled")
     .gte("scheduled_at", new Date().toISOString().slice(0, 10))
     .order("scheduled_at", { ascending: true });
+  const { data: upcomingVisits } = agencyScope
+    ? await visitsQuery
+    : await visitsQuery.eq("user_id", user.id);
 
   const nextVisitByProperty = new Map<string, string>();
   for (const v of upcomingVisits ?? []) {
@@ -248,9 +290,10 @@ export default async function PropertiesPage({
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
           <div>
-            <p className="section-title">Carteira</p>
+            <p className="section-title">{agencyScope ? "Portfólio da imobiliária" : "Carteira"}</p>
             <p className="text-sm text-ink-2">
-              {totalCount} {totalCount === 1 ? "imóvel na carteira" : "imóveis na carteira"}
+              {totalCount} {totalCount === 1 ? "imóvel" : "imóveis"}
+              {agencyScope ? " no portfólio da equipe" : " na sua carteira"}
               {isFiltering && ` · ${filteredProps.length} no filtro "${activeFilter.label}"`}
             </p>
           </div>
@@ -262,22 +305,50 @@ export default async function PropertiesPage({
           </Link>
         </div>
 
+        {/* Escopo: meus × imobiliária */}
+        {hasAgency && (
+          <div className="flex gap-2 mb-4">
+            <Link
+              href="/dashboard/properties"
+              className={`px-4 py-2 rounded text-xs font-bold uppercase tracking-wider border transition-colors ${
+                !agencyScope ? "bg-header text-white border-header" : "bg-card text-ink-2 border-border hover:border-forest hover:text-forest"
+              }`}
+            >
+              Meus imóveis
+            </Link>
+            <Link
+              href="/dashboard/properties?escopo=imob"
+              className={`px-4 py-2 rounded text-xs font-bold uppercase tracking-wider border transition-colors ${
+                agencyScope ? "bg-header text-white border-header" : "bg-card text-ink-2 border-border hover:border-forest hover:text-forest"
+              }`}
+            >
+              🏢 Imobiliária
+            </Link>
+          </div>
+        )}
+
         {/* Filtros */}
         {totalCount > 0 && (
           <div className="flex flex-wrap gap-2 mb-6">
-            {FILTERS.map((f) => (
-              <Link
-                key={f.key}
-                href={f.key === "all" ? "/dashboard/properties" : `/dashboard/properties?filtro=${f.key}`}
-                className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider border transition-colors ${
-                  activeFilter.key === f.key
-                    ? "bg-forest text-white border-forest"
-                    : "bg-card text-ink-2 border-border hover:border-forest hover:text-forest"
-                }`}
-              >
-                {f.label}
-              </Link>
-            ))}
+            {FILTERS.map((f) => {
+              const params = new URLSearchParams();
+              if (f.key !== "all") params.set("filtro", f.key);
+              if (agencyScope) params.set("escopo", "imob");
+              const qs = params.toString();
+              return (
+                <Link
+                  key={f.key}
+                  href={`/dashboard/properties${qs ? `?${qs}` : ""}`}
+                  className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider border transition-colors ${
+                    activeFilter.key === f.key
+                      ? "bg-forest text-white border-forest"
+                      : "bg-card text-ink-2 border-border hover:border-forest hover:text-forest"
+                  }`}
+                >
+                  {f.label}
+                </Link>
+              );
+            })}
           </div>
         )}
 
@@ -298,7 +369,7 @@ export default async function PropertiesPage({
           </div>
         )}
 
-        {totalCount > 0 && isFiltering && (
+        {totalCount > 0 && (isFiltering || agencyScope) && (
           filteredProps.length === 0 ? (
             <div className="card text-center py-12">
               <p className="text-sm text-ink-2">Nenhum imóvel no filtro "{activeFilter.label}".</p>
@@ -310,13 +381,15 @@ export default async function PropertiesPage({
                   key={property.id}
                   property={property}
                   nextVisit={nextVisitByProperty.get(property.id)}
+                  captadorName={agencyScope && property.user_id !== user.id ? captadorById.get(property.user_id) : undefined}
+                  canEdit={property.user_id === user.id || isGestor}
                 />
               ))}
             </div>
           )
         )}
 
-        {totalCount > 0 && !isFiltering && (
+        {totalCount > 0 && !isFiltering && !agencyScope && (
           <div className="space-y-4">
             {/* Empreendimentos com unidades */}
             {orderedGroups.map(({ parent, children }) => (

@@ -96,6 +96,24 @@ export default async function OnboardingPage() {
               />
               <p className="text-xs text-ink-3 mt-1">Opcional — usada na aba Metas para a meta geral do time.</p>
             </div>
+            <div>
+              <label
+                htmlFor="invite_code"
+                className="block text-xs font-semibold uppercase tracking-wider text-ink-2 mb-2"
+              >
+                Código de convite da imobiliária
+              </label>
+              <input
+                id="invite_code"
+                name="invite_code"
+                type="text"
+                placeholder="Ex: 3FA9B2"
+                className="w-full px-4 py-3 bg-surface border border-border rounded focus:border-forest focus:outline-none transition-colors text-ink text-sm uppercase font-mono tracking-widest"
+              />
+              <p className="text-xs text-ink-3 mt-1">
+                Sua imobiliária usa o MyAsset? Informe o código do gestor para entrar na equipe. Se não tiver, deixe em branco.
+              </p>
+            </div>
 
             {/* Aceite dos Termos */}
             <div className="border border-border rounded p-4 bg-surface">

@@ -12,10 +12,10 @@ export default async function NewDealPage({
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  // Sem filtro de user_id: o corretor pode fechar negócio em imóvel de colega da imobiliária
   const { data: properties } = await supabase
     .from("properties")
     .select("id, name, city, listing_purpose")
-    .eq("user_id", user.id)
     .eq("is_active", true)
     .order("name");
   const props = properties ?? [];

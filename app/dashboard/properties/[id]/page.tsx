@@ -68,20 +68,38 @@ export default async function PropertyDetailPage({ params }: Props) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  // Sem filtro de user_id: a RLS libera imóveis próprios e da mesma imobiliária
   const { data: property, error } = await supabase
-    .from("properties").select("*").eq("id", params.id).eq("user_id", user.id).single();
+    .from("properties").select("*").eq("id", params.id).single();
   if (error || !property) notFound();
+
+  const isOwner = property.user_id === user.id;
+
+  const { data: myProfile } = await supabase
+    .from("user_profiles")
+    .select("agency_id, agency_role")
+    .eq("id", user.id)
+    .single();
+  const isGestor = !!myProfile?.agency_id && myProfile?.agency_role === "gestor";
+  const canEdit = isOwner || isGestor;
+
+  const { data: ownerProfile } = isOwner
+    ? { data: null }
+    : await supabase
+        .from("user_profiles")
+        .select("full_name, phone")
+        .eq("id", property.user_id)
+        .single();
 
   const { data: transactions } = await supabase
     .from("transactions").select("*").eq("property_id", params.id).eq("user_id", user.id)
     .order("transaction_date", { ascending: false });
 
-  // Visitas deste imóvel
+  // Visitas deste imóvel (inclui as de colegas da imobiliária via RLS)
   const { data: propertyVisits } = await supabase
     .from("property_visits")
-    .select("id, visitor_name, visitor_phone, scheduled_at, status, notes")
+    .select("id, user_id, visitor_name, visitor_phone, scheduled_at, status, notes")
     .eq("property_id", params.id)
-    .eq("user_id", user.id)
     .order("scheduled_at", { ascending: false })
     .limit(12);
   const visits = propertyVisits ?? [];
@@ -100,7 +118,6 @@ export default async function PropertyDetailPage({ params }: Props) {
     .from("properties")
     .select("id, name, nickname, listing_purpose, listing_status, unit_identifier, monthly_rent, current_value")
     .eq("parent_property_id", params.id)
-    .eq("user_id", user.id)
     .order("unit_identifier", { ascending: true });
 
   const propertyUnits = units || [];
@@ -176,6 +193,11 @@ export default async function PropertyDetailPage({ params }: Props) {
             </p>
             <h1 className="font-display text-5xl text-ink leading-tight mb-1">{property.name}</h1>
             <p className="text-sm text-ink-3 font-mono">@{property.nickname}</p>
+            {!isOwner && ownerProfile && (
+              <p className="text-xs text-ink-2 mt-1">
+                👤 Captado por <strong className="text-ink">{ownerProfile.full_name || "colega da equipe"}</strong>
+              </p>
+            )}
             {(property.city || property.state) && (
               <p className="text-sm text-ink-2 mt-1">
                 {[property.address, property.city, property.state].filter(Boolean).join(" · ")}
@@ -184,12 +206,14 @@ export default async function PropertyDetailPage({ params }: Props) {
           </div>
 
           <div className="flex flex-col gap-2 shrink-0">
-            <Link
-              href={`/dashboard/properties/${params.id}/edit`}
-              className="px-4 py-2 bg-surface border border-border text-ink text-xs font-bold uppercase tracking-wider rounded hover:border-forest hover:text-forest transition-colors text-center"
-            >
-              Editar imóvel
-            </Link>
+            {canEdit && (
+              <Link
+                href={`/dashboard/properties/${params.id}/edit`}
+                className="px-4 py-2 bg-surface border border-border text-ink text-xs font-bold uppercase tracking-wider rounded hover:border-forest hover:text-forest transition-colors text-center"
+              >
+                Editar imóvel
+              </Link>
+            )}
             <Link
               href={`/dashboard/visits/new?property=${params.id}`}
               className="px-4 py-2 bg-forest text-white text-xs font-bold uppercase tracking-wider rounded hover:bg-forest-light transition-colors text-center"
@@ -205,6 +229,7 @@ export default async function PropertyDetailPage({ params }: Props) {
             </Link>
 
             {/* Troca rápida de status */}
+            {canEdit && (
             <div className="flex gap-1 mt-1">
               {(["available", "reserved", "closed"] as const).map((s) => {
                 const cfg = STATUS_CONFIG[s];
@@ -227,6 +252,7 @@ export default async function PropertyDetailPage({ params }: Props) {
                 );
               })}
             </div>
+            )}
           </div>
         </div>
 
@@ -394,7 +420,7 @@ export default async function PropertyDetailPage({ params }: Props) {
                         {v.notes ? ` · ${v.notes}` : ""}
                       </p>
                     </div>
-                    {isScheduled && (
+                    {isScheduled && v.user_id === user.id && (
                       <div className="flex items-center gap-2 shrink-0">
                         <form action={markVisitDone}>
                           <input type="hidden" name="visit_id" value={v.id} />
@@ -417,7 +443,8 @@ export default async function PropertyDetailPage({ params }: Props) {
           )}
         </div>
 
-        {/* ── FINANCEIRO DO IMÓVEL ──────────────────────── */}
+        {/* ── FINANCEIRO DO IMÓVEL (só o captador vê) ───── */}
+        {isOwner && (
         <div className="card">
           <div className="flex items-center justify-between mb-5">
             <div>
@@ -469,6 +496,7 @@ export default async function PropertyDetailPage({ params }: Props) {
             </div>
           )}
         </div>
+        )}
       </div>
     </main>
   );

@@ -57,7 +57,7 @@ export default async function DashboardPage() {
   // Buscar plano e trial do usuário
   const { data: profile } = await supabase
     .from("user_profiles")
-    .select("plan, trial_started_at")
+    .select("plan, trial_started_at, agency_id, agency_name")
     .eq("id", user.id)
     .single();
 
@@ -189,6 +189,28 @@ export default async function DashboardPage() {
     { name: "Fechados", value: closedValue, color: "#5FBF8A", percentage: pct(closedValue) },
   ];
 
+  // ── Portfólio da imobiliária (compartilhado via RLS) ─
+  const hasAgency = !!profile?.agency_id;
+  let imobAvailable = 0, imobReserved = 0, imobDealsMonth = 0, imobVgvSoldMonth = 0;
+  if (hasAgency) {
+    const [{ data: teamProps }, { data: teamDeals }] = await Promise.all([
+      supabase
+        .from("properties")
+        .select("listing_status")
+        .eq("is_active", true),
+      supabase
+        .from("deals")
+        .select("deal_type, deal_value, closed_at")
+        .gte("closed_at", startOfMonth),
+    ]);
+    const tp = teamProps ?? [];
+    imobAvailable = tp.filter(p => p.listing_status === "available").length;
+    imobReserved = tp.filter(p => p.listing_status === "reserved").length;
+    const td = teamDeals ?? [];
+    imobDealsMonth = td.length;
+    imobVgvSoldMonth = td.filter(d => d.deal_type === "sale").reduce((acc, d) => acc + Number(d.deal_value), 0);
+  }
+
   // Próxima visita agendada por imóvel
   const nextVisitByProperty = new Map<string, string>();
   for (const v of scheduled) {
@@ -313,6 +335,37 @@ export default async function DashboardPage() {
             </KpiCard>
           </div>
         </section>
+
+        {/* ═══ SEÇÃO IMOBILIÁRIA (compartilhado) ═══════ */}
+        {hasAgency && (
+          <section id="imobiliaria" className="scroll-mt-6">
+            <div className="flex items-center justify-between mb-3 px-1">
+              <p className="text-xs font-bold uppercase tracking-widest text-ink-3">
+                🏢 {profile?.agency_name || "Imobiliária"} — portfólio do time
+              </p>
+              <Link href="/dashboard/properties?escopo=imob" className="text-xs text-forest font-semibold uppercase tracking-wider hover:text-forest-light transition-colors">
+                Ver portfólio →
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <KpiCard label="Disponíveis na imob" tooltip="Imóveis disponíveis no portfólio de toda a equipe — os seus e os dos colegas.">
+                <p className="kpi-value text-positive">{imobAvailable}</p>
+              </KpiCard>
+              <KpiCard label="Em negociação" tooltip="Imóveis reservados por qualquer corretor da equipe.">
+                <p className="kpi-value" style={{ color: "#D9A05B" }}>{imobReserved}</p>
+              </KpiCard>
+              <KpiCard label="Fechados — mês" tooltip="Negócios concluídos por toda a equipe neste mês (vendas e locações).">
+                <p className="kpi-value">{imobDealsMonth}</p>
+              </KpiCard>
+              <KpiCard label="VGV vendido — time" tooltip="Soma das vendas fechadas por todos os corretores da imobiliária neste mês. É o número que alimenta a meta geral.">
+                <p className="kpi-value text-positive">{formatCurrencyShort(imobVgvSoldMonth)}</p>
+                <Link href="/dashboard/goals" className="text-xs text-forest font-semibold uppercase tracking-wider hover:text-forest-light transition-colors mt-1 inline-block">
+                  Meta geral →
+                </Link>
+              </KpiCard>
+            </div>
+          </section>
+        )}
 
         {/* ═══ SEÇÃO CARTEIRA ══════════════════════════ */}
         <section id="carteira" className="scroll-mt-6">

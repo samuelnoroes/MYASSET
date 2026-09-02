@@ -41,11 +41,36 @@ export default async function GoalsPage() {
       .maybeSingle(),
     supabase
       .from("user_profiles")
-      .select("agency_name")
+      .select("agency_name, agency_id, agency_role")
       .eq("id", user.id)
       .single(),
   ]);
   const agencyName = profile?.agency_name || null;
+  const hasAgency = !!profile?.agency_id;
+  const isGestor = profile?.agency_role === "gestor";
+
+  // Meta geral definida pelo gestor + vendas consolidadas do time (via RLS)
+  let agencyGoalTarget: number | null = null;
+  let teamVgvSold = 0;
+  let teamSalesCount = 0;
+  if (hasAgency) {
+    const [{ data: agencyGoal }, { data: teamDeals }] = await Promise.all([
+      supabase
+        .from("agency_goals")
+        .select("target_amount")
+        .eq("agency_id", profile!.agency_id)
+        .eq("period_month", periodMonth)
+        .maybeSingle(),
+      supabase
+        .from("deals")
+        .select("user_id, deal_type, deal_value")
+        .gte("closed_at", periodMonth),
+    ]);
+    agencyGoalTarget = agencyGoal?.target_amount ? Number(agencyGoal.target_amount) : null;
+    const teamSales = (teamDeals ?? []).filter(d => d.deal_type === "sale");
+    teamVgvSold = teamSales.reduce((acc, d) => acc + Number(d.deal_value), 0);
+    teamSalesCount = teamSales.length;
+  }
 
   const { data: monthDeals } = await supabase
     .from("deals")
@@ -59,10 +84,16 @@ export default async function GoalsPage() {
   const vgvSold = sales.reduce((acc, d) => acc + Number(d.deal_value), 0);
 
   const personalTarget = goal?.personal_target ? Number(goal.personal_target) : null;
-  const agencyTarget = goal?.agency_target ? Number(goal.agency_target) : null;
+  // Na imobiliária, a meta geral vem do gestor e o realizado é do time inteiro;
+  // corretor solo continua informando a referência manualmente.
+  const agencyTarget = hasAgency
+    ? agencyGoalTarget
+    : goal?.agency_target ? Number(goal.agency_target) : null;
+  const agencyRealized = hasAgency ? teamVgvSold : vgvSold;
 
   const personalPct = personalTarget ? (vgvSold / personalTarget) * 100 : null;
-  const agencyPct = agencyTarget ? (vgvSold / agencyTarget) * 100 : null;
+  const agencyPct = agencyTarget ? (agencyRealized / agencyTarget) * 100 : null;
+  const myShareOfTeam = hasAgency && teamVgvSold > 0 ? (vgvSold / teamVgvSold) * 100 : null;
 
   return (
     <main className="min-h-screen bg-surface">
@@ -125,17 +156,34 @@ export default async function GoalsPage() {
           {agencyTarget ? (
             <>
               <div className="flex items-baseline justify-between mb-3">
-                <p className="text-2xl font-bold text-ink">{formatCurrency(agencyTarget)}</p>
+                <p className="text-2xl font-bold text-ink">{formatCurrency(agencyRealized)}</p>
                 <p className="text-sm text-ink-2">
-                  você já contribuiu <strong className="text-ink">{formatCurrency(vgvSold)}</strong>
+                  de <strong className="text-ink">{formatCurrency(agencyTarget)}</strong>
                 </p>
               </div>
               <ProgressBar pct={agencyPct ?? 0} color="#3B82F6" />
-              <p className="text-xs text-ink-3 mt-2">
-                Suas vendas representam <strong className="text-ink">{(agencyPct ?? 0).toFixed(1)}%</strong> da
-                meta geral da sua imobiliária neste mês. Use como lembrete da sua posição no time.
-              </p>
+              {hasAgency ? (
+                <p className="text-xs text-ink-3 mt-2">
+                  {teamSalesCount} {teamSalesCount === 1 ? "venda" : "vendas"} do time no mês ·
+                  meta definida pelo gestor · você contribuiu com{" "}
+                  <strong className="text-ink">{formatCurrency(vgvSold)}</strong>
+                  {myShareOfTeam !== null && <> ({myShareOfTeam.toFixed(0)}% do realizado)</>}
+                  {" · "}o time está em <strong className="text-ink">{(agencyPct ?? 0).toFixed(1)}%</strong> da meta.
+                </p>
+              ) : (
+                <p className="text-xs text-ink-3 mt-2">
+                  Suas vendas representam <strong className="text-ink">{(agencyPct ?? 0).toFixed(1)}%</strong> da
+                  meta geral da sua imobiliária neste mês. Use como lembrete da sua posição no time.
+                </p>
+              )}
             </>
+          ) : hasAgency ? (
+            <p className="text-sm text-ink-2">
+              O gestor ainda não definiu a meta geral deste mês.
+              {isGestor && (
+                <> Defina agora no <Link href="/admin" className="text-forest font-semibold hover:text-forest-light transition-colors">console do gestor →</Link></>
+              )}
+            </p>
           ) : (
             <p className="text-sm text-ink-2">
               Informe a meta geral da sua imobiliária abaixo — ela fica aqui como lembrete
@@ -163,20 +211,28 @@ export default async function GoalsPage() {
                 className="w-full px-4 py-3 bg-surface border border-border rounded focus:border-forest focus:outline-none transition-colors text-ink text-sm"
               />
             </div>
-            <div>
-              <label htmlFor="agency_target" className="block text-xs font-semibold uppercase tracking-wider text-ink-2 mb-2">
-                Meta geral da imobiliária
-              </label>
-              <input
-                id="agency_target"
-                name="agency_target"
-                type="text"
-                inputMode="numeric"
-                defaultValue={agencyTarget ? String(agencyTarget) : ""}
-                placeholder="Ex.: 10.000.000"
-                className="w-full px-4 py-3 bg-surface border border-border rounded focus:border-forest focus:outline-none transition-colors text-ink text-sm"
-              />
-            </div>
+            {!hasAgency ? (
+              <div>
+                <label htmlFor="agency_target" className="block text-xs font-semibold uppercase tracking-wider text-ink-2 mb-2">
+                  Meta geral da imobiliária
+                </label>
+                <input
+                  id="agency_target"
+                  name="agency_target"
+                  type="text"
+                  inputMode="numeric"
+                  defaultValue={agencyTarget ? String(agencyTarget) : ""}
+                  placeholder="Ex.: 10.000.000"
+                  className="w-full px-4 py-3 bg-surface border border-border rounded focus:border-forest focus:outline-none transition-colors text-ink text-sm"
+                />
+              </div>
+            ) : (
+              <div className="flex items-end">
+                <p className="text-xs text-ink-3 pb-3">
+                  A meta geral é definida pelo gestor da {agencyName || "imobiliária"} e consolida as vendas de todo o time automaticamente.
+                </p>
+              </div>
+            )}
             <div className="sm:col-span-2">
               <button
                 type="submit"
