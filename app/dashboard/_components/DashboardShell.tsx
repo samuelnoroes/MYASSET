@@ -66,6 +66,11 @@ const NAV_ICONS: Record<string, JSX.Element> = {
       <circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0114 0v1"/>
     </svg>
   ),
+  goals: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/>
+    </svg>
+  ),
   plan: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
       <path d="M6 3h12l4 6-10 12L2 9z"/><path d="M2 9h20M9 3l3 6 3-6"/>
@@ -85,18 +90,17 @@ const NAV_ICONS: Record<string, JSX.Element> = {
 
 const NAV_ITEMS = [
   { href: "/dashboard",                      label: "Dashboard",    icon: "dashboard", badge: null },
-  { href: "/dashboard/properties",           label: "Portfólio",    icon: "portfolio", badge: null },
+  { href: "/dashboard/properties",           label: "Carteira",     icon: "portfolio", badge: null },
+  { href: "/dashboard/goals",                label: "Metas",        icon: "goals", badge: null },
   { href: "/dashboard/tax",                  label: "IR",           icon: "tax", badge: null },
     { href: "/dashboard/whatsapp",            label: "WhatsApp",     icon: "whatsapp", badge: null },
     { href: "/dashboard/profile",              label: "Perfil",       icon: "profile", badge: null },
   ];
-  
+
   const DASHBOARD_ANCHORS = [
     { href: "#visao-geral", label: "Visão geral"  },
     { href: "#mes-atual",   label: "Mês atual"    },
-    { href: "#historico",   label: "Histórico"    },
-    { href: "#graficos",    label: "Gráficos"     },
-    { href: "#imoveis",     label: "Imóveis"      },
+    { href: "#carteira",    label: "Carteira"     },
   ];
   
   function formatDate(dateStr: string): string {
