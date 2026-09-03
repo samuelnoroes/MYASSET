@@ -70,6 +70,26 @@ export default async function WhatsAppPage() {
         whatsappNumber={profile?.whatsapp_number ?? null}
         pairedAt={profile?.paired_at ?? null}
       />
+
+      {/* O que dá para pedir ao assistente */}
+      {status === "active" && profile?.whatsapp_number && (
+        <div className="card mt-6">
+          <p className="section-title">O que você pode pedir por lá</p>
+          <ul className="space-y-2.5 text-sm text-ink-2">
+            <li>• &ldquo;Quais visitas eu tenho hoje?&rdquo;</li>
+            <li>• &ldquo;Me manda a ficha do sintra203 pra eu mandar pro cliente&rdquo;</li>
+            <li>• &ldquo;Agenda visita do João amanhã 15h no sintra203&rdquo;</li>
+            <li>• &ldquo;Quais imóveis estão disponíveis na imobiliária?&rdquo;</li>
+            <li>• &ldquo;Fechei a venda do sintra203 por 920 mil&rdquo;</li>
+            <li>• &ldquo;Como está minha meta esse mês?&rdquo;</li>
+            <li>• &ldquo;Muda o aluguel do meireles01 pra 3.200&rdquo;</li>
+          </ul>
+          <p className="text-xs text-ink-3 mt-4">
+            O assistente altera de verdade os dados do app — ele confirma com você antes de
+            registrar fechamentos ou mudar valores.
+          </p>
+        </div>
+      )}
     </div>
   )
 }

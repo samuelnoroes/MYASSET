@@ -43,7 +43,10 @@ Deploy automático via Vercel a cada push na branch `main`.
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY` (rotas de API server-side)
-- `ASSISTANT_API_SECRET` (segredo do endpoint `/api/assistant` usado pelo bot WhatsApp)
+- `ANTHROPIC_API_KEY` (cérebro do bot WhatsApp)
+- `WHATSAPP_WEBHOOK_SECRET` (protege `/api/whatsapp/webhook`; opcional mas recomendado)
+- `ASSISTANT_API_SECRET` (segredo do endpoint `/api/assistant` para integrações)
+- `WAHA_URL`, `WAHA_API_KEY`, `WAHA_SESSION` (servidor WhatsApp; têm padrão no código)
 
 ## Modo imobiliária (multi-tenant)
 
@@ -52,10 +55,23 @@ Deploy automático via Vercel a cada push na branch `main`.
 - `/admin` é o **console do gestor**: meta geral do mês (consolidada com as vendas de todos), desempenho e edição do perfil de cada corretor.
 - A meta geral absorve automaticamente cada venda registrada (`deals`) pelos corretores da imobiliária.
 
-## API do assistente WhatsApp (`POST /api/assistant`)
+## Bot WhatsApp (`POST /api/whatsapp/webhook`)
 
-Endpoint interno para o bot (n8n + Evolution/WAHA) operar o app em nome do corretor,
-identificado pelo número de WhatsApp.
+O assistente conversacional roda **dentro do app** — não depende de n8n.
+
+- O corretor vincula o número em **app > WhatsApp** (`/api/whatsapp/optin`, grava
+  `whatsapp_number` e `paired_at`).
+- O WAHA entrega as mensagens recebidas neste webhook; configure a URL
+  `https://www.myasset.tech/api/whatsapp/webhook` no evento `message`
+  (com header `x-webhook-secret` ou `?secret=` se `WHATSAPP_WEBHOOK_SECRET` estiver setado).
+- O corretor é identificado pelo número pareado; o Claude responde usando as ações do
+  assistente (`app/lib/assistantActions.ts`) e a resposta volta via WAHA `sendText`.
+- Mensagens duplicadas são descartadas (`wa_processed_msgs`), o histórico fica em
+  `whatsapp_messages` e o consumo respeita o limite mensal do plano (`whatsapp_usage`).
+
+## API do assistente (`POST /api/assistant`)
+
+Mesmas ações do bot, expostas para integrações externas (automações, n8n).
 
 - Header: `x-assistant-secret: $ASSISTANT_API_SECRET`
 - Corpo: `{ "phone": "5585999999999", "action": "...", "params": { ... } }`
