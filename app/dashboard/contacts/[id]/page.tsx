@@ -33,7 +33,7 @@ export default async function ContactPage({ params }: { params: { id: string } }
       <div className="max-w-4xl mx-auto px-6 py-8 space-y-6">
         <div>
           <p className="text-xs font-bold uppercase tracking-widest text-forest mb-2">
-            {isOwner ? "Contato" : "Contato do colega (leitura)"}
+            {isOwner ? "Contato" : "Contato (acesso de administrador, leitura)"}
           </p>
           <h1 className="text-3xl font-bold text-ink">{c.name}</h1>
         </div>

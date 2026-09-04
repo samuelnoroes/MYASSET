@@ -9,7 +9,7 @@ const FILTERS: { key: string; label: string }[] = [
   ...STAGES.map((s) => ({ key: s, label: STAGE_LABEL[s] })),
 ];
 
-function ContactRow({ contact, canEdit = true }: { contact: Contact; canEdit?: boolean }) {
+function ContactRow({ contact }: { contact: Contact }) {
   return (
     <div className="flex items-center gap-5 px-6 py-5 hover:bg-surface transition-colors">
       <div className="flex-1 min-w-0">
@@ -45,7 +45,7 @@ function ContactRow({ contact, canEdit = true }: { contact: Contact; canEdit?: b
           href={`/dashboard/contacts/${contact.id}`}
           className="text-xs text-ink-3 hover:text-forest transition-colors uppercase tracking-wider"
         >
-          {canEdit ? "Abrir" : "Ver"}
+          Abrir
         </Link>
       </div>
     </div>
@@ -55,7 +55,7 @@ function ContactRow({ contact, canEdit = true }: { contact: Contact; canEdit?: b
 export default async function ContactsPage({
   searchParams,
 }: {
-  searchParams: { filtro?: string; escopo?: string };
+  searchParams: { filtro?: string };
 }) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -63,33 +63,20 @@ export default async function ContactsPage({
 
   const { data: myProfile } = await supabase
     .from("user_profiles")
-    .select("agency_id, agency_role, agency_name")
+    .select("agency_name")
     .eq("id", user.id)
     .single();
 
-  const hasAgency = !!myProfile?.agency_id;
-  const isGestor = myProfile?.agency_role === "gestor";
-  const agencyScope = hasAgency && isGestor && searchParams.escopo === "imob";
-
-  const baseSelect = supabase
+  // Contatos são privados por corretor — diferente dos imóveis, ninguém
+  // da mesma imobiliária (nem o gestor) enxerga o contato de um colega.
+  const { data: contacts, error } = await supabase
     .from("leads")
     .select("id, user_id, name, phone, email, intent, stage, budget_min, budget_max, city, neighborhoods, property_type, bedrooms_min, bathrooms_min, area_min, parking_min, features, source, notes, lost_reason, created_at, last_activity_at")
+    .eq("user_id", user.id)
     .order("last_activity_at", { ascending: false });
-
-  // No escopo "imobiliária" a RLS libera os contatos dos colegas em leitura (só gestor)
-  const { data: contacts, error } = agencyScope ? await baseSelect : await baseSelect.eq("user_id", user.id);
   if (error) redirect("/error?message=" + encodeURIComponent(error.message));
 
   const allContacts = (contacts ?? []) as Contact[];
-
-  let captadorById = new Map<string, string>();
-  if (agencyScope) {
-    const { data: colleagues } = await supabase
-      .from("user_profiles")
-      .select("id, full_name")
-      .eq("agency_id", myProfile!.agency_id);
-    captadorById = new Map((colleagues ?? []).map((c) => [c.id, (c.full_name || "").split(" ")[0] || "Colega"]));
-  }
 
   const activeFilter = FILTERS.find((f) => f.key === searchParams.filtro) ?? FILTERS[0];
   const filtered = activeFilter.key === "all" ? allContacts : allContacts.filter((c) => c.stage === activeFilter.key);
@@ -109,10 +96,9 @@ export default async function ContactsPage({
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
           <div>
-            <p className="section-title">{agencyScope ? "Contatos da imobiliária" : "Contatos"}</p>
+            <p className="section-title">Contatos</p>
             <p className="text-sm text-ink-2">
-              {totalCount} {totalCount === 1 ? "contato" : "contatos"}
-              {agencyScope ? " no time (leitura)" : " seus"}
+              {totalCount} {totalCount === 1 ? "contato seu" : "contatos seus"}
               {activeFilter.key !== "all" && ` · ${filtered.length} em "${activeFilter.label}"`}
             </p>
           </div>
@@ -124,33 +110,11 @@ export default async function ContactsPage({
           </Link>
         </div>
 
-        {hasAgency && isGestor && (
-          <div className="flex gap-2 mb-4">
-            <Link
-              href="/dashboard/contacts"
-              className={`px-4 py-2 rounded text-xs font-bold uppercase tracking-wider border transition-colors ${
-                !agencyScope ? "bg-header text-ink border-header" : "bg-card text-ink-2 border-border hover:border-forest hover:text-forest"
-              }`}
-            >
-              Meus contatos
-            </Link>
-            <Link
-              href="/dashboard/contacts?escopo=imob"
-              className={`px-4 py-2 rounded text-xs font-bold uppercase tracking-wider border transition-colors ${
-                agencyScope ? "bg-header text-ink border-header" : "bg-card text-ink-2 border-border hover:border-forest hover:text-forest"
-              }`}
-            >
-              🏢 Imobiliária (leitura)
-            </Link>
-          </div>
-        )}
-
         {totalCount > 0 && (
           <div className="flex flex-wrap gap-2 mb-6">
             {FILTERS.map((f) => {
               const params = new URLSearchParams();
               if (f.key !== "all") params.set("filtro", f.key);
-              if (agencyScope) params.set("escopo", "imob");
               const qs = params.toString();
               return (
                 <Link
@@ -194,16 +158,7 @@ export default async function ContactsPage({
           ) : (
             <div className="card divide-y divide-border p-0 overflow-hidden">
               {filtered.map((contact) => (
-                <div key={contact.id}>
-                  {agencyScope && contact.user_id !== user.id && (
-                    <div className="px-6 pt-3 -mb-1">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-ink-3 border border-border px-2 py-0.5 rounded-full">
-                        👤 {captadorById.get(contact.user_id) ?? "Colega"}
-                      </span>
-                    </div>
-                  )}
-                  <ContactRow contact={contact} canEdit={contact.user_id === user.id} />
-                </div>
+                <ContactRow key={contact.id} contact={contact} />
               ))}
             </div>
           )
