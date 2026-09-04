@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
+import BrandMark from "../../../dashboard/_components/BrandMark";
 import { updateBrokerProfile } from "../../actions";
 
 const inputClass =
@@ -44,9 +45,7 @@ export default async function EditBrokerPage({ params }: { params: { id: string 
     <main className="min-h-screen bg-surface">
       <header className="bg-header text-white">
         <div className="max-w-2xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/dashboard" className="font-display text-xl italic">
-            My<span style={{ color: "#C4A96B" }}>Asset</span>
-          </Link>
+          <BrandMark />
           <Link href="/admin" className="text-xs text-gray-400 hover:text-white transition-colors uppercase tracking-wider">
             ← Console
           </Link>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
+import BrandMark from "../dashboard/_components/BrandMark";
 import { saveAgencyGoal } from "./actions";
 
 function formatCurrency(v: number): string {
@@ -142,9 +143,7 @@ export default async function AdminPage() {
     <main className="min-h-screen bg-surface">
       <header className="bg-header text-white">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/dashboard" className="font-display text-xl italic">
-            My<span style={{ color: "#C4A96B" }}>Asset</span>
-          </Link>
+          <BrandMark agencyName={agency?.name} />
           <Link href="/dashboard" className="text-xs text-gray-400 hover:text-white transition-colors uppercase tracking-wider">
             ← Dashboard
           </Link>
