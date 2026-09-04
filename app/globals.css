@@ -79,6 +79,15 @@ body {
 
 ::selection { background: var(--selection); }
 
+/* Logo com traço preto (PNG): inverte no tema escuro pra ficar legível
+   em vez de trocar de imagem — funciona porque o traço é monocromático. */
+.agency-logo-invert-on-dark {
+  filter: none;
+}
+:root[data-theme="dark"] .agency-logo-invert-on-dark {
+  filter: invert(1) brightness(1.1);
+}
+
 @layer components {
   /* Label de seção estilo XP — com linha colorida embaixo */
   .section-title {

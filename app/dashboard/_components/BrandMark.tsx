@@ -38,6 +38,20 @@ export default async function BrandMark({
 
   const brand = resolveAgencyBrand(name);
 
+  if (brand?.logo) {
+    return (
+      <Link href="/dashboard" style={{ display: "inline-flex", alignItems: "center" }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={brand.logo}
+          alt={brand.logoAlt ?? brand.name}
+          className="agency-logo-invert-on-dark"
+          style={{ height: 26, width: "auto", display: "block" }}
+        />
+      </Link>
+    );
+  }
+
   return (
     <Link href="/dashboard" className={className} style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
       {brand ? (
