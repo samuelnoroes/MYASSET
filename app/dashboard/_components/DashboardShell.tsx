@@ -235,6 +235,17 @@ const NAV_ITEMS = [
               <Link href="/dashboard" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 8 }}>
                 {(() => {
                   const brand = resolveAgencyBrand(agencyName);
+                  if (brand?.logo) {
+                    return (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={brand.logo}
+                        alt={brand.logoAlt ?? brand.name}
+                        className="agency-logo-invert-on-dark"
+                        style={{ height: 26, width: "auto", maxWidth: "100%", display: "block" }}
+                      />
+                    );
+                  }
                   if (brand) {
                     return (
                       <>
