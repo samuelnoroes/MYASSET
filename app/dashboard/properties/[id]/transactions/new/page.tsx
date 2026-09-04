@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
+import BrandMark from "../../../../_components/BrandMark";
 import { createTransaction } from "../actions";
 
 const INCOME_CATEGORIES = [
@@ -55,9 +56,7 @@ export default async function NewTransactionPage({ params, searchParams }: Props
       {/* Header */}
       <header className="bg-header text-white ">
         <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/dashboard" className="font-display text-xl italic">
-            My<span style={{ color: "#C4A96B" }}>Asset</span>
-          </Link>
+          <BrandMark />
           <Link
             href={`/dashboard/properties/${params.id}`}
             className="text-xs text-gray-400 hover:text-white transition-colors uppercase tracking-wider"

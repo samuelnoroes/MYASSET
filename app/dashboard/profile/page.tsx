@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
+import BrandMark from "../_components/BrandMark";
 import ProfileForm from "./_components/ProfileForm";
 import { createAgencyAction, joinAgencyAction } from "./agencyActions";
 
@@ -30,9 +31,7 @@ export default async function ProfilePage() {
     <main className="min-h-screen bg-surface">
       <header className="bg-header text-white ">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/dashboard" className="font-display text-xl italic">
-            My<span style={{ color: "#C4A96B" }}>Asset</span>
-          </Link>
+          <BrandMark agencyName={profile?.agency_name} />
           <Link
             href="/dashboard"
             className="text-xs text-gray-400 hover:text-white transition-colors uppercase tracking-wider"

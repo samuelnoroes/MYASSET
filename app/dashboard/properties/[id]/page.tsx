@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
+import BrandMark from "../../_components/BrandMark";
 import { deleteTransaction } from "./transactions/actions";
 import { setListingStatus } from "../actions";
 import { markVisitDone, cancelVisit } from "../../visitActions";
@@ -77,7 +78,7 @@ export default async function PropertyDetailPage({ params }: Props) {
 
   const { data: myProfile } = await supabase
     .from("user_profiles")
-    .select("agency_id, agency_role")
+    .select("agency_id, agency_role, agency_name")
     .eq("id", user.id)
     .single();
   const isGestor = !!myProfile?.agency_id && myProfile?.agency_role === "gestor";
@@ -155,9 +156,7 @@ export default async function PropertyDetailPage({ params }: Props) {
       {/* Header */}
       <header className="bg-header text-white ">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/dashboard" className="font-display text-xl italic">
-            My<span style={{ color: "#C4A96B" }}>Asset</span>
-          </Link>
+          <BrandMark agencyName={myProfile?.agency_name} />
           <Link href="/dashboard/properties" className="text-xs text-gray-400 hover:text-white transition-colors uppercase tracking-wider">
             ← Carteira
           </Link>
