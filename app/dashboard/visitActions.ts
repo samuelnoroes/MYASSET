@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
+import { createCalendarEvent, deleteCalendarEvent } from "@/app/lib/googleCalendar";
 
 export async function createVisit(formData: FormData) {
   const supabase = createClient();
@@ -22,12 +23,32 @@ export async function createVisit(formData: FormData) {
   // Visível = próprio ou da mesma imobiliária (RLS decide)
   const { data: property } = await supabase
     .from("properties")
-    .select("id")
+    .select("id, name, address, city, state")
     .eq("id", propertyId)
     .single();
 
   if (!property) {
     redirect("/error?message=" + encodeURIComponent("Imóvel não encontrado."));
+  }
+
+  // Sincroniza com a Google Agenda do corretor, se ele tiver conectado a
+  // conta. Nunca bloqueia o agendamento — se falhar, segue sem o evento.
+  let googleEventId: string | null = null;
+  const { data: googleToken } = await supabase
+    .from("google_calendar_tokens")
+    .select("refresh_token")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (googleToken) {
+    googleEventId = await createCalendarEvent(googleToken.refresh_token, {
+      propertyName: property!.name,
+      address: [property!.address, property!.city, property!.state].filter(Boolean).join(", ") || null,
+      visitorName,
+      visitorPhone: visitorPhone || null,
+      notes: notes || null,
+      scheduledAt,
+    });
   }
 
   const { error } = await supabase.from("property_visits").insert({
@@ -38,6 +59,7 @@ export async function createVisit(formData: FormData) {
     scheduled_at: scheduledAt,
     notes: notes || null,
     status: "scheduled",
+    google_event_id: googleEventId,
   });
 
   if (error) {
@@ -76,6 +98,24 @@ export async function cancelVisit(formData: FormData) {
 
   const visitId = String(formData.get("visit_id") || "");
   if (!visitId) redirect("/error?message=" + encodeURIComponent("Visita inválida."));
+
+  const { data: visit } = await supabase
+    .from("property_visits")
+    .select("google_event_id")
+    .eq("id", visitId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (visit?.google_event_id) {
+    const { data: googleToken } = await supabase
+      .from("google_calendar_tokens")
+      .select("refresh_token")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (googleToken) {
+      await deleteCalendarEvent(googleToken.refresh_token, visit.google_event_id);
+    }
+  }
 
   const { error } = await supabase
     .from("property_visits")
