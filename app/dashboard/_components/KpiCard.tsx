@@ -37,8 +37,8 @@ export default function KpiCard({ label, tooltip, children, className = "" }: Pr
           width: 20,
           height: 20,
           borderRadius: "50%",
-          backgroundColor: open ? "#C4A96B" : "#2A2D33",
-          color: open ? "#fff" : "#6B7280",
+          backgroundColor: open ? "#C4A96B" : "var(--border)",
+          color: open ? "#fff" : "var(--ink-3)",
           border: "none",
           cursor: "pointer",
           fontSize: 11,
@@ -58,8 +58,8 @@ export default function KpiCard({ label, tooltip, children, className = "" }: Pr
         }}
         onMouseLeave={e => {
           if (!open) {
-            (e.currentTarget as HTMLElement).style.backgroundColor = "#2A2D33";
-            (e.currentTarget as HTMLElement).style.color = "#6B7280";
+            (e.currentTarget as HTMLElement).style.backgroundColor = "var(--border)";
+            (e.currentTarget as HTMLElement).style.color = "var(--ink-3)";
           }
         }}
       >
@@ -75,13 +75,14 @@ export default function KpiCard({ label, tooltip, children, className = "" }: Pr
             right: 0,
             zIndex: 50,
             width: 240,
-            backgroundColor: "#141618",
-            color: "#141618",
+            backgroundColor: "var(--card)",
+            color: "var(--ink)",
+            border: "1px solid var(--border)",
             borderRadius: 8,
             padding: "12px 14px",
             fontSize: 12,
             lineHeight: 1.6,
-            boxShadow: "0 8px 24px rgba(0,0,0,0.18)",
+            boxShadow: "0 8px 24px var(--shadow-panel)",
           }}
         >
           {/* Setinha */}
@@ -91,7 +92,9 @@ export default function KpiCard({ label, tooltip, children, className = "" }: Pr
             right: 12,
             width: 12,
             height: 12,
-            backgroundColor: "#141618",
+            backgroundColor: "var(--card)",
+            borderTop: "1px solid var(--border)",
+            borderLeft: "1px solid var(--border)",
             transform: "rotate(45deg)",
             borderRadius: 2,
           }} />

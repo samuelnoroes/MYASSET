@@ -56,15 +56,15 @@ const CustomBarTooltip = ({ active, payload, label }: any) => {
     return (
       <div
         style={{
-          background: "#141618",
-          border: "1px solid #2A2D33",
+          background: "var(--card)",
+          border: "1px solid var(--border)",
           borderRadius: 6,
           padding: "10px 14px",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+          boxShadow: "0 2px 8px var(--shadow-panel)",
           fontSize: 13,
         }}
       >
-        <p style={{ fontWeight: 700, color: "#F5F3EF", marginBottom: 6 }}>
+        <p style={{ fontWeight: 700, color: "var(--ink)", marginBottom: 6 }}>
           {label}
         </p>
         {payload.map((entry: any) => (
@@ -84,15 +84,15 @@ const CustomPieTooltip = ({ active, payload }: any) => {
     return (
       <div
         style={{
-          background: "#141618",
-          border: "1px solid #2A2D33",
+          background: "var(--card)",
+          border: "1px solid var(--border)",
           borderRadius: 6,
           padding: "8px 12px",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+          boxShadow: "0 2px 8px var(--shadow-panel)",
           fontSize: 13,
         }}
       >
-        <p style={{ fontWeight: 600, color: "#F5F3EF" }}>{payload[0].name}</p>
+        <p style={{ fontWeight: 600, color: "var(--ink)" }}>{payload[0].name}</p>
         <p style={{ color: payload[0].payload.color }}>
           {formatCurrency(payload[0].value)}
         </p>
@@ -207,25 +207,25 @@ export default function BrokerCharts({
                 >
                   <CartesianGrid
                     strokeDasharray="3 3"
-                    stroke="#1C1E22"
+                    stroke="var(--card-2)"
                     vertical={false}
                   />
                   <XAxis
                     dataKey="month"
-                    tick={{ fontSize: 11, fill: "#9CA3AF" }}
+                    tick={{ fontSize: 11, fill: "var(--ink-2)" }}
                     axisLine={false}
                     tickLine={false}
                   />
                   <YAxis
                     allowDecimals={false}
-                    tick={{ fontSize: 11, fill: "#9CA3AF" }}
+                    tick={{ fontSize: 11, fill: "var(--ink-2)" }}
                     axisLine={false}
                     tickLine={false}
                     width={38}
                   />
                   <Tooltip
                     content={<CustomBarTooltip />}
-                    cursor={{ fill: "#141618" }}
+                    cursor={{ fill: "var(--overlay-08)" }}
                   />
                   <Bar dataKey="visitas" fill="#C4A96B" radius={[3, 3, 0, 0]} />
                   <Bar dataKey="fechamentos" fill="#5FBF8A" radius={[3, 3, 0, 0]} />

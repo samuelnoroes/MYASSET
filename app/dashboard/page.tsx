@@ -410,7 +410,7 @@ export default async function DashboardPage() {
                     <div key={p.id} className="flex items-center gap-5 py-4">
                       <div className="shrink-0 relative" style={{ width: 52, height: 52 }}>
                         <svg width="52" height="52" viewBox="0 0 52 52">
-                          <circle cx="26" cy="26" r={radius} fill="none" stroke="#2A2D33" strokeWidth="5" />
+                          <circle cx="26" cy="26" r={radius} fill="none" stroke="var(--border)" strokeWidth="5" />
                           {gaugeValue > 0 && <circle cx="26" cy="26" r={radius} fill="none" stroke={color} strokeWidth="5" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} strokeLinecap="round" transform="rotate(-90 26 26)" />}
                         </svg>
                         <div className="absolute inset-0 flex items-center justify-center">
@@ -458,7 +458,7 @@ export default async function DashboardPage() {
         {/* Footer A5 */}
         <div className="flex items-center justify-center gap-3 py-4 opacity-50">
           <span className="text-xs text-ink-3 uppercase tracking-wider">Uma solução</span>
-          <A5Logo light height={18} />
+          <A5Logo light="theme" height={18} />
         </div>
       </div>
     </main>

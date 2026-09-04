@@ -13,35 +13,37 @@ const config: Config = {
         mono: ["var(--font-mono)", "monospace"],
       },
       colors: {
-        // Fundos — private banking dark
-        surface: "#0C0D0F",
-        card: "#141618",
-        "card-2": "#1C1E22",
+        // Todos os tokens abaixo vêm de CSS custom properties (app/globals.css),
+        // que trocam de valor conforme o tema (claro é o padrão; dark em
+        // :root[data-theme="dark"]). Ver app/lib/theme.ts.
+        surface: "var(--surface)",
+        card: "var(--card)",
+        "card-2": "var(--card-2)",
 
-        // Identidade MyAsset — acento dourado
-        forest: "#C4A96B",
-        "forest-light": "#D4B97A",
-        moss: "#8B7240",
+        // Identidade MyAsset — acento dourado (igual nos dois temas)
+        forest: "var(--forest)",
+        "forest-light": "var(--forest-light)",
+        moss: "var(--moss)",
 
         // Texto
-        ink: "#F5F3EF",
-        "ink-2": "#9BA3AF",
-        "ink-3": "#6B7280",
-        muted: "#4A4F5A",
+        ink: "var(--ink)",
+        "ink-2": "var(--ink-2)",
+        "ink-3": "var(--ink-3)",
+        muted: "var(--muted)",
 
         // Financeiro
-        positive: "#5FBF8A",
-        negative: "#E0686C",
-        warning: "#D9A05B",
+        positive: "var(--positive)",
+        negative: "var(--negative)",
+        warning: "var(--warning)",
 
         // Header
-        header: "#0C0D0F",
+        header: "var(--header)",
 
         // Bordas
-        border: "#2A2D33",
+        border: "var(--border)",
 
         // Alertas
-        cream: "#141618",
+        cream: "var(--card)",
       },
       boxShadow: {
         card: "0 1px 0 0 rgba(0,0,0,0.4)",

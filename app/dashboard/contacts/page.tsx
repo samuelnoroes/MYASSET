@@ -97,7 +97,7 @@ export default async function ContactsPage({
 
   return (
     <main className="min-h-screen bg-surface">
-      <header className="bg-header text-white ">
+      <header className="bg-header text-ink ">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <BrandMark agencyName={myProfile?.agency_name} />
           <Link href="/dashboard" className="text-xs text-gray-400 hover:text-white transition-colors uppercase tracking-wider">
@@ -129,7 +129,7 @@ export default async function ContactsPage({
             <Link
               href="/dashboard/contacts"
               className={`px-4 py-2 rounded text-xs font-bold uppercase tracking-wider border transition-colors ${
-                !agencyScope ? "bg-header text-white border-header" : "bg-card text-ink-2 border-border hover:border-forest hover:text-forest"
+                !agencyScope ? "bg-header text-ink border-header" : "bg-card text-ink-2 border-border hover:border-forest hover:text-forest"
               }`}
             >
               Meus contatos
@@ -137,7 +137,7 @@ export default async function ContactsPage({
             <Link
               href="/dashboard/contacts?escopo=imob"
               className={`px-4 py-2 rounded text-xs font-bold uppercase tracking-wider border transition-colors ${
-                agencyScope ? "bg-header text-white border-header" : "bg-card text-ink-2 border-border hover:border-forest hover:text-forest"
+                agencyScope ? "bg-header text-ink border-header" : "bg-card text-ink-2 border-border hover:border-forest hover:text-forest"
               }`}
             >
               🏢 Imobiliária (leitura)

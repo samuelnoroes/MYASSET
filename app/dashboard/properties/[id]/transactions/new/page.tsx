@@ -47,14 +47,14 @@ export default async function NewTransactionPage({ params, searchParams }: Props
 
   const today = new Date().toISOString().split("T")[0];
 
-  const accentColor = isIncome ? "#C4A96B" : "#141618";
+  const accentColor = isIncome ? "#C4A96B" : "var(--ink-2)";
   const typeLabel = isIncome ? "Nova receita" : "Nova despesa";
   const actionLabel = isIncome ? "Lançar receita" : "Lançar despesa";
 
   return (
     <main className="min-h-screen bg-surface">
       {/* Header */}
-      <header className="bg-header text-white ">
+      <header className="bg-header text-ink ">
         <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
           <BrandMark />
           <Link
@@ -85,9 +85,9 @@ export default async function NewTransactionPage({ params, searchParams }: Props
           <div
             className="flex items-center gap-3 px-4 py-3 rounded mb-6 text-sm font-semibold"
             style={{
-              backgroundColor: isIncome ? "#13201A" : "#141618",
+              backgroundColor: isIncome ? "rgba(95,191,138,0.14)" : "var(--card-2)",
               color: accentColor,
-              border: `1px solid ${isIncome ? "#BBF7D0" : "#2A2D33"}`,
+              border: `1px solid ${isIncome ? "rgba(95,191,138,0.4)" : "var(--border)"}`,
             }}
           >
             <span style={{ fontSize: 18 }}>

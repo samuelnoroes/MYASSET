@@ -1,10 +1,12 @@
 type Props = {
-  light?: boolean; // true = branco (fundos escuros), false = azul navy (fundos claros)
+  // true = branco (fundo sempre escuro, ex. landing); false = navy (fundo sempre claro);
+  // "theme" = segue o tema claro/escuro do dashboard (var(--ink))
+  light?: boolean | "theme";
   height?: number;
 };
 
 export default function A5Logo({ light = false, height = 28 }: Props) {
-  const color = light ? "#FFFFFF" : "#141618";
+  const color = light === "theme" ? "var(--ink)" : light ? "#FFFFFF" : "#141618";
   const width = Math.round(height * 1.65);
 
   return (

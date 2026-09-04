@@ -274,7 +274,7 @@ export default async function PropertiesPage({
 
   return (
     <main className="min-h-screen bg-surface">
-      <header className="bg-header text-white ">
+      <header className="bg-header text-ink ">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <BrandMark agencyName={myProfile?.agency_name} />
           <Link
@@ -310,7 +310,7 @@ export default async function PropertiesPage({
             <Link
               href="/dashboard/properties"
               className={`px-4 py-2 rounded text-xs font-bold uppercase tracking-wider border transition-colors ${
-                !agencyScope ? "bg-header text-white border-header" : "bg-card text-ink-2 border-border hover:border-forest hover:text-forest"
+                !agencyScope ? "bg-header text-ink border-header" : "bg-card text-ink-2 border-border hover:border-forest hover:text-forest"
               }`}
             >
               Meus imóveis
@@ -318,7 +318,7 @@ export default async function PropertiesPage({
             <Link
               href="/dashboard/properties?escopo=imob"
               className={`px-4 py-2 rounded text-xs font-bold uppercase tracking-wider border transition-colors ${
-                agencyScope ? "bg-header text-white border-header" : "bg-card text-ink-2 border-border hover:border-forest hover:text-forest"
+                agencyScope ? "bg-header text-ink border-header" : "bg-card text-ink-2 border-border hover:border-forest hover:text-forest"
               }`}
             >
               🏢 Imobiliária

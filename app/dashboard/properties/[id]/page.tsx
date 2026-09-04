@@ -27,7 +27,7 @@ const PURPOSE_COLORS: Record<string, string> = {
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   available: { label: "Disponível", color: "#5FBF8A" },
   reserved:  { label: "Reservado",  color: "#D9A05B" },
-  closed:    { label: "Fechado",    color: "#9CA3AF" },
+  closed:    { label: "Fechado",    color: "var(--ink-3)" },
 };
 const TYPE_LABELS: Record<string, string> = {
   residential: "Residencial", commercial: "Comercial", land: "Terreno", mixed: "Misto",
@@ -156,7 +156,7 @@ export default async function PropertyDetailPage({ params }: Props) {
   return (
     <main className="min-h-screen bg-surface">
       {/* Header */}
-      <header className="bg-header text-white ">
+      <header className="bg-header text-ink ">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <BrandMark agencyName={myProfile?.agency_name} />
           <Link href="/dashboard/properties" className="text-xs text-gray-400 hover:text-white transition-colors uppercase tracking-wider">
@@ -469,7 +469,7 @@ export default async function PropertyDetailPage({ params }: Props) {
               <Link href={`/dashboard/properties/${params.id}/transactions/new?type=income`} className="px-4 py-2 bg-forest text-white font-bold tracking-wider uppercase text-xs rounded hover:bg-forest-light transition-colors">
                 + Receita
               </Link>
-              <Link href={`/dashboard/properties/${params.id}/transactions/new?type=expense`} className="px-4 py-2 bg-header text-white font-bold tracking-wider uppercase text-xs rounded hover:opacity-80 transition-opacity">
+              <Link href={`/dashboard/properties/${params.id}/transactions/new?type=expense`} className="px-4 py-2 bg-header text-ink font-bold tracking-wider uppercase text-xs rounded hover:opacity-80 transition-opacity">
                 + Despesa
               </Link>
             </div>

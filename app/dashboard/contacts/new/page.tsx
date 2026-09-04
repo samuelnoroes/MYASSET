@@ -6,7 +6,7 @@ import ContactFormFields from "../_components/ContactFormFields";
 export default function NewContactPage() {
   return (
     <main className="min-h-screen bg-surface">
-      <header className="bg-header text-white ">
+      <header className="bg-header text-ink ">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <BrandMark />
           <Link href="/dashboard/contacts" className="text-xs text-gray-400 hover:text-white transition-colors uppercase tracking-wider">

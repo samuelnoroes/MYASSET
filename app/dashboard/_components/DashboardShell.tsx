@@ -7,6 +7,7 @@ import { createClient } from "@/utils/supabase/client";
 import { logout } from "@/app/dashboard/actions";
 import CrestIcon from "./CrestIcon";
 import { resolveAgencyBrand } from "./agencyBrand";
+import ThemeToggle from "./ThemeToggle";
 
 const SIDEBAR_EXPANDED = 220;
 const SIDEBAR_COLLAPSED = 64;
@@ -28,16 +29,16 @@ const TYPE_CONFIG: Record<
   string,
   { label: string; color: string; bg: string; icon: string; btnBg: string }
 > = {
-  opportunity: { label: "Oportunidade", color: "#D9A05B", bg: "#231C10", icon: "💡", btnBg: "#D9A05B" },
-  optimization: { label: "Otimização",  color: "#C4A96B", bg: "#13201A", icon: "📈", btnBg: "#C4A96B" },
-  news:         { label: "Mercado",     color: "#3B82F6", bg: "#16202B", icon: "📰", btnBg: "#3B82F6" },
+  opportunity: { label: "Oportunidade", color: "#D9A05B", bg: "rgba(217,160,91,0.14)", icon: "💡", btnBg: "#D9A05B" },
+  optimization: { label: "Otimização",  color: "#C4A96B", bg: "rgba(196,169,107,0.14)", icon: "📈", btnBg: "#C4A96B" },
+  news:         { label: "Mercado",     color: "#3B82F6", bg: "rgba(59,130,246,0.14)", icon: "📰", btnBg: "#3B82F6" },
 };
 
 const PLAN_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  trial:    { label: "Trial",    color: "#D9A05B", bg: "#231C10" },
-  essencial: { label: "Essencial", color: "#3B82F6", bg: "#16202B" },
-  plus:      { label: "Plus",      color: "#C4A96B", bg: "#231C10" },
-  pro:      { label: "Pro",      color: "#5FBF8A", bg: "#13201A" },
+  trial:    { label: "Trial",    color: "#D9A05B", bg: "rgba(217,160,91,0.14)" },
+  essencial: { label: "Essencial", color: "#3B82F6", bg: "rgba(59,130,246,0.14)" },
+  plus:      { label: "Plus",      color: "#C4A96B", bg: "rgba(196,169,107,0.14)" },
+  pro:      { label: "Pro",      color: "#5FBF8A", bg: "rgba(95,191,138,0.14)" },
 };
 
 
@@ -200,14 +201,14 @@ const NAV_ITEMS = [
     const isPlanActive = pathname === "/dashboard/plans";
   
     return (
-      <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "#0C0D0F" }}>
+      <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "var(--surface)" }}>
   
         <aside
           style={{
             width: sidebarWidth,
             minWidth: sidebarWidth,
-            backgroundColor: "#141618",
-            borderRight: "1px solid #2A2D33",
+            backgroundColor: "var(--card)",
+            borderRight: "1px solid var(--border)",
             display: "flex",
             flexDirection: "column",
             transition: "width 0.25s ease, min-width 0.25s ease",
@@ -222,7 +223,7 @@ const NAV_ITEMS = [
           <div
             style={{
               padding: sidebarOpen ? "20px 12px 16px 20px" : "20px 0 16px",
-              borderBottom: "1px solid rgba(255,255,255,0.08)",
+              borderBottom: "1px solid var(--overlay-08)",
               display: "flex",
               alignItems: "center",
               justifyContent: sidebarOpen ? "space-between" : "center",
@@ -237,8 +238,8 @@ const NAV_ITEMS = [
                   if (brand) {
                     return (
                       <>
-                        <CrestIcon size={24} color="#fff" />
-                        <span style={{ fontFamily: "var(--font-display, serif)", fontSize: 12.5, fontWeight: 700, color: "#fff", letterSpacing: "0.01em", lineHeight: 1.2 }}>
+                        <CrestIcon size={24} color="var(--ink)" />
+                        <span style={{ fontFamily: "var(--font-display, serif)", fontSize: 12.5, fontWeight: 700, color: "var(--ink)", letterSpacing: "0.01em", lineHeight: 1.2 }}>
                           {brand.name}
                           <br />
                           <span style={{ color: "#C4A96B", fontSize: 10.5 }}>{brand.suffix}</span>
@@ -247,7 +248,7 @@ const NAV_ITEMS = [
                     );
                   }
                   return (
-                    <span style={{ fontFamily: "var(--font-display, serif)", fontSize: 22, fontStyle: "italic", fontWeight: 700, color: "#fff", letterSpacing: "-0.5px" }}>
+                    <span style={{ fontFamily: "var(--font-display, serif)", fontSize: 22, fontStyle: "italic", fontWeight: 700, color: "var(--ink)", letterSpacing: "-0.5px" }}>
                       My<span style={{ color: "#C4A96B" }}>Asset</span>
                     </span>
                   );
@@ -258,11 +259,11 @@ const NAV_ITEMS = [
             onClick={toggleSidebar}
             title={sidebarOpen ? "Recolher menu" : "Expandir menu"}
             style={{
-              background: "rgba(255,255,255,0.08)",
+              background: "var(--overlay-08)",
               border: "none",
               borderRadius: 6,
               cursor: "pointer",
-              color: "#9CA3AF",
+              color: "var(--ink-2)",
               fontSize: 18,
               fontWeight: 700,
               width: 32,
@@ -274,12 +275,12 @@ const NAV_ITEMS = [
               transition: "background 0.15s, color 0.15s",
             }}
             onMouseEnter={e => {
-              (e.currentTarget as HTMLElement).style.backgroundColor = "rgba(255,255,255,0.15)";
-              (e.currentTarget as HTMLElement).style.color = "#fff";
+              (e.currentTarget as HTMLElement).style.backgroundColor = "var(--overlay-15)";
+              (e.currentTarget as HTMLElement).style.color = "var(--ink)";
             }}
             onMouseLeave={e => {
-              (e.currentTarget as HTMLElement).style.backgroundColor = "rgba(255,255,255,0.08)";
-              (e.currentTarget as HTMLElement).style.color = "#9CA3AF";
+              (e.currentTarget as HTMLElement).style.backgroundColor = "var(--overlay-08)";
+              (e.currentTarget as HTMLElement).style.color = "var(--ink-2)";
             }}
           >
             {sidebarOpen ? "‹" : "›"}
@@ -307,13 +308,13 @@ const NAV_ITEMS = [
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                 }}
-                onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.backgroundColor = "rgba(255,255,255,0.05)"; }}
+                onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.backgroundColor = "var(--overlay-05)"; }}
                 onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.backgroundColor = "transparent"; }}
               >
-                <span style={{ flexShrink: 0, width: 24, display: "flex", justifyContent: "center", color: isActive ? "#C4A96B" : "#6B7280" }}>{NAV_ICONS[item.icon]}</span>
+                <span style={{ flexShrink: 0, width: 24, display: "flex", justifyContent: "center", color: isActive ? "#C4A96B" : "var(--ink-3)" }}>{NAV_ICONS[item.icon]}</span>
                 {sidebarOpen && (
                   <span style={{ display: "flex", alignItems: "center", gap: 8, flex: 1 }}>
-                    <span style={{ fontSize: 14, fontWeight: isActive ? 700 : 500, color: isActive ? "#fff" : "#9CA3AF", letterSpacing: "0.01em" }}>
+                    <span style={{ fontSize: 14, fontWeight: isActive ? 700 : 500, color: isActive ? "var(--ink)" : "var(--ink-2)", letterSpacing: "0.01em" }}>
                       {item.label}
                     </span>
                     {item.badge && (
@@ -349,13 +350,13 @@ const NAV_ITEMS = [
               whiteSpace: "nowrap",
               overflow: "hidden",
             }}
-            onMouseEnter={e => { if (!isPlanActive) (e.currentTarget as HTMLElement).style.backgroundColor = "rgba(255,255,255,0.05)"; }}
+            onMouseEnter={e => { if (!isPlanActive) (e.currentTarget as HTMLElement).style.backgroundColor = "var(--overlay-05)"; }}
             onMouseLeave={e => { if (!isPlanActive) (e.currentTarget as HTMLElement).style.backgroundColor = "transparent"; }}
           >
-            <span style={{ flexShrink: 0, width: 24, display: "flex", justifyContent: "center", color: isPlanActive ? "#C4A96B" : "#6B7280" }}>{NAV_ICONS.plan}</span>
+            <span style={{ flexShrink: 0, width: 24, display: "flex", justifyContent: "center", color: isPlanActive ? "#C4A96B" : "var(--ink-3)" }}>{NAV_ICONS.plan}</span>
             {sidebarOpen && (
               <span style={{ display: "flex", alignItems: "center", gap: 8, flex: 1 }}>
-                <span style={{ fontSize: 14, fontWeight: isPlanActive ? 700 : 500, color: isPlanActive ? "#fff" : "#9CA3AF" }}>
+                <span style={{ fontSize: 14, fontWeight: isPlanActive ? 700 : 500, color: isPlanActive ? "var(--ink)" : "var(--ink-2)" }}>
                   Meu Plano
                 </span>
                 <span style={{
@@ -375,11 +376,11 @@ const NAV_ITEMS = [
           <div style={{
             margin: "4px 12px 8px",
             padding: "8px",
-            backgroundColor: "rgba(255,255,255,0.04)",
+            backgroundColor: "var(--overlay-04)",
             borderRadius: 6,
             borderLeft: "2px solid rgba(109,166,138,0.4)",
           }}>
-            <p style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "#6B7280", marginBottom: 6, paddingLeft: 4 }}>
+            <p style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--ink-3)", marginBottom: 6, paddingLeft: 4 }}>
               Ir para
             </p>
             {DASHBOARD_ANCHORS.map(a => (
@@ -390,13 +391,13 @@ const NAV_ITEMS = [
                   display: "block",
                   padding: "4px 4px",
                   fontSize: 12,
-                  color: "#9CA3AF",
+                  color: "var(--ink-2)",
                   textDecoration: "none",
                   borderRadius: 4,
                   transition: "color 0.15s",
                 }}
-                onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = "#fff"}
-                onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = "#9CA3AF"}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = "var(--ink)"}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = "var(--ink-2)"}
               >
                 · {a.label}
               </a>
@@ -404,7 +405,7 @@ const NAV_ITEMS = [
           </div>
         )}
 
-        <div style={{ padding: sidebarOpen ? "0 12px 8px" : "0 0 8px", borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 12 }}>
+        <div style={{ padding: sidebarOpen ? "0 12px 8px" : "0 0 8px", borderTop: "1px solid var(--overlay-08)", paddingTop: 12 }}>
           <button
             onClick={() => togglePanel(!panelOpen)}
             title={panelOpen ? "Fechar informativos" : "Abrir informativos"}
@@ -424,10 +425,10 @@ const NAV_ITEMS = [
               overflow: "hidden",
             }}
           >
-            <span style={{ flexShrink: 0, width: 24, display: "flex", justifyContent: "center", color: panelOpen ? "#C4A96B" : "#6B7280" }}>{NAV_ICONS.bell}</span>
+            <span style={{ flexShrink: 0, width: 24, display: "flex", justifyContent: "center", color: panelOpen ? "#C4A96B" : "var(--ink-3)" }}>{NAV_ICONS.bell}</span>
             {sidebarOpen && (
               <>
-                <span style={{ fontSize: 14, fontWeight: 500, color: panelOpen ? "#fff" : "#9CA3AF", flex: 1, textAlign: "left" }}>
+                <span style={{ fontSize: 14, fontWeight: 500, color: panelOpen ? "var(--ink)" : "var(--ink-2)", flex: 1, textAlign: "left" }}>
                   Informativos
                 </span>
                 {visibleNotifs.length > 0 && (
@@ -471,6 +472,10 @@ const NAV_ITEMS = [
           </div>
         )}
 
+        <div style={{ padding: sidebarOpen ? "0 12px 4px" : "0 0 4px" }}>
+          <ThemeToggle sidebarOpen={sidebarOpen} />
+        </div>
+
         <div style={{ padding: sidebarOpen ? "0 12px 12px" : "0 0 12px" }}>
           <form action={logout}>
             <button
@@ -490,11 +495,11 @@ const NAV_ITEMS = [
                 whiteSpace: "nowrap",
                 overflow: "hidden",
               }}
-              onMouseEnter={e => (e.currentTarget as HTMLElement).style.backgroundColor = "rgba(255,255,255,0.05)"}
+              onMouseEnter={e => (e.currentTarget as HTMLElement).style.backgroundColor = "var(--overlay-05)"}
               onMouseLeave={e => (e.currentTarget as HTMLElement).style.backgroundColor = "transparent"}
             >
-              <span style={{ flexShrink: 0, width: 24, display: "flex", justifyContent: "center", color: "#6B7280" }}>{NAV_ICONS.exit}</span>
-              {sidebarOpen && <span style={{ fontSize: 14, fontWeight: 500, color: "#9CA3AF" }}>Sair</span>}
+              <span style={{ flexShrink: 0, width: 24, display: "flex", justifyContent: "center", color: "var(--ink-3)" }}>{NAV_ICONS.exit}</span>
+              {sidebarOpen && <span style={{ fontSize: 14, fontWeight: 500, color: "var(--ink-2)" }}>Sair</span>}
             </button>
           </form>
         </div>
@@ -521,33 +526,33 @@ const NAV_ITEMS = [
           top: 0,
           right: 0,
           height: "100vh",
-          backgroundColor: "#141618",
-          borderLeft: "1px solid #2A2D33",
+          backgroundColor: "var(--card)",
+          borderLeft: "1px solid var(--border)",
           display: "flex",
           flexDirection: "column",
           transform: panelOpen ? "translateX(0)" : `translateX(${PANEL_WIDTH}px)`,
           transition: "transform 0.3s ease",
           zIndex: 40,
-          boxShadow: panelOpen ? "-12px 0 32px rgba(0,0,0,0.5)" : "none",
+          boxShadow: panelOpen ? "-12px 0 32px var(--shadow-panel)" : "none",
         }}
       >
         <div style={{
           padding: "20px 16px 14px",
-          borderBottom: "1px solid #2A2D33",
+          borderBottom: "1px solid var(--border)",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
           flexShrink: 0,
         }}>
           <div>
-            <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "#9CA3AF", marginBottom: 2 }}>
+            <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--ink-2)", marginBottom: 2 }}>
               A5 Asset
             </p>
-            <p style={{ fontSize: 14, fontWeight: 700, color: "#F5F3EF" }}>Informativos</p>
+            <p style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)" }}>Informativos</p>
           </div>
           <button
             onClick={() => togglePanel(false)}
-            style={{ background: "none", border: "none", cursor: "pointer", color: "#9CA3AF", fontSize: 20, lineHeight: 1, padding: "4px 6px", borderRadius: 4 }}
+            style={{ background: "none", border: "none", cursor: "pointer", color: "var(--ink-2)", fontSize: 20, lineHeight: 1, padding: "4px 6px", borderRadius: 4 }}
             title="Fechar painel"
           >
             ×
@@ -556,11 +561,11 @@ const NAV_ITEMS = [
 
         <div style={{ flex: 1, overflowY: "auto", padding: "12px", display: "flex", flexDirection: "column", gap: 10 }}>
           {loading ? (
-            <p style={{ fontSize: 13, color: "#9CA3AF", textAlign: "center", marginTop: 32 }}>Carregando...</p>
+            <p style={{ fontSize: 13, color: "var(--ink-2)", textAlign: "center", marginTop: 32 }}>Carregando...</p>
           ) : visibleNotifs.length === 0 ? (
             <div style={{ textAlign: "center", marginTop: 40 }}>
               <p style={{ fontSize: 32, marginBottom: 12 }}>📭</p>
-              <p style={{ fontSize: 13, color: "#9CA3AF", lineHeight: 1.6 }}>
+              <p style={{ fontSize: 13, color: "var(--ink-2)", lineHeight: 1.6 }}>
                 Nenhum informativo no momento.<br />Novidades aparecerão aqui.
               </p>
             </div>
@@ -584,7 +589,7 @@ const NAV_ITEMS = [
                     style={{
                       position: "absolute", top: 6, right: 8,
                       background: "none", border: "none", cursor: "pointer",
-                      color: "#9CA3AF", fontSize: 16, lineHeight: 1, padding: "2px 4px",
+                      color: "var(--ink-2)", fontSize: 16, lineHeight: 1, padding: "2px 4px",
                     }}
                   >
                     ×
@@ -596,12 +601,12 @@ const NAV_ITEMS = [
                         {cfg.label}
                       </span>
                     </div>
-                    <span style={{ fontSize: 10, color: "#9CA3AF" }}>{formatDate(n.created_at)}</span>
+                    <span style={{ fontSize: 10, color: "var(--ink-2)" }}>{formatDate(n.created_at)}</span>
                   </div>
-                  <p style={{ fontSize: 13, fontWeight: 600, color: "#F5F3EF", lineHeight: 1.4, marginBottom: 4 }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)", lineHeight: 1.4, marginBottom: 4 }}>
                     {n.title}
                   </p>
-                  <p style={{ fontSize: 12, color: "#6B7280", lineHeight: 1.6, marginBottom: n.contact_label ? 10 : 0 }}>
+                  <p style={{ fontSize: 12, color: "var(--ink-3)", lineHeight: 1.6, marginBottom: n.contact_label ? 10 : 0 }}>
                     {n.body}
                   </p>
                   {n.contact_label && n.contact_url && (
@@ -629,7 +634,7 @@ const NAV_ITEMS = [
           )}
         </div>
 
-        <div style={{ padding: "12px 16px", borderTop: "1px solid #2A2D33", flexShrink: 0 }}>
+        <div style={{ padding: "12px 16px", borderTop: "1px solid var(--border)", flexShrink: 0 }}>
           <a
             href={`https://wa.me/${WA_PHONE}?text=${WA_MESSAGE}`}
             target="_blank"
@@ -637,7 +642,7 @@ const NAV_ITEMS = [
             style={{
               display: "flex", alignItems: "center", gap: 8,
               padding: "10px 14px", borderRadius: 8,
-              backgroundColor: "#13201A", border: "1px solid #BBF7D0",
+              backgroundColor: "rgba(95,191,138,0.14)", border: "1px solid rgba(95,191,138,0.4)",
               textDecoration: "none",
             }}
           >
@@ -646,7 +651,7 @@ const NAV_ITEMS = [
             </svg>
             <div>
               <p style={{ fontSize: 12, fontWeight: 700, color: "#5FBF8A", lineHeight: 1 }}>Suporte A5</p>
-              <p style={{ fontSize: 11, color: "#6B7280", lineHeight: 1.4, marginTop: 2 }}>Fale com a equipe</p>
+              <p style={{ fontSize: 11, color: "var(--ink-3)", lineHeight: 1.4, marginTop: 2 }}>Fale com a equipe</p>
             </div>
           </a>
         </div>
@@ -658,7 +663,7 @@ const NAV_ITEMS = [
           title="Abrir informativos"
           style={{
             position: "fixed", right: 0, top: "50%", transform: "translateY(-50%)",
-            backgroundColor: "#141618", color: "#fff", border: "none",
+            backgroundColor: "var(--card)", color: "var(--ink)", border: "1px solid var(--border)",
             borderRadius: "6px 0 0 6px", padding: "12px 8px", cursor: "pointer",
             zIndex: 41, writingMode: "vertical-rl", fontSize: 11, fontWeight: 700,
             letterSpacing: "0.1em", textTransform: "uppercase",

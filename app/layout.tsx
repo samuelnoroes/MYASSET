@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { DM_Serif_Display, Inter, JetBrains_Mono } from "next/font/google";
+import { NO_FLASH_THEME_SCRIPT } from "./lib/theme";
 import "./globals.css";
 
 const display = DM_Serif_Display({
@@ -49,6 +51,11 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className={`${display.variable} ${sans.variable} ${mono.variable}`}>
       <body className="font-sans bg-cream text-ink antialiased">
+        {/* beforeInteractive injeta no <head> e roda antes da hidratação —
+            evita o flash do tema errado no primeiro paint. */}
+        <Script id="theme-no-flash" strategy="beforeInteractive">
+          {NO_FLASH_THEME_SCRIPT}
+        </Script>
         {children}
       </body>
     </html>
