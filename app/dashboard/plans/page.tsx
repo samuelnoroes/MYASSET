@@ -130,7 +130,6 @@ export default function PlansPage() {
               `Até ${cfg.maxProperties} imóveis na carteira`,
               `${cfg.monthlyMessages} mensagens/mês no WhatsApp`,
               "Dashboard completo com gráficos",
-              "Relatório IR (Carnê-Leão)",
               "Agenda de visitas e metas de VGV",
               "Inteligência de mercado (MarketDataCard)",
               `Agente WhatsApp inteligente (${cfg.monthlyMessages} msgs/mês)`,
