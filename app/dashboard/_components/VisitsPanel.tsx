@@ -28,12 +28,20 @@ export default function VisitsPanel({ visits, onMarkDone, onCancel }: Props) {
         <p className="text-xs font-bold uppercase tracking-wider text-ink-3">
           {visits.length} {visits.length === 1 ? "visita agendada" : "visitas agendadas"}
         </p>
-        <Link
-          href="/dashboard/visits/new"
-          className="text-xs text-forest font-semibold uppercase tracking-wider hover:text-forest-light transition-colors"
-        >
-          + Agendar visita
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link
+            href="/dashboard/visits"
+            className="text-xs text-ink-3 hover:text-forest transition-colors uppercase tracking-wider"
+          >
+            Ver todas
+          </Link>
+          <Link
+            href="/dashboard/visits/new"
+            className="text-xs text-forest font-semibold uppercase tracking-wider hover:text-forest-light transition-colors"
+          >
+            + Agendar visita
+          </Link>
+        </div>
       </div>
 
       {visits.map((v) => {

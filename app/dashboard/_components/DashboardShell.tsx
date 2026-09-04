@@ -75,6 +75,11 @@ const NAV_ICONS: Record<string, JSX.Element> = {
       <circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/>
     </svg>
   ),
+  visits: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <rect x="3" y="4" width="18" height="17" rx="1.5"/><path d="M3 9h18M8 2v4M16 2v4"/><path d="M8.5 14l2 2 4-4"/>
+    </svg>
+  ),
   plan: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
       <path d="M6 3h12l4 6-10 12L2 9z"/><path d="M2 9h20M9 3l3 6 3-6"/>
@@ -96,6 +101,7 @@ const NAV_ITEMS = [
   { href: "/dashboard",                      label: "Dashboard",    icon: "dashboard", badge: null },
   { href: "/dashboard/properties",           label: "Carteira",     icon: "portfolio", badge: null },
   { href: "/dashboard/contacts",             label: "Contatos",     icon: "contacts", badge: null },
+  { href: "/dashboard/visits",               label: "Visitas",      icon: "visits", badge: null },
   { href: "/dashboard/goals",                label: "Metas",        icon: "goals", badge: null },
     { href: "/dashboard/whatsapp",            label: "WhatsApp",     icon: "whatsapp", badge: null },
     { href: "/dashboard/profile",              label: "Perfil",       icon: "profile", badge: null },
