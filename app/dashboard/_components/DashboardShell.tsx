@@ -63,6 +63,12 @@ const NAV_ICONS: Record<string, JSX.Element> = {
       <circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0114 0v1"/>
     </svg>
   ),
+  contacts: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <rect x="3" y="4" width="14" height="16" rx="1.5"/><circle cx="10" cy="10" r="2.2"/>
+      <path d="M6.3 16.5c0.6-2 2-3 3.7-3s3.1 1 3.7 3"/><path d="M18 8h3M18 12h3M18 16h3"/>
+    </svg>
+  ),
   goals: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
       <circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/>
@@ -88,6 +94,7 @@ const NAV_ICONS: Record<string, JSX.Element> = {
 const NAV_ITEMS = [
   { href: "/dashboard",                      label: "Dashboard",    icon: "dashboard", badge: null },
   { href: "/dashboard/properties",           label: "Carteira",     icon: "portfolio", badge: null },
+  { href: "/dashboard/contacts",             label: "Contatos",     icon: "contacts", badge: null },
   { href: "/dashboard/goals",                label: "Metas",        icon: "goals", badge: null },
     { href: "/dashboard/whatsapp",            label: "WhatsApp",     icon: "whatsapp", badge: null },
     { href: "/dashboard/profile",              label: "Perfil",       icon: "profile", badge: null },

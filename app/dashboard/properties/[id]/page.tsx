@@ -7,7 +7,9 @@ import { setListingStatus } from "../actions";
 import { markVisitDone, cancelVisit } from "../../visitActions";
 import MarketDataCard from "../_components/MarketDataCard";
 import SharePropertyCard from "../_components/SharePropertyCard";
+import MatchedContacts from "../_components/MatchedContacts";
 import { buildPropertyShareMessage } from "@/app/lib/propertyShareMessage";
+import { Suspense } from "react";
 
 const CATEGORY_LABELS: Record<string, string> = {
   rent: "Aluguel", iptu: "IPTU", condominium: "Condomínio",
@@ -379,6 +381,14 @@ export default async function PropertyDetailPage({ params }: Props) {
             </div>
           </div>
         )}
+
+        {/* ── CONTATOS COMPATÍVEIS ──────────────────────── */}
+        <div className="card">
+          <p className="section-title">Contatos compatíveis</p>
+          <Suspense fallback={<p className="text-sm text-ink-3">Buscando…</p>}>
+            <MatchedContacts propertyId={params.id} />
+          </Suspense>
+        </div>
 
         {/* ── VISITAS DO IMÓVEL ─────────────────────────── */}
         <div className="card">
