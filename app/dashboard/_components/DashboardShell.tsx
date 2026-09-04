@@ -5,6 +5,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { logout } from "@/app/dashboard/actions";
+import CrestIcon from "./CrestIcon";
+import { resolveAgencyBrand } from "./agencyBrand";
 
 const SIDEBAR_EXPANDED = 220;
 const SIDEBAR_COLLAPSED = 64;
@@ -117,6 +119,7 @@ const NAV_ITEMS = [
     const [loading, setLoading]         = useState(true);
     const [isAdmin, setIsAdmin]         = useState(false);
     const [userPlan, setUserPlan]       = useState<string>("trial");
+    const [agencyName, setAgencyName]   = useState<string | null>(null);
   
     useEffect(() => {
       const savedSidebar = localStorage.getItem("sidebar-open");
@@ -127,12 +130,13 @@ const NAV_ITEMS = [
         if (!user) return;
         supabase
           .from("user_profiles")
-          .select("is_admin, plan, agency_role")
+          .select("is_admin, plan, agency_role, agency_name")
           .eq("id", user.id)
           .single()
           .then(({ data }) => {
             if (data?.is_admin || data?.agency_role === "gestor") setIsAdmin(true);
             if (data?.plan) setUserPlan(data.plan);
+            setAgencyName(data?.agency_name ?? null);
           });
         supabase
           .from("user_profiles")
@@ -220,11 +224,28 @@ const NAV_ITEMS = [
             }}
           >
             {sidebarOpen && (
-              <Link href="/dashboard" style={{ textDecoration: "none" }}>
-                <span style={{ fontFamily: "var(--font-display, serif)", fontSize: 22, fontStyle: "italic", fontWeight: 700, color: "#fff", letterSpacing: "-0.5px" }}>
-                  My<span style={{ color: "#C4A96B" }}>Asset</span>
-                </span>
-                            </Link>
+              <Link href="/dashboard" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 8 }}>
+                {(() => {
+                  const brand = resolveAgencyBrand(agencyName);
+                  if (brand) {
+                    return (
+                      <>
+                        <CrestIcon size={24} color="#fff" />
+                        <span style={{ fontFamily: "var(--font-display, serif)", fontSize: 12.5, fontWeight: 700, color: "#fff", letterSpacing: "0.01em", lineHeight: 1.2 }}>
+                          {brand.name}
+                          <br />
+                          <span style={{ color: "#C4A96B", fontSize: 10.5 }}>{brand.suffix}</span>
+                        </span>
+                      </>
+                    );
+                  }
+                  return (
+                    <span style={{ fontFamily: "var(--font-display, serif)", fontSize: 22, fontStyle: "italic", fontWeight: 700, color: "#fff", letterSpacing: "-0.5px" }}>
+                      My<span style={{ color: "#C4A96B" }}>Asset</span>
+                    </span>
+                  );
+                })()}
+              </Link>
             )}
           <button
             onClick={toggleSidebar}
