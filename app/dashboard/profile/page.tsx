@@ -3,9 +3,15 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import BrandMark from "../_components/BrandMark";
 import ProfileForm from "./_components/ProfileForm";
+import GoogleCalendarConnectButton from "./_components/GoogleCalendarConnectButton";
 import { createAgencyAction, joinAgencyAction } from "./agencyActions";
+import { disconnectGoogleCalendarAction } from "./googleCalendarActions";
 
-export default async function ProfilePage() {
+export default async function ProfilePage({
+  searchParams,
+}: {
+  searchParams?: { google_calendar?: string; message?: string };
+}) {
   const supabase = createClient();
   const {
     data: { user },
@@ -26,6 +32,12 @@ export default async function ProfilePage() {
         .eq("id", profile.agency_id)
         .single()
     : { data: null };
+
+  const { data: googleCalendar } = await supabase
+    .from("google_calendar_tokens")
+    .select("connected_at")
+    .eq("user_id", user.id)
+    .maybeSingle();
 
   return (
     <main className="min-h-screen bg-surface">
@@ -119,6 +131,43 @@ export default async function ProfilePage() {
                 </button>
               </form>
             </div>
+          )}
+        </div>
+
+        {/* ── GOOGLE AGENDA ────────────────────────────── */}
+        <div className="card mt-6">
+          <h2 className="text-xl font-bold text-ink mb-2">Google Agenda</h2>
+          <p className="text-sm text-ink-2 mb-4">
+            Conecte sua conta Google pra toda visita agendada no MyAsset entrar automaticamente
+            na sua agenda pessoal — e sumir de lá quando você cancelar.
+          </p>
+
+          {searchParams?.google_calendar === "error" && (
+            <p className="text-sm text-red-500 mb-4">
+              {searchParams.message || "Não foi possível conectar a Google Agenda."}
+            </p>
+          )}
+          {searchParams?.google_calendar === "connected" && (
+            <p className="text-sm text-forest mb-4">Google Agenda conectada com sucesso! ✅</p>
+          )}
+
+          {googleCalendar ? (
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <p className="text-sm text-ink-2">
+                <span className="font-bold text-forest">Conectado ✓</span> desde{" "}
+                {new Date(googleCalendar.connected_at).toLocaleDateString("pt-BR")}
+              </p>
+              <form action={disconnectGoogleCalendarAction}>
+                <button
+                  type="submit"
+                  className="px-6 py-3 border border-border text-ink-2 text-xs font-bold uppercase tracking-wider rounded hover:border-red-400 hover:text-red-500 transition-colors"
+                >
+                  Desconectar
+                </button>
+              </form>
+            </div>
+          ) : (
+            <GoogleCalendarConnectButton />
           )}
         </div>
       </div>
