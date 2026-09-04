@@ -204,6 +204,16 @@ export default async function PropertyDetailPage({ params }: Props) {
                 {[property.address, property.city, property.state].filter(Boolean).join(" · ")}
               </p>
             )}
+            {property.listing_url && (
+              <a
+                href={property.listing_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 mt-2 text-xs font-bold uppercase tracking-wider text-forest hover:text-forest-light transition-colors"
+              >
+                🔗 Ver no site da imobiliária
+              </a>
+            )}
           </div>
 
           <div className="flex flex-col gap-2 shrink-0">
