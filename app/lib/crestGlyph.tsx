@@ -1,13 +1,18 @@
 /**
  * Brasão da Leopoldo Cabral e Associados, recriado em SVG (sem asset
  * raster) para os ícones do app (favicon, apple-touch-icon, manifest).
- * Compatível com o renderer do next/og (Satori) usado em icon.tsx /
- * apple-icon.tsx / rotas de ícone.
+ *
+ * Compatível com o renderer do next/og (Satori): o Satori NÃO suporta
+ * <text> dentro de <svg> ("<text> nodes are not currently supported"),
+ * então o monograma "LC" é uma <div> normal sobreposta ao SVG (só com
+ * o escudo + louros), não um <text> do próprio SVG.
  */
 export function CrestGlyph({
+  boxSize,
   stroke = "#141618",
   background = "#F5F1EA",
 }: {
+  boxSize: number;
   stroke?: string;
   background?: string;
 }) {
@@ -31,17 +36,13 @@ export function CrestGlyph({
     });
 
   return (
-    <div
-      style={{
-        width: "100%",
-        height: "100%",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background,
-      }}
-    >
-      <svg width="86%" height="86%" viewBox="0 0 100 100">
+    <div style={{ width: "100%", height: "100%", position: "relative", display: "flex", background }}>
+      <svg
+        width="100%"
+        height="100%"
+        viewBox="0 0 100 100"
+        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+      >
         {leaves(-1)}
         {leaves(1)}
         <path
@@ -51,17 +52,25 @@ export function CrestGlyph({
           fill={background}
         />
         <circle cx="50" cy="34" r="13" stroke={stroke} strokeWidth={2.4} fill="none" />
-        <text
-          x="50"
-          y="40.5"
-          textAnchor="middle"
-          fontFamily="Georgia, serif"
-          fontSize="13"
-          fill={stroke}
-        >
-          LC
-        </text>
       </svg>
+      <div
+        style={{
+          position: "absolute",
+          top: "21%",
+          left: 0,
+          right: 0,
+          height: "26%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: "Georgia, serif",
+          fontWeight: 700,
+          fontSize: Math.round(boxSize * 0.13),
+          color: stroke,
+        }}
+      >
+        LC
+      </div>
     </div>
   );
 }
