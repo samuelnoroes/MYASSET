@@ -11,13 +11,12 @@ export async function createVisit(formData: FormData) {
   if (!user) redirect("/login");
 
   const propertyId = String(formData.get("property_id") || "");
-  const visitorName = String(formData.get("visitor_name") || "").trim();
-  const visitorPhone = String(formData.get("visitor_phone") || "").trim();
+  const leadId = String(formData.get("lead_id") || "");
   const scheduledAt = String(formData.get("scheduled_at") || "");
   const notes = String(formData.get("notes") || "").trim();
 
-  if (!propertyId || !visitorName || !scheduledAt) {
-    redirect("/error?message=" + encodeURIComponent("Preencha imóvel, nome do interessado e data da visita."));
+  if (!propertyId || !leadId || !scheduledAt) {
+    redirect("/error?message=" + encodeURIComponent("Selecione o imóvel, o contato e a data da visita."));
   }
 
   // Visível = próprio ou da mesma imobiliária (RLS decide)
@@ -30,6 +29,21 @@ export async function createVisit(formData: FormData) {
   if (!property) {
     redirect("/error?message=" + encodeURIComponent("Imóvel não encontrado."));
   }
+
+  // Toda visita precisa de um contato já cadastrado — nada de nome/telefone
+  // digitado solto. O lead só pode ser um contato do próprio corretor (RLS).
+  const { data: lead } = await supabase
+    .from("leads")
+    .select("id, name, phone")
+    .eq("id", leadId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (!lead) {
+    redirect("/error?message=" + encodeURIComponent("Contato não encontrado. Cadastre o contato antes de marcar a visita."));
+  }
+  const visitorName = lead!.name;
+  const visitorPhone = lead!.phone;
 
   // Sincroniza com a Google Agenda do corretor, se ele tiver conectado a
   // conta. Nunca bloqueia o agendamento — se falhar, segue sem o evento.
@@ -54,6 +68,7 @@ export async function createVisit(formData: FormData) {
   const { error } = await supabase.from("property_visits").insert({
     user_id: user.id,
     property_id: propertyId,
+    lead_id: leadId,
     visitor_name: visitorName,
     visitor_phone: visitorPhone || null,
     scheduled_at: scheduledAt,
@@ -67,7 +82,8 @@ export async function createVisit(formData: FormData) {
   }
 
   revalidatePath("/dashboard");
-  redirect("/dashboard");
+  revalidatePath("/dashboard/visits");
+  redirect("/dashboard/visits");
 }
 
 export async function markVisitDone(formData: FormData) {
@@ -89,6 +105,7 @@ export async function markVisitDone(formData: FormData) {
   }
 
   revalidatePath("/dashboard");
+  revalidatePath("/dashboard/visits");
 }
 
 export async function cancelVisit(formData: FormData) {
@@ -128,4 +145,5 @@ export async function cancelVisit(formData: FormData) {
   }
 
   revalidatePath("/dashboard");
+  revalidatePath("/dashboard/visits");
 }

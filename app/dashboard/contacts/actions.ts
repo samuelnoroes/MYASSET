@@ -95,6 +95,16 @@ export async function createContact(formData: FormData) {
   if (error) err(error.message);
 
   revalidatePath("/dashboard/contacts");
+
+  // Veio do fluxo "agendar visita → cadastrar novo lead": volta pra lá com
+  // o imóvel e o contato recém-criado já selecionados.
+  if (String(formData.get("return_to") || "") === "visit") {
+    const propertyId = String(formData.get("property_id") || "");
+    const params = new URLSearchParams({ lead: data.id });
+    if (propertyId) params.set("property", propertyId);
+    redirect(`/dashboard/visits/new?${params.toString()}`);
+  }
+
   redirect(`/dashboard/contacts/${data.id}`);
 }
 

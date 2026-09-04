@@ -94,13 +94,12 @@ export default async function DashboardPage() {
 
   const todayStr = todayInBrazil();
   const in7days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-  const in5days = new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
   const scheduled = visits.filter(v => v.status === "scheduled");
   const doneVisits = visits.filter(v => v.status === "done");
 
   const visitAlerts: VisitAlert[] = scheduled
-    .filter(v => String(v.scheduled_at).slice(0, 10) <= in5days)
+    .filter(v => String(v.scheduled_at).slice(0, 10) <= in7days)
     .map(v => {
       const dateStr = String(v.scheduled_at).slice(0, 10);
       const isToday = dateStr === todayStr;
@@ -280,12 +279,20 @@ export default async function DashboardPage() {
             <p className="text-sm text-ink-2">
               🗓️ Nenhuma visita agendada para os próximos dias.
             </p>
-            <Link
-              href="/dashboard/visits/new"
-              className="text-xs text-forest font-semibold uppercase tracking-wider hover:text-forest-light transition-colors shrink-0 ml-4"
-            >
-              + Agendar visita
-            </Link>
+            <div className="flex items-center gap-4 shrink-0 ml-4">
+              <Link
+                href="/dashboard/visits"
+                className="text-xs text-ink-3 hover:text-forest transition-colors uppercase tracking-wider"
+              >
+                Ver agendamentos
+              </Link>
+              <Link
+                href="/dashboard/visits/new"
+                className="text-xs text-forest font-semibold uppercase tracking-wider hover:text-forest-light transition-colors"
+              >
+                + Agendar visita
+              </Link>
+            </div>
           </div>
         )}
 
