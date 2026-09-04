@@ -2,6 +2,68 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   Tema (claro é o padrão; :root[data-theme="dark"] sobrescreve).
+   Ver app/lib/theme.ts pro toggle e o script sem-flash em layout.tsx.
+   ============================================================ */
+:root {
+  --surface: #F6F4EF;
+  --card: #FFFFFF;
+  --card-2: #F0EDE6;
+  --header: #FFFFFF;
+  --border: #E7E2D9;
+
+  --ink: #1A1815;
+  --ink-2: #6B6459;
+  --ink-3: #948C7E;
+  --muted: #B9B2A4;
+
+  --forest: #C4A96B;
+  --forest-light: #D4B97A;
+  --moss: #8B7240;
+
+  --positive: #5FBF8A;
+  --negative: #E0686C;
+  --warning: #D9A05B;
+
+  --overlay-04: rgba(0, 0, 0, 0.04);
+  --overlay-05: rgba(0, 0, 0, 0.05);
+  --overlay-08: rgba(0, 0, 0, 0.08);
+  --overlay-15: rgba(0, 0, 0, 0.15);
+
+  --selection: rgba(196, 169, 107, 0.18);
+  --scrollbar-thumb: rgba(0, 0, 0, 0.15);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.28);
+  --shadow-panel: rgba(0, 0, 0, 0.18);
+}
+
+:root[data-theme="dark"] {
+  --surface: #0C0D0F;
+  --card: #141618;
+  --card-2: #1C1E22;
+  --header: #0C0D0F;
+  --border: #2A2D33;
+
+  --ink: #F5F3EF;
+  --ink-2: #9CA3AF;
+  --ink-3: #6B7280;
+  --muted: #4A4F5A;
+
+  --positive: #5FBF8A;
+  --negative: #E0686C;
+  --warning: #D9A05B;
+
+  --overlay-04: rgba(255, 255, 255, 0.04);
+  --overlay-05: rgba(255, 255, 255, 0.05);
+  --overlay-08: rgba(255, 255, 255, 0.08);
+  --overlay-15: rgba(255, 255, 255, 0.15);
+
+  --selection: rgba(196, 169, 107, 0.25);
+  --scrollbar-thumb: #2A2D33;
+  --scrollbar-thumb-hover: #4A4F5A;
+  --shadow-panel: rgba(0, 0, 0, 0.5);
+}
+
 html,
 body {
   height: 100%;
@@ -10,12 +72,12 @@ body {
 body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #0C0D0F;
-  color: #F5F3EF;
+  background-color: var(--surface);
+  color: var(--ink);
   font-size: 15px;
 }
 
-::selection { background: rgba(196, 169, 107, 0.25); }
+::selection { background: var(--selection); }
 
 @layer components {
   /* Label de seção estilo XP — com linha colorida embaixo */
@@ -24,7 +86,7 @@ body {
     letter-spacing: 0.18em;
     display: inline-block;
     padding-bottom: 6px;
-    border-bottom: 1px solid #8B7240;
+    border-bottom: 1px solid var(--moss);
     margin-bottom: 20px;
   }
 
@@ -53,9 +115,9 @@ body {
 }
 
 
-/* Scrollbars — dark */
-* { scrollbar-width: thin; scrollbar-color: #2A2D33 transparent; }
+/* Scrollbars */
+* { scrollbar-width: thin; scrollbar-color: var(--scrollbar-thumb) transparent; }
 *::-webkit-scrollbar { width: 8px; height: 8px; }
 *::-webkit-scrollbar-track { background: transparent; }
-*::-webkit-scrollbar-thumb { background: #2A2D33; border-radius: 4px; }
-*::-webkit-scrollbar-thumb:hover { background: #4A4F5A; }
+*::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 4px; }
+*::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }

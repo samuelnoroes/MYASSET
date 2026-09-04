@@ -30,7 +30,7 @@ export default async function NewPropertyPage({
 
   return (
     <main className="min-h-screen bg-surface">
-      <header className="bg-header text-white ">
+      <header className="bg-header text-ink ">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <BrandMark />
           <Link

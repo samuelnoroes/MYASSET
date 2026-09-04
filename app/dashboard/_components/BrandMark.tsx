@@ -42,7 +42,7 @@ export default async function BrandMark({
     <Link href="/dashboard" className={className} style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
       {brand ? (
         <>
-          <CrestIcon size={20} color="#fff" />
+          <CrestIcon size={20} color="var(--ink)" />
           <span>
             {brand.name} <span style={{ color: "#C4A96B" }}>{brand.suffix}</span>
           </span>
