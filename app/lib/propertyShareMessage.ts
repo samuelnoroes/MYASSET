@@ -20,6 +20,7 @@ export type ShareableProperty = {
   monthly_rent: number | string | null;
   iptu_amount: number | string | null;
   condo_fee: number | string | null;
+  listing_url?: string | null;
 };
 
 function brl(value: number): string {
@@ -59,6 +60,11 @@ export function buildPropertyShareMessage(property: ShareableProperty): string {
   if (iptu) costs.push(`IPTU ${brl(iptu)}/mês`);
   if (condo) costs.push(`Condomínio ${brl(condo)}/mês`);
   if (costs.length > 0) lines.push(`🧾 ${costs.join(" · ")}`);
+
+  if (property.listing_url) {
+    lines.push("");
+    lines.push(`🔗 Mais fotos e detalhes: ${property.listing_url}`);
+  }
 
   lines.push("");
   lines.push("Quer conhecer? Me chama que agendo sua visita! 😊");

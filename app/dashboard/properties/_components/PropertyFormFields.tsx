@@ -19,6 +19,7 @@ type DefaultValues = {
   address?: string;
   city?: string;
   state?: string;
+  listing_url?: string | null;
   listing_purpose?: string | null;
   listing_status?: string | null;
   current_value?: number | null;
@@ -193,6 +194,20 @@ export default function PropertyFormFields({
             <option value="land">Terreno</option>
             <option value="mixed">Misto</option>
           </select>
+        </div>
+
+        <div>
+          <label htmlFor="listing_url" className={labelClass}>Link no site da imobiliária</label>
+          <input
+            id="listing_url" name="listing_url" type="url"
+            placeholder="https://www.suaimobiliaria.com.br/imoveis/..."
+            defaultValue={defaults.listing_url || ""}
+            className={inputClass}
+          />
+          <p className={hintClass}>
+            Cole aqui o link do anúncio no site — o assistente de IA manda esse link
+            pro cliente quando pedirem mais informações ou fotos do imóvel.
+          </p>
         </div>
       </div>
 

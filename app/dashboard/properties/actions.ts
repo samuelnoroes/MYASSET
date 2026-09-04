@@ -16,6 +16,7 @@ type PropertyInput = {
   address: string | null;
   city: string | null;
   state: string | null;
+  listing_url: string | null;
   listing_purpose: string;
   listing_status: string;
   current_value: number | null;
@@ -42,12 +43,14 @@ function parsePropertyForm(formData: FormData): PropertyInput {
   const stateField = String(formData.get("state") || "").trim().toUpperCase() || null;
   const parentPropertyId = String(formData.get("parent_property_id") || "").trim() || null;
   const unitIdentifier = String(formData.get("unit_identifier") || "").trim() || null;
+  const listingUrl = String(formData.get("listing_url") || "").trim() || null;
 
   if (!name) err("Nome do imóvel é obrigatório.");
   if (!nickname) err("Apelido do imóvel é obrigatório.");
   if (!/^[a-z0-9]+$/.test(nickname)) err("Apelido deve conter apenas letras minúsculas e números.");
   if (!["sale", "rent"].includes(listingPurpose)) err("Finalidade inválida.");
   if (!["available", "reserved", "closed"].includes(listingStatus)) err("Status inválido.");
+  if (listingUrl && !/^https?:\/\/.+/i.test(listingUrl)) err("Link do site inválido — comece com http:// ou https://.");
   if (!["residential", "commercial", "land", "mixed"].includes(propertyType)) err("Tipo de imóvel inválido.");
 
   const n = (key: string): number | null => {
@@ -69,6 +72,7 @@ function parsePropertyForm(formData: FormData): PropertyInput {
   return {
     name, nickname, property_type: propertyType,
     address, city, state: stateField,
+    listing_url: listingUrl,
     listing_purpose: listingPurpose,
     listing_status: listingStatus,
     current_value: n("current_value"),

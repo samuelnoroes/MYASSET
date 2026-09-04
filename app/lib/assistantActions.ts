@@ -21,7 +21,7 @@ export function onlyDigits(raw: string): string {
 export const EDITABLE_PROPERTY_FIELDS = new Set([
   "name", "address", "city", "state",
   "current_value", "monthly_rent", "iptu_amount", "condo_fee",
-  "listing_purpose", "listing_status",
+  "listing_purpose", "listing_status", "listing_url",
   "owner_name", "owner_phone",
 ]);
 
@@ -373,14 +373,14 @@ export const ASSISTANT_TOOLS = [
   },
   {
     name: "update_property",
-    description: "Atualiza dados de um imóvel (valores, IPTU, condomínio, status, finalidade, endereço, proprietário). Só o captador ou o gestor podem alterar.",
+    description: "Atualiza dados de um imóvel (valores, IPTU, condomínio, status, finalidade, endereço, link do site, proprietário). Só o captador ou o gestor podem alterar.",
     input_schema: {
       type: "object" as const,
       properties: {
         nickname: { type: "string" },
         fields: {
           type: "object",
-          description: "Campos a alterar. Aceitos: name, address, city, state, current_value, monthly_rent, iptu_amount, condo_fee, listing_purpose (sale|rent), listing_status (available|reserved|closed), owner_name, owner_phone",
+          description: "Campos a alterar. Aceitos: name, address, city, state, current_value, monthly_rent, iptu_amount, condo_fee, listing_purpose (sale|rent), listing_status (available|reserved|closed), listing_url (link do anúncio no site da imobiliária), owner_name, owner_phone",
         },
       },
       required: ["nickname", "fields"],
